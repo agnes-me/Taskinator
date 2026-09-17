@@ -6,18 +6,40 @@ import { WEEKDAY_LABELS } from '@/lib/recurrence';
 
 type Option = { id: string; name?: string; displayName?: string; icon?: string };
 
+export type EditableTask = {
+  id: string;
+  title: string;
+  description: string | null;
+  categoryId: string | null;
+  zoneId: string | null;
+  assigneeId: string | null;
+  priority: string;
+  dueDate: Date | null;
+  recurrenceType: string;
+  recurrenceInterval: number;
+  recurrenceWeekdays: string | null;
+};
+
+function toDateInputValue(date: Date | null): string {
+  if (!date) return '';
+  return date.toISOString().slice(0, 10);
+}
+
 export function TaskForm({
   categories,
   zones,
   profiles,
   onDone,
+  initialTask,
 }: {
   categories: Option[];
   zones: Option[];
   profiles: Option[];
   onDone?: () => void;
+  initialTask?: EditableTask;
 }) {
-  const [recurrenceType, setRecurrenceType] = useState('NONE');
+  const [recurrenceType, setRecurrenceType] = useState(initialTask?.recurrenceType ?? 'NONE');
+  const selectedWeekdays = new Set((initialTask?.recurrenceWeekdays ?? '').split(',').filter(Boolean));
 
   return (
     <form
@@ -27,19 +49,26 @@ export function TaskForm({
       }}
       className="card space-y-3"
     >
+      {initialTask && <input type="hidden" name="id" value={initialTask.id} />}
       <div>
         <label className="label">Titre</label>
-        <input className="input" name="title" required placeholder="Ex: Passer l'aspirateur" />
+        <input
+          className="input"
+          name="title"
+          required
+          placeholder="Ex: Passer l'aspirateur"
+          defaultValue={initialTask?.title}
+        />
       </div>
       <div>
         <label className="label">Description (optionnel)</label>
-        <textarea className="input" name="description" rows={2} />
+        <textarea className="input" name="description" rows={2} defaultValue={initialTask?.description ?? ''} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
           <label className="label">Catégorie</label>
-          <select className="input" name="categoryId" defaultValue="">
+          <select className="input" name="categoryId" defaultValue={initialTask?.categoryId ?? ''}>
             <option value="">—</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -50,7 +79,7 @@ export function TaskForm({
         </div>
         <div>
           <label className="label">Zone</label>
-          <select className="input" name="zoneId" defaultValue="">
+          <select className="input" name="zoneId" defaultValue={initialTask?.zoneId ?? ''}>
             <option value="">—</option>
             {zones.map((z) => (
               <option key={z.id} value={z.id}>
@@ -61,7 +90,7 @@ export function TaskForm({
         </div>
         <div>
           <label className="label">Assigné à</label>
-          <select className="input" name="assigneeId" defaultValue="">
+          <select className="input" name="assigneeId" defaultValue={initialTask?.assigneeId ?? ''}>
             <option value="">—</option>
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
@@ -72,7 +101,7 @@ export function TaskForm({
         </div>
         <div>
           <label className="label">Priorité</label>
-          <select className="input" name="priority" defaultValue="MEDIUM">
+          <select className="input" name="priority" defaultValue={initialTask?.priority ?? 'MEDIUM'}>
             <option value="LOW">Basse</option>
             <option value="MEDIUM">Moyenne</option>
             <option value="HIGH">Haute</option>
@@ -82,7 +111,7 @@ export function TaskForm({
 
       <div>
         <label className="label">Échéance (optionnel)</label>
-        <input className="input" type="date" name="dueDate" />
+        <input className="input" type="date" name="dueDate" defaultValue={toDateInputValue(initialTask?.dueDate ?? null)} />
       </div>
 
       <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -103,7 +132,13 @@ export function TaskForm({
         {(recurrenceType === 'DAILY' || recurrenceType === 'MONTHLY' || recurrenceType === 'CUSTOM_DAYS') && (
           <div className="mt-2">
             <label className="label">Toutes les combien de {recurrenceType === 'MONTHLY' ? 'mois' : 'jours'} ?</label>
-            <input className="input w-24" type="number" min={1} name="recurrenceInterval" defaultValue={1} />
+            <input
+              className="input w-24"
+              type="number"
+              min={1}
+              name="recurrenceInterval"
+              defaultValue={initialTask?.recurrenceInterval ?? 1}
+            />
           </div>
         )}
 
@@ -111,7 +146,7 @@ export function TaskForm({
           <div className="mt-2 flex flex-wrap gap-2">
             {Object.entries(WEEKDAY_LABELS).map(([value, label]) => (
               <label key={value} className="flex items-center gap-1 text-sm">
-                <input type="checkbox" name="weekday" value={value} /> {label}
+                <input type="checkbox" name="weekday" value={value} defaultChecked={selectedWeekdays.has(value)} /> {label}
               </label>
             ))}
           </div>
@@ -119,7 +154,7 @@ export function TaskForm({
       </div>
 
       <button className="btn-primary w-full" type="submit">
-        Enregistrer la tâche
+        {initialTask ? 'Mettre à jour la tâche' : 'Enregistrer la tâche'}
       </button>
     </form>
   );

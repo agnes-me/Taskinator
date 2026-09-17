@@ -1,35 +1,39 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { requireSessionAndHousehold } from '@/lib/require-session';
-import { TaskCard } from '@/components/TaskCard';
+import { TaskRow } from '@/components/TaskRow';
 
 export default async function DashboardPage() {
   const { household } = await requireSessionAndHousehold();
 
-  const [freshHousehold, overdueTasks, todayTasks, upcomingEvents, templatesCount] = await Promise.all([
-    prisma.household.findUnique({ where: { id: household.id } }),
-    prisma.task.findMany({
-      where: { householdId: household.id, status: { not: 'DONE' }, dueDate: { lt: new Date() } },
-      include: { category: true, zone: true, assignee: true },
-      orderBy: { dueDate: 'asc' },
-      take: 6,
-    }),
-    prisma.task.findMany({
-      where: {
-        householdId: household.id,
-        status: { not: 'DONE' },
-        dueDate: { gte: startOfToday(), lte: endOfToday() },
-      },
-      include: { category: true, zone: true, assignee: true },
-      orderBy: { dueDate: 'asc' },
-    }),
-    prisma.event.findMany({
-      where: { householdId: household.id, eventDate: { gte: new Date() } },
-      orderBy: { eventDate: 'asc' },
-      take: 3,
-    }),
-    prisma.taskTemplate.count({ where: { householdId: household.id } }),
-  ]);
+  const [freshHousehold, overdueTasks, todayTasks, upcomingEvents, templatesCount, categories, zones, profiles] =
+    await Promise.all([
+      prisma.household.findUnique({ where: { id: household.id } }),
+      prisma.task.findMany({
+        where: { householdId: household.id, status: { not: 'DONE' }, dueDate: { lt: new Date() } },
+        include: { category: true, zone: true, assignee: true },
+        orderBy: { dueDate: 'asc' },
+        take: 6,
+      }),
+      prisma.task.findMany({
+        where: {
+          householdId: household.id,
+          status: { not: 'DONE' },
+          dueDate: { gte: startOfToday(), lte: endOfToday() },
+        },
+        include: { category: true, zone: true, assignee: true },
+        orderBy: { dueDate: 'asc' },
+      }),
+      prisma.event.findMany({
+        where: { householdId: household.id, eventDate: { gte: new Date() } },
+        orderBy: { eventDate: 'asc' },
+        take: 3,
+      }),
+      prisma.taskTemplate.count({ where: { householdId: household.id } }),
+      prisma.category.findMany({ where: { householdId: household.id }, orderBy: { sortOrder: 'asc' } }),
+      prisma.zone.findMany({ where: { householdId: household.id }, orderBy: { sortOrder: 'asc' } }),
+      prisma.profile.findMany({ where: { householdId: household.id }, orderBy: { createdAt: 'asc' } }),
+    ]);
 
   const isHouseholdPaused = Boolean(
     freshHousehold?.remindersPausedUntil && freshHousehold.remindersPausedUntil > new Date(),
@@ -61,9 +65,16 @@ export default async function DashboardPage() {
       {overdueTasks.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-red-600">Tâches en retard</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
             {overdueTasks.map((task) => (
-              <TaskCard key={task.id} task={task} isHouseholdPaused={isHouseholdPaused} />
+              <TaskRow
+                key={task.id}
+                task={task}
+                categories={categories}
+                zones={zones}
+                profiles={profiles}
+                isHouseholdPaused={isHouseholdPaused}
+              />
             ))}
           </div>
         </section>
@@ -79,9 +90,16 @@ export default async function DashboardPage() {
         {todayTasks.length === 0 ? (
           <p className="card text-sm text-slate-500">Rien de prévu aujourd&apos;hui. 🎉</p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
             {todayTasks.map((task) => (
-              <TaskCard key={task.id} task={task} isHouseholdPaused={isHouseholdPaused} />
+              <TaskRow
+                key={task.id}
+                task={task}
+                categories={categories}
+                zones={zones}
+                profiles={profiles}
+                isHouseholdPaused={isHouseholdPaused}
+              />
             ))}
           </div>
         )}
