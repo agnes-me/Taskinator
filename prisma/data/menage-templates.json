@@ -1,0 +1,2145 @@
+[
+  {
+    "name": "Ménage - Intérieur",
+    "icon": "🧹",
+    "description": "Catalogue complet importé (109 tâches) — Ménage - Intérieur",
+    "defaultCategoryName": "Ménage",
+    "defaultCategoryIcon": "🧹",
+    "defaultCategoryColor": "#0d9488",
+    "defaultCategoryKind": "CHORE",
+    "items": [
+      {
+        "title": "Essuyer les plans de travail",
+        "zoneName": "Cuisine",
+        "description": "⏱ 3 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 0
+      },
+      {
+        "title": "Faire / ranger la vaisselle",
+        "zoneName": "Cuisine",
+        "description": "⏱ 15 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 1
+      },
+      {
+        "title": "Vider la poubelle",
+        "zoneName": "Cuisine",
+        "description": "⏱ 2 min",
+        "recurrenceType": "CUSTOM_DAYS",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 2
+      },
+      {
+        "title": "Nettoyer la table",
+        "zoneName": "Cuisine",
+        "description": "⏱ 3 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 3
+      },
+      {
+        "title": "Balayer le sol",
+        "zoneName": "Cuisine",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 4
+      },
+      {
+        "title": "Laver le sol",
+        "zoneName": "Cuisine",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 5
+      },
+      {
+        "title": "Nettoyer les plaques de cuisson",
+        "zoneName": "Cuisine",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 6
+      },
+      {
+        "title": "Nettoyer évier et robinetterie",
+        "zoneName": "Cuisine",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 7
+      },
+      {
+        "title": "Nettoyer l'extérieur du four / micro-ondes",
+        "zoneName": "Cuisine",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 8
+      },
+      {
+        "title": "Nettoyer l'intérieur du four",
+        "zoneName": "Cuisine",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "HIGH",
+        "sortOrder": 9
+      },
+      {
+        "title": "Nettoyer l'intérieur du micro-ondes",
+        "zoneName": "Cuisine",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 10
+      },
+      {
+        "title": "Détartrer la bouilloire",
+        "zoneName": "Cuisine",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 11
+      },
+      {
+        "title": "Détartrer la cafetière",
+        "zoneName": "Cuisine",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 12
+      },
+      {
+        "title": "Nettoyer les filtres de la hotte aspirante",
+        "zoneName": "Cuisine",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 13
+      },
+      {
+        "title": "Nettoyer l'intérieur du réfrigérateur",
+        "zoneName": "Cuisine",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 14
+      },
+      {
+        "title": "Nettoyer les joints de carrelage / plan de travail",
+        "zoneName": "Cuisine",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "HIGH",
+        "sortOrder": 15
+      },
+      {
+        "title": "Vider et nettoyer les placards",
+        "zoneName": "Cuisine",
+        "description": "⏱ 45 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "HIGH",
+        "sortOrder": 16
+      },
+      {
+        "title": "Dégivrer / nettoyer le congélateur",
+        "zoneName": "Cuisine",
+        "description": "⏱ 45 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "HIGH",
+        "sortOrder": 17
+      },
+      {
+        "title": "Nettoyer derrière et sous réfrigérateur / four",
+        "zoneName": "Cuisine",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "HIGH",
+        "sortOrder": 18
+      },
+      {
+        "title": "Détartrer la robinetterie en profondeur",
+        "zoneName": "Cuisine",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 19
+      },
+      {
+        "title": "Nettoyer les vitres de la cuisine",
+        "zoneName": "Cuisine",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 20
+      },
+      {
+        "title": "Laver rideaux / stores",
+        "zoneName": "Cuisine",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "MEDIUM",
+        "sortOrder": 21
+      },
+      {
+        "title": "Vérifier les dates de péremption des placards",
+        "zoneName": "Cuisine",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 22
+      },
+      {
+        "title": "Nettoyer les WC",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 23
+      },
+      {
+        "title": "Nettoyer le lavabo",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 24
+      },
+      {
+        "title": "Nettoyer douche / baignoire",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 15 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 25
+      },
+      {
+        "title": "Nettoyer le miroir",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 3 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 26
+      },
+      {
+        "title": "Laver le sol",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 27
+      },
+      {
+        "title": "Laver le tapis de bain",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 5 min + machine",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 2,
+        "priority": "LOW",
+        "sortOrder": 28
+      },
+      {
+        "title": "Changer / laver le rideau de douche",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 29
+      },
+      {
+        "title": "Nettoyer les joints de carrelage",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "HIGH",
+        "sortOrder": 30
+      },
+      {
+        "title": "Détartrer pommeau et flexible de douche",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 31
+      },
+      {
+        "title": "Nettoyer les évacuations (cheveux, filtres)",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "HIGH",
+        "sortOrder": 32
+      },
+      {
+        "title": "Nettoyer la grille de VMC",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 33
+      },
+      {
+        "title": "Vider / trier la pharmacie, vérifier péremptions",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 34
+      },
+      {
+        "title": "Nettoyer le meuble sous vasque",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 35
+      },
+      {
+        "title": "Détartrer les WC en profondeur",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 36
+      },
+      {
+        "title": "Laver les serviettes de toilette",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 5 min + machine",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 37
+      },
+      {
+        "title": "Nettoyer vitres / fenêtre",
+        "zoneName": "Salle de bain",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 38
+      },
+      {
+        "title": "Faire le lit",
+        "zoneName": "Chambre",
+        "description": "⏱ 2 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 39
+      },
+      {
+        "title": "Aérer la pièce",
+        "zoneName": "Chambre",
+        "description": "⏱ 5 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 40
+      },
+      {
+        "title": "Ranger vêtements / désordre",
+        "zoneName": "Chambre",
+        "description": "⏱ 5 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 41
+      },
+      {
+        "title": "Changer les draps",
+        "zoneName": "Chambre",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 42
+      },
+      {
+        "title": "Passer l'aspirateur",
+        "zoneName": "Chambre",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 43
+      },
+      {
+        "title": "Dépoussiérer meubles et surfaces",
+        "zoneName": "Chambre",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 44
+      },
+      {
+        "title": "Laver le sol",
+        "zoneName": "Chambre",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 45
+      },
+      {
+        "title": "Nettoyer sous le lit",
+        "zoneName": "Chambre",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 46
+      },
+      {
+        "title": "Laver couette / oreillers",
+        "zoneName": "Chambre",
+        "description": "⏱ 15 min + machine",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 47
+      },
+      {
+        "title": "Retourner / aspirer le matelas",
+        "zoneName": "Chambre",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "HIGH",
+        "sortOrder": 48
+      },
+      {
+        "title": "Trier / ranger le placard",
+        "zoneName": "Chambre",
+        "description": "⏱ 1h30 · saisonnier · Rotation printemps / automne",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 49
+      },
+      {
+        "title": "Nettoyer vitres",
+        "zoneName": "Chambre",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 50
+      },
+      {
+        "title": "Laver rideaux",
+        "zoneName": "Chambre",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "MEDIUM",
+        "sortOrder": 51
+      },
+      {
+        "title": "Dépoussiérer luminaires",
+        "zoneName": "Chambre",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 52
+      },
+      {
+        "title": "Ranger la pièce",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 5 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 53
+      },
+      {
+        "title": "Dépoussiérer surfaces / meubles",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 54
+      },
+      {
+        "title": "Passer l'aspirateur (sol + canapé)",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 15 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 55
+      },
+      {
+        "title": "Laver le sol",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 56
+      },
+      {
+        "title": "Secouer / retourner les coussins",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 57
+      },
+      {
+        "title": "Aspirer et nettoyer le tapis en profondeur",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "HIGH",
+        "sortOrder": 58
+      },
+      {
+        "title": "Nettoyer écran TV et appareils",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 2,
+        "priority": "LOW",
+        "sortOrder": 59
+      },
+      {
+        "title": "Dépoussiérer bibliothèque / livres",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 60
+      },
+      {
+        "title": "Nettoyer vitres",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 61
+      },
+      {
+        "title": "Laver rideaux",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "MEDIUM",
+        "sortOrder": 62
+      },
+      {
+        "title": "Dépoussiérer luminaires / lustres",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 63
+      },
+      {
+        "title": "Dépoussiérer les feuilles des plantes vertes",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 64
+      },
+      {
+        "title": "Nettoyer cheminée / poêle (cendres)",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ 15 min · saisonnier · Hiver, hebdomadaire",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 65
+      },
+      {
+        "title": "Faire ramoner cheminée / poêle",
+        "zoneName": "Salon / Séjour",
+        "description": "⏱ Prestataire · Avant l'hiver",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "MEDIUM",
+        "sortOrder": 66
+      },
+      {
+        "title": "Secouer / laver le paillasson",
+        "zoneName": "Entrée / Couloirs / Escaliers",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 67
+      },
+      {
+        "title": "Ranger chaussures et manteaux",
+        "zoneName": "Entrée / Couloirs / Escaliers",
+        "description": "⏱ 3 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 68
+      },
+      {
+        "title": "Passer l'aspirateur",
+        "zoneName": "Entrée / Couloirs / Escaliers",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 69
+      },
+      {
+        "title": "Laver le sol",
+        "zoneName": "Entrée / Couloirs / Escaliers",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 70
+      },
+      {
+        "title": "Nettoyer le miroir",
+        "zoneName": "Entrée / Couloirs / Escaliers",
+        "description": "⏱ 3 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 71
+      },
+      {
+        "title": "Dépoussiérer patères / rangements",
+        "zoneName": "Entrée / Couloirs / Escaliers",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 72
+      },
+      {
+        "title": "Nettoyer la rampe d'escalier",
+        "zoneName": "Entrée / Couloirs / Escaliers",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 73
+      },
+      {
+        "title": "Nettoyer la porte d'entrée (int./ext.)",
+        "zoneName": "Entrée / Couloirs / Escaliers",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 74
+      },
+      {
+        "title": "Ranger le bureau",
+        "zoneName": "Bureau",
+        "description": "⏱ 3 min",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 75
+      },
+      {
+        "title": "Vider la corbeille",
+        "zoneName": "Bureau",
+        "description": "⏱ 2 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 76
+      },
+      {
+        "title": "Dépoussiérer bureau et étagères",
+        "zoneName": "Bureau",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 77
+      },
+      {
+        "title": "Nettoyer écran et clavier",
+        "zoneName": "Bureau",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 78
+      },
+      {
+        "title": "Passer l'aspirateur",
+        "zoneName": "Bureau",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 79
+      },
+      {
+        "title": "Ranger / organiser les câbles",
+        "zoneName": "Bureau",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 80
+      },
+      {
+        "title": "Trier et archiver les papiers",
+        "zoneName": "Bureau",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 81
+      },
+      {
+        "title": "Nettoyer vitres",
+        "zoneName": "Bureau",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 82
+      },
+      {
+        "title": "Vider le lave-linge / étendre le linge",
+        "zoneName": "Buanderie",
+        "description": "⏱ 10 min",
+        "recurrenceType": "CUSTOM_DAYS",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 83
+      },
+      {
+        "title": "Nettoyer le filtre du lave-linge",
+        "zoneName": "Buanderie",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 84
+      },
+      {
+        "title": "Nettoyer le joint du hublot",
+        "zoneName": "Buanderie",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 85
+      },
+      {
+        "title": "Nettoyer le bac à produits",
+        "zoneName": "Buanderie",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 86
+      },
+      {
+        "title": "Faire un cycle à vide (nettoyant / vinaigre)",
+        "zoneName": "Buanderie",
+        "description": "⏱ 5 min + cycle",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 87
+      },
+      {
+        "title": "Nettoyer le filtre à peluches du sèche-linge",
+        "zoneName": "Buanderie",
+        "description": "⏱ 3 min · si utilisé",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 88
+      },
+      {
+        "title": "Nettoyer le condenseur du sèche-linge",
+        "zoneName": "Buanderie",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 89
+      },
+      {
+        "title": "Repasser / plier le linge",
+        "zoneName": "Buanderie",
+        "description": "⏱ Variable",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 90
+      },
+      {
+        "title": "Balayer / laver le sol",
+        "zoneName": "Buanderie",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 91
+      },
+      {
+        "title": "Ranger et dépoussiérer les étagères",
+        "zoneName": "Buanderie",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 92
+      },
+      {
+        "title": "Faire l'inventaire des produits ménagers",
+        "zoneName": "Buanderie",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 93
+      },
+      {
+        "title": "Sortir les poubelles",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 5 min · ou tous les 2-3j",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 94
+      },
+      {
+        "title": "Nettoyer poignées de porte et interrupteurs",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 95
+      },
+      {
+        "title": "Nettoyer toutes les vitres / fenêtres",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 1h",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "HIGH",
+        "sortOrder": 96
+      },
+      {
+        "title": "Dépoussiérer les plinthes",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 97
+      },
+      {
+        "title": "Dépoussiérer en hauteur (corniches, plafonds)",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "HIGH",
+        "sortOrder": 98
+      },
+      {
+        "title": "Nettoyer / dépoussiérer les radiateurs",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 30 min · saisonnier · Avant la saison de chauffe (automne)",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "MEDIUM",
+        "sortOrder": 99
+      },
+      {
+        "title": "Détartrer les chasses d'eau",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 100
+      },
+      {
+        "title": "Grand ménage de printemps",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 1 journée · Printemps",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "HIGH",
+        "sortOrder": 101
+      },
+      {
+        "title": "Grand ménage d'automne",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 1 journée · Automne",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "HIGH",
+        "sortOrder": 102
+      },
+      {
+        "title": "Nettoyer / entretenir les VMC de la maison",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "MEDIUM",
+        "sortOrder": 103
+      },
+      {
+        "title": "Dépoussiérer luminaires / abat-jours",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 104
+      },
+      {
+        "title": "Nettoyer les tapis / moquettes en profondeur",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 1h",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "HIGH",
+        "sortOrder": 105
+      },
+      {
+        "title": "Laver les rideaux de toute la maison",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 1h + machine",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "MEDIUM",
+        "sortOrder": 106
+      },
+      {
+        "title": "Désinfecter les poubelles intérieures",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 107
+      },
+      {
+        "title": "Dépoussiérer prises et câbles multimédia",
+        "zoneName": "Tâches transversales (toute la maison)",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 108
+      }
+    ]
+  },
+  {
+    "name": "Extérieur - Jardin - Garage",
+    "icon": "🌿",
+    "description": "Catalogue complet importé (40 tâches) — Extérieur - Jardin - Garage",
+    "defaultCategoryName": "Extérieur & Jardin",
+    "defaultCategoryIcon": "🌿",
+    "defaultCategoryColor": "#65a30d",
+    "defaultCategoryKind": "CHORE",
+    "items": [
+      {
+        "title": "Balayer le sol",
+        "zoneName": "Garage",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 0
+      },
+      {
+        "title": "Laver le sol (Kärcher / eau)",
+        "zoneName": "Garage",
+        "description": "⏱ 30 min · saisonnier · Printemps",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 1
+      },
+      {
+        "title": "Ranger et organiser les outils",
+        "zoneName": "Garage",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 2
+      },
+      {
+        "title": "Enlever les toiles d'araignées",
+        "zoneName": "Garage",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 3
+      },
+      {
+        "title": "Sortir les poubelles de tri sélectif",
+        "zoneName": "Garage",
+        "description": "⏱ 5 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 4
+      },
+      {
+        "title": "Nettoyer les poubelles / bacs",
+        "zoneName": "Garage",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 5
+      },
+      {
+        "title": "Entretenir les vélos (chaîne, pneus)",
+        "zoneName": "Garage",
+        "description": "⏱ 30 min · saisonnier · Printemps / été",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "MEDIUM",
+        "sortOrder": 6
+      },
+      {
+        "title": "Contrôler le véhicule (niveaux, pression pneus)",
+        "zoneName": "Garage",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 7
+      },
+      {
+        "title": "Rangement saisonnier (pneus, déco)",
+        "zoneName": "Garage",
+        "description": "⏱ 1h · saisonnier · 2x / an",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 8
+      },
+      {
+        "title": "Grand rangement / désencombrement",
+        "zoneName": "Garage",
+        "description": "⏱ 2-3h",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "HIGH",
+        "sortOrder": 9
+      },
+      {
+        "title": "Tondre la pelouse",
+        "zoneName": "Jardin",
+        "description": "⏱ 45 min · saison · Mars à octobre",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "HIGH",
+        "sortOrder": 10
+      },
+      {
+        "title": "Arroser les plantes / potager",
+        "zoneName": "Jardin",
+        "description": "⏱ 15 min · saison · Été",
+        "recurrenceType": "DAILY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 11
+      },
+      {
+        "title": "Désherber massifs / allées",
+        "zoneName": "Jardin",
+        "description": "⏱ 30 min · Mars à octobre",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 2,
+        "priority": "HIGH",
+        "sortOrder": 12
+      },
+      {
+        "title": "Tailler les haies",
+        "zoneName": "Jardin",
+        "description": "⏱ 1h30 · saisonnier · Mai + septembre",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 13
+      },
+      {
+        "title": "Tailler arbustes / rosiers",
+        "zoneName": "Jardin",
+        "description": "⏱ 1h · saisonnier · Fin d'hiver",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 14
+      },
+      {
+        "title": "Ramasser les feuilles mortes",
+        "zoneName": "Jardin",
+        "description": "⏱ 45 min · saison · Automne",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "HIGH",
+        "sortOrder": 15
+      },
+      {
+        "title": "Scarifier / aérer la pelouse",
+        "zoneName": "Jardin",
+        "description": "⏱ 1h30 · Automne ou printemps",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "HIGH",
+        "sortOrder": 16
+      },
+      {
+        "title": "Traiter anti-mousse de la pelouse",
+        "zoneName": "Jardin",
+        "description": "⏱ 30 min · saisonnier · Automne / printemps",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "MEDIUM",
+        "sortOrder": 17
+      },
+      {
+        "title": "Entretenir le potager (semis, récolte)",
+        "zoneName": "Jardin",
+        "description": "⏱ Variable · saison",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 18
+      },
+      {
+        "title": "Nettoyer et huiler les outils de jardin",
+        "zoneName": "Jardin",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "MEDIUM",
+        "sortOrder": 19
+      },
+      {
+        "title": "Vidanger / hiverniser le système d'arrosage",
+        "zoneName": "Jardin",
+        "description": "⏱ 30 min · saisonnier · Automne",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "MEDIUM",
+        "sortOrder": 20
+      },
+      {
+        "title": "Nettoyer la mousse sur allées / terrasses",
+        "zoneName": "Jardin",
+        "description": "⏱ 1h · Printemps",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "HIGH",
+        "sortOrder": 21
+      },
+      {
+        "title": "Vérifier / nettoyer le composteur",
+        "zoneName": "Jardin",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 22
+      },
+      {
+        "title": "Nettoyer et ranger le mobilier de jardin",
+        "zoneName": "Jardin",
+        "description": "⏱ 1h · saisonnier · Automne",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "MEDIUM",
+        "sortOrder": 23
+      },
+      {
+        "title": "Entretenir la tondeuse (aiguisage, vidange)",
+        "zoneName": "Jardin",
+        "description": "⏱ 30 min · saisonnier · Printemps",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "MEDIUM",
+        "sortOrder": 24
+      },
+      {
+        "title": "Hiverniser le matériel de jardin (vidange essence)",
+        "zoneName": "Jardin",
+        "description": "⏱ 30 min · saisonnier · Automne",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "LOW",
+        "sortOrder": 25
+      },
+      {
+        "title": "Balayer",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 10 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 26
+      },
+      {
+        "title": "Laver au jet / Kärcher",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 30 min · saison · Avril à octobre",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "HIGH",
+        "sortOrder": 27
+      },
+      {
+        "title": "Nettoyer le mobilier extérieur",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 15 min · saison",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 2,
+        "priority": "LOW",
+        "sortOrder": 28
+      },
+      {
+        "title": "Nettoyer / détartrer le barbecue",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 30 min · saison · Été",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 29
+      },
+      {
+        "title": "Entretenir les jardinières (arrosage, taille)",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 15 min · saison",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 30
+      },
+      {
+        "title": "Nettoyer store / pergola",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "MEDIUM",
+        "sortOrder": 31
+      },
+      {
+        "title": "Housser le mobilier pour l'hiver",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 20 min · saisonnier · Automne",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "LOW",
+        "sortOrder": 32
+      },
+      {
+        "title": "Nettoyer les dalles en profondeur",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 1h · Printemps",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "HIGH",
+        "sortOrder": 33
+      },
+      {
+        "title": "Vérifier les fixations parasol / pergola",
+        "zoneName": "Terrasse / Balcon",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 34
+      },
+      {
+        "title": "Entretien courant (pH, chlore, filtration)",
+        "zoneName": "Piscine / Spa (si applicable)",
+        "description": "⏱ 20 min · saison · Été",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 35
+      },
+      {
+        "title": "Nettoyer skimmers et paniers",
+        "zoneName": "Piscine / Spa (si applicable)",
+        "description": "⏱ 10 min · saison · Été",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 36
+      },
+      {
+        "title": "Nettoyer le fond (robot / épuisette)",
+        "zoneName": "Piscine / Spa (si applicable)",
+        "description": "⏱ 20 min · saison · Été",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 1,
+        "priority": "MEDIUM",
+        "sortOrder": 37
+      },
+      {
+        "title": "Hivernage de la piscine",
+        "zoneName": "Piscine / Spa (si applicable)",
+        "description": "⏱ 2h · saisonnier · Automne",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 38
+      },
+      {
+        "title": "Remise en route de la piscine",
+        "zoneName": "Piscine / Spa (si applicable)",
+        "description": "⏱ 2h · saisonnier · Printemps",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 39
+      }
+    ]
+  },
+  {
+    "name": "Entretien technique maison",
+    "icon": "🔧",
+    "description": "Catalogue complet importé (46 tâches) — Entretien technique maison",
+    "defaultCategoryName": "Entretien technique",
+    "defaultCategoryIcon": "🔧",
+    "defaultCategoryColor": "#6366f1",
+    "defaultCategoryKind": "ADMIN",
+    "items": [
+      {
+        "title": "Purger les radiateurs",
+        "zoneName": "Chauffage & eau chaude",
+        "description": "⏱ 15 min · Avant l'hiver (automne)",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 0
+      },
+      {
+        "title": "Faire réviser la chaudière (contrat d'entretien)",
+        "zoneName": "Chauffage & eau chaude",
+        "description": "⏱ Prestataire · Obligatoire",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 1
+      },
+      {
+        "title": "Vérifier la pression du circuit de chauffage",
+        "zoneName": "Chauffage & eau chaude",
+        "description": "⏱ 5 min · saison · Hiver",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 2
+      },
+      {
+        "title": "Détartrer le ballon / chauffe-eau",
+        "zoneName": "Chauffage & eau chaude",
+        "description": "⏱ 30-45 min ou prestataire",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "MEDIUM",
+        "sortOrder": 3
+      },
+      {
+        "title": "Vérifier le groupe de sécurité du chauffe-eau",
+        "zoneName": "Chauffage & eau chaude",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 4
+      },
+      {
+        "title": "Ramoner la cheminée / poêle à bois",
+        "zoneName": "Chauffage & eau chaude",
+        "description": "⏱ Prestataire · Obligatoire",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 5
+      },
+      {
+        "title": "Entretenir la pompe à chaleur (filtre, unité extérieure)",
+        "zoneName": "Chauffage & eau chaude",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "MEDIUM",
+        "sortOrder": 6
+      },
+      {
+        "title": "Purger / nettoyer le chauffage au sol",
+        "zoneName": "Chauffage & eau chaude",
+        "description": "⏱ Prestataire",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 7
+      },
+      {
+        "title": "Vérifier l'absence de fuites (éviers, WC)",
+        "zoneName": "Plomberie",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 8
+      },
+      {
+        "title": "Purger et vérifier les siphons",
+        "zoneName": "Plomberie",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 9
+      },
+      {
+        "title": "Vérifier le bon fonctionnement des vannes d'arrêt",
+        "zoneName": "Plomberie",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 10
+      },
+      {
+        "title": "Entretenir / vidanger la fosse septique (si applicable)",
+        "zoneName": "Plomberie",
+        "description": "⏱ Prestataire",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "MEDIUM",
+        "sortOrder": 11
+      },
+      {
+        "title": "Relever le compteur d'eau / vérifier anomalies",
+        "zoneName": "Plomberie",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 12
+      },
+      {
+        "title": "Vérifier le tableau électrique (disjoncteurs)",
+        "zoneName": "Électricité & réseaux",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 13
+      },
+      {
+        "title": "Tester les prises avec détecteur différentiel",
+        "zoneName": "Électricité & réseaux",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 14
+      },
+      {
+        "title": "Vérifier l'état des rallonges et multiprises",
+        "zoneName": "Électricité & réseaux",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 15
+      },
+      {
+        "title": "Dépoussiérer les grilles de ventilation des appareils électroniques",
+        "zoneName": "Électricité & réseaux",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 16
+      },
+      {
+        "title": "Faire vérifier l'installation électrique par un professionnel",
+        "zoneName": "Électricité & réseaux",
+        "description": "⏱ Prestataire · occasionnel · Tous les 5-10 ans ou à l'achat",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "LOW",
+        "sortOrder": 17
+      },
+      {
+        "title": "Nettoyer les gouttières",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ 1h30 · saisonnier · Automne + printemps",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 18
+      },
+      {
+        "title": "Vérifier l'état de la toiture (tuiles, ardoises)",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ Prestataire ou 30 min visuel",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "MEDIUM",
+        "sortOrder": 19
+      },
+      {
+        "title": "Nettoyer chéneaux et descentes d'eau pluviale",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ 1h · saisonnier · Automne",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 20
+      },
+      {
+        "title": "Nettoyer la façade (démoussage, lavage)",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ Prestataire ou 2h · Printemps",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "HIGH",
+        "sortOrder": 21
+      },
+      {
+        "title": "Vérifier les joints de fenêtres / portes extérieures",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 22
+      },
+      {
+        "title": "Vérifier l'étanchéité de la toiture-terrasse / Velux",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 23
+      },
+      {
+        "title": "Débroussailler autour de la maison",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ 1h · saisonnier · Printemps / été - obligation légale en zone à risque",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "HIGH",
+        "sortOrder": 24
+      },
+      {
+        "title": "Nettoyer / vérifier regards et grilles d'évacuation",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "MEDIUM",
+        "sortOrder": 25
+      },
+      {
+        "title": "Vérifier l'état du portail / de la clôture",
+        "zoneName": "Toiture & façade",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 26
+      },
+      {
+        "title": "Graisser les gonds et charnières de portes/fenêtres",
+        "zoneName": "Menuiseries & ouvertures",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 27
+      },
+      {
+        "title": "Lubrifier les rails de volets roulants",
+        "zoneName": "Menuiseries & ouvertures",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 28
+      },
+      {
+        "title": "Vérifier le bon fonctionnement des volets",
+        "zoneName": "Menuiseries & ouvertures",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 29
+      },
+      {
+        "title": "Nettoyer les rails de fenêtres coulissantes",
+        "zoneName": "Menuiseries & ouvertures",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 30
+      },
+      {
+        "title": "Vérifier les joints d'étanchéité des fenêtres",
+        "zoneName": "Menuiseries & ouvertures",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 31
+      },
+      {
+        "title": "Tester les détecteurs de fumée (piles)",
+        "zoneName": "Sécurité & détection",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 32
+      },
+      {
+        "title": "Vérifier l'extincteur (date, pression)",
+        "zoneName": "Sécurité & détection",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 33
+      },
+      {
+        "title": "Vérifier le système d'alarme (piles, test)",
+        "zoneName": "Sécurité & détection",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 34
+      },
+      {
+        "title": "Vérifier la date de péremption de la trousse de secours",
+        "zoneName": "Sécurité & détection",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 35
+      },
+      {
+        "title": "Vérifier le détecteur de monoxyde de carbone",
+        "zoneName": "Sécurité & détection",
+        "description": "⏱ 5 min · Si chauffage à combustion",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 36
+      },
+      {
+        "title": "Nettoyer / remplacer les filtres VMC",
+        "zoneName": "Ventilation & climatisation",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 37
+      },
+      {
+        "title": "Nettoyer les bouches d'extraction VMC",
+        "zoneName": "Ventilation & climatisation",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 38
+      },
+      {
+        "title": "Faire réviser le climatiseur / PAC réversible",
+        "zoneName": "Ventilation & climatisation",
+        "description": "⏱ Prestataire · Avant l'été",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 39
+      },
+      {
+        "title": "Nettoyer les filtres de climatisation",
+        "zoneName": "Ventilation & climatisation",
+        "description": "⏱ 10 min · saison · Été",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 40
+      },
+      {
+        "title": "Vérifier / renouveler les contrats d'entretien",
+        "zoneName": "Administratif & assurances",
+        "description": "⏱ 15 min · Chaudière, VMC, etc.",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 41
+      },
+      {
+        "title": "Vérifier la couverture d'assurance habitation",
+        "zoneName": "Administratif & assurances",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 42
+      },
+      {
+        "title": "Archiver les factures et garanties",
+        "zoneName": "Administratif & assurances",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 43
+      },
+      {
+        "title": "Vérifier la validité des diagnostics obligatoires",
+        "zoneName": "Administratif & assurances",
+        "description": "⏱ Variable · occasionnel · Si vente / location",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "LOW",
+        "sortOrder": 44
+      },
+      {
+        "title": "Faire le point sur les taxes (foncière, ordures ménagères)",
+        "zoneName": "Administratif & assurances",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 45
+      }
+    ]
+  },
+  {
+    "name": "Véhicule",
+    "icon": "🚗",
+    "description": "Catalogue complet importé (24 tâches) — Véhicule",
+    "defaultCategoryName": "Véhicule",
+    "defaultCategoryIcon": "🚗",
+    "defaultCategoryColor": "#f97316",
+    "defaultCategoryKind": "OTHER",
+    "items": [
+      {
+        "title": "Vérifier le niveau d'huile moteur",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 0
+      },
+      {
+        "title": "Vérifier le niveau de liquide de refroidissement",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 1
+      },
+      {
+        "title": "Vérifier le niveau de liquide lave-glace",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 2
+      },
+      {
+        "title": "Vérifier la pression des pneus",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 3
+      },
+      {
+        "title": "Vérifier l'état / usure des pneus",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 4
+      },
+      {
+        "title": "Vérifier l'éclairage (phares, feux, clignotants)",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 5
+      },
+      {
+        "title": "Vérifier la batterie (état, bornes)",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 6
+      },
+      {
+        "title": "Vérifier le carnet d'entretien / kilométrage",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 7
+      },
+      {
+        "title": "Vérifier la trousse de secours / gilet / triangle",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 8
+      },
+      {
+        "title": "Faire le plein d'AdBlue (diesel)",
+        "zoneName": "Contrôles réguliers",
+        "description": "⏱ 5 min · selon usage",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "LOW",
+        "sortOrder": 9
+      },
+      {
+        "title": "Vidange moteur + filtre à huile",
+        "zoneName": "Entretien mécanique",
+        "description": "⏱ Prestataire · ou selon kilométrage",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 10
+      },
+      {
+        "title": "Remplacer le filtre à air",
+        "zoneName": "Entretien mécanique",
+        "description": "⏱ Prestataire ou 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 11
+      },
+      {
+        "title": "Remplacer le filtre d'habitacle",
+        "zoneName": "Entretien mécanique",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 12
+      },
+      {
+        "title": "Vérifier les freins (plaquettes, disques)",
+        "zoneName": "Entretien mécanique",
+        "description": "⏱ Prestataire",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 13
+      },
+      {
+        "title": "Contrôle technique",
+        "zoneName": "Entretien mécanique",
+        "description": "⏱ Prestataire (1h) · Selon âge du véhicule",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 24,
+        "priority": "LOW",
+        "sortOrder": 14
+      },
+      {
+        "title": "Entretenir / recharger la climatisation auto",
+        "zoneName": "Entretien mécanique",
+        "description": "⏱ Prestataire · Avant l'été",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 15
+      },
+      {
+        "title": "Changer les pneus été / hiver",
+        "zoneName": "Pneumatiques",
+        "description": "⏱ 1h ou prestataire · saisonnier · 2x / an selon région",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "MEDIUM",
+        "sortOrder": 16
+      },
+      {
+        "title": "Vérifier les essuie-glaces (état, remplacement)",
+        "zoneName": "Pneumatiques",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 6,
+        "priority": "LOW",
+        "sortOrder": 17
+      },
+      {
+        "title": "Nettoyer l'intérieur du véhicule",
+        "zoneName": "Nettoyage",
+        "description": "⏱ 30 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 18
+      },
+      {
+        "title": "Nettoyer les tapis de sol",
+        "zoneName": "Nettoyage",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 19
+      },
+      {
+        "title": "Laver la carrosserie",
+        "zoneName": "Nettoyage",
+        "description": "⏱ 30 min",
+        "recurrenceType": "WEEKLY",
+        "recurrenceInterval": 2,
+        "priority": "MEDIUM",
+        "sortOrder": 20
+      },
+      {
+        "title": "Cirer / protéger la carrosserie",
+        "zoneName": "Nettoyage",
+        "description": "⏱ 1h · saisonnier · 2x / an",
+        "recurrenceType": null,
+        "recurrenceInterval": null,
+        "priority": "MEDIUM",
+        "sortOrder": 21
+      },
+      {
+        "title": "Renouveler l'assurance auto",
+        "zoneName": "Administratif",
+        "description": "⏱ 20 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 22
+      },
+      {
+        "title": "Vérifier la date du contrôle technique",
+        "zoneName": "Administratif",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 23
+      }
+    ]
+  },
+  {
+    "name": "Autre - Divers",
+    "icon": "📦",
+    "description": "Catalogue complet importé (13 tâches) — Autre - Divers",
+    "defaultCategoryName": "Autre",
+    "defaultCategoryIcon": "📌",
+    "defaultCategoryColor": "#6b7280",
+    "defaultCategoryKind": "OTHER",
+    "items": [
+      {
+        "title": "Vérifier / gonfler les pneus",
+        "zoneName": "Vélo",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 0
+      },
+      {
+        "title": "Huiler la chaîne",
+        "zoneName": "Vélo",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 1
+      },
+      {
+        "title": "Vérifier les freins",
+        "zoneName": "Vélo",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 2
+      },
+      {
+        "title": "Révision complète",
+        "zoneName": "Vélo",
+        "description": "⏱ Prestataire",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 12,
+        "priority": "LOW",
+        "sortOrder": 3
+      },
+      {
+        "title": "Détartrer le lave-vaisselle",
+        "zoneName": "Électroménager",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 4
+      },
+      {
+        "title": "Nettoyer le filtre du lave-vaisselle",
+        "zoneName": "Électroménager",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 5
+      },
+      {
+        "title": "Vider / nettoyer le bac de l'aspirateur",
+        "zoneName": "Électroménager",
+        "description": "⏱ 5 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 6
+      },
+      {
+        "title": "Laver le filtre de l'aspirateur",
+        "zoneName": "Électroménager",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 7
+      },
+      {
+        "title": "Détartrer le fer à repasser",
+        "zoneName": "Électroménager",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 8
+      },
+      {
+        "title": "Sauvegarder les données importantes",
+        "zoneName": "Informatique & domotique",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 9
+      },
+      {
+        "title": "Mettre à jour les appareils (PC, box, routeur)",
+        "zoneName": "Informatique & domotique",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 10
+      },
+      {
+        "title": "Dépoussiérer unité centrale / box internet",
+        "zoneName": "Informatique & domotique",
+        "description": "⏱ 15 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 3,
+        "priority": "LOW",
+        "sortOrder": 11
+      },
+      {
+        "title": "Vérifier antivirus / sécurité informatique",
+        "zoneName": "Informatique & domotique",
+        "description": "⏱ 10 min",
+        "recurrenceType": "MONTHLY",
+        "recurrenceInterval": 1,
+        "priority": "LOW",
+        "sortOrder": 12
+      }
+    ]
+  }
+]

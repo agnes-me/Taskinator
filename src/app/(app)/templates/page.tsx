@@ -12,7 +12,7 @@ export default async function TemplatesPage() {
   const { household } = await requireSessionAndHousehold();
 
   const templates = await prisma.taskTemplate.findMany({
-    where: { householdId: household.id },
+    where: { OR: [{ householdId: household.id }, { householdId: null }] },
     include: { _count: { select: { items: true } } },
     orderBy: { createdAt: 'asc' },
   });
@@ -33,7 +33,14 @@ export default async function TemplatesPage() {
               <span className="text-lg">
                 {t.icon} {t.name}
               </span>
-              <span className="text-xs text-slate-400">{TYPE_LABELS[t.type]}</span>
+              <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                {!t.householdId && (
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+                    Système
+                  </span>
+                )}
+                {TYPE_LABELS[t.type]}
+              </span>
             </div>
             {t.description && <p className="mt-1 text-sm text-slate-500">{t.description}</p>}
             <p className="mt-2 text-xs text-slate-400">{t._count.items} élément(s)</p>

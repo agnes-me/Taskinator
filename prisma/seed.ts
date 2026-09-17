@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { importChoreTemplates } from './import-templates';
 
 const prisma = new PrismaClient();
 
@@ -14,6 +15,8 @@ function token(length = 32) {
 }
 
 async function main() {
+  await importChoreTemplates(prisma);
+
   const existing = await prisma.user.findUnique({ where: { email: 'demo@taskinator.local' } });
   if (existing) {
     console.log('Le jeu de données de démo existe déjà, rien à faire.');

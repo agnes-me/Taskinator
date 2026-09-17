@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { requireSessionAndHousehold } from '@/lib/require-session';
+import { RECURRENCE_LABELS } from '@/lib/recurrence';
+import type { RecurrenceType } from '@/lib/types';
 import { addTemplateItem, deleteTemplate, deleteTemplateItem, instantiateTemplate } from '../actions';
 
 export default async function TemplateDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -8,7 +10,7 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
   const { household } = await requireSessionAndHousehold();
 
   const template = await prisma.taskTemplate.findFirst({
-    where: { id, householdId: household.id },
+    where: { id, OR: [{ householdId: household.id }, { householdId: null }] },
     include: { items: { orderBy: { sortOrder: 'asc' }, include: { category: true, zone: true } } },
   });
   if (!template) notFound();
@@ -21,6 +23,7 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
 
   const isEventPlanning = template.type === 'EVENT_PLANNING';
   const hasPerPersonItems = template.items.some((i) => i.perPerson);
+  const isOwnTemplate = template.householdId === household.id;
 
   return (
     <div className="space-y-6">
@@ -28,9 +31,15 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
         <h1 className="text-2xl font-bold">
           {template.icon} {template.name}
         </h1>
-        <form action={deleteTemplate.bind(null, template.id)}>
-          <button className="text-sm text-red-600 hover:underline">Supprimer le template</button>
-        </form>
+        {isOwnTemplate ? (
+          <form action={deleteTemplate.bind(null, template.id)}>
+            <button className="text-sm text-red-600 hover:underline">Supprimer le template</button>
+          </form>
+        ) : (
+          <span className="rounded-full bg-brand-50 px-2 py-1 text-xs text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+            Template système
+          </span>
+        )}
       </div>
       {template.description && <p className="text-slate-500">{template.description}</p>}
 
@@ -42,7 +51,17 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
               <span className="flex flex-wrap items-center gap-2 text-sm">
                 {item.title}
                 {item.category && <span className="text-xs text-slate-400">{item.category.icon}</span>}
-                {item.zone && <span className="text-xs text-slate-400">{item.zone.icon}</span>}
+                {(item.zone || item.zoneName) && (
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-800">
+                    {item.zone ? `${item.zone.icon} ${item.zone.name}` : item.zoneName}
+                  </span>
+                )}
+                {item.recurrenceType && item.recurrenceType !== 'NONE' && (
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+                    🔁 {RECURRENCE_LABELS[item.recurrenceType as RecurrenceType]}
+                    {item.recurrenceInterval && item.recurrenceInterval > 1 ? ` (×${item.recurrenceInterval})` : ''}
+                  </span>
+                )}
                 {item.perPerson && (
                   <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
                     👤 par personne
@@ -57,48 +76,53 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
                         : `J${item.offsetDays}`}
                   </span>
                 )}
+                {item.description && <span className="text-xs text-slate-400">{item.description}</span>}
               </span>
-              <form action={deleteTemplateItem.bind(null, item.id)}>
-                <button className="text-xs text-red-600 hover:underline">Retirer</button>
-              </form>
+              {isOwnTemplate && (
+                <form action={deleteTemplateItem.bind(null, item.id)}>
+                  <button className="text-xs text-red-600 hover:underline">Retirer</button>
+                </form>
+              )}
             </li>
           ))}
           {template.items.length === 0 && <p className="py-2 text-sm text-slate-400">Aucun élément pour l&apos;instant.</p>}
         </ul>
 
-        <form action={addTemplateItem} className="grid gap-2 sm:grid-cols-6">
-          <input type="hidden" name="templateId" value={template.id} />
-          <input className="input sm:col-span-2" name="title" placeholder="Nouvel élément" required />
-          <select className="input" name="categoryId" defaultValue="">
-            <option value="">Catégorie</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.icon} {c.name}
-              </option>
-            ))}
-          </select>
-          <select className="input" name="zoneId" defaultValue="">
-            <option value="">Zone</option>
-            {zones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.icon} {z.name}
-              </option>
-            ))}
-          </select>
-          {isEventPlanning && (
-            <input
-              className="input"
-              type="number"
-              name="offsetDays"
-              placeholder="Décalage (jours), ex: -7"
-              title="Nombre de jours avant (négatif) ou après (positif) la date de l'évènement"
-            />
-          )}
-          <label className="flex items-center gap-1 text-sm">
-            <input type="checkbox" name="perPerson" /> Par personne
-          </label>
-          <button className="btn-secondary sm:col-span-6">Ajouter l&apos;élément</button>
-        </form>
+        {isOwnTemplate && (
+          <form action={addTemplateItem} className="grid gap-2 sm:grid-cols-6">
+            <input type="hidden" name="templateId" value={template.id} />
+            <input className="input sm:col-span-2" name="title" placeholder="Nouvel élément" required />
+            <select className="input" name="categoryId" defaultValue="">
+              <option value="">Catégorie</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.icon} {c.name}
+                </option>
+              ))}
+            </select>
+            <select className="input" name="zoneId" defaultValue="">
+              <option value="">Zone</option>
+              {zones.map((z) => (
+                <option key={z.id} value={z.id}>
+                  {z.icon} {z.name}
+                </option>
+              ))}
+            </select>
+            {isEventPlanning && (
+              <input
+                className="input"
+                type="number"
+                name="offsetDays"
+                placeholder="Décalage (jours), ex: -7"
+                title="Nombre de jours avant (négatif) ou après (positif) la date de l'évènement"
+              />
+            )}
+            <label className="flex items-center gap-1 text-sm">
+              <input type="checkbox" name="perPerson" /> Par personne
+            </label>
+            <button className="btn-secondary sm:col-span-6">Ajouter l&apos;élément</button>
+          </form>
+        )}
       </section>
 
       <section className="card space-y-3">
@@ -106,7 +130,9 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
         <p className="text-sm text-slate-500">
           {isEventPlanning
             ? "Choisissez la date de l'évènement : chaque élément sera daté automatiquement selon son décalage (rétroplanning)."
-            : 'Choisissez une date de référence (ex: date de départ) pour générer les tâches de cette liste.'}
+            : template.items.some((i) => i.recurrenceType && i.recurrenceType !== 'NONE')
+              ? 'Choisissez une date de départ : les tâches récurrentes seront créées dans vos tâches avec leur périodicité déjà réglée.'
+              : 'Choisissez une date de référence (ex: date de départ) pour générer les tâches de cette liste.'}
         </p>
         <form action={instantiateTemplate} className="space-y-3">
           <input type="hidden" name="templateId" value={template.id} />

@@ -185,6 +185,14 @@ model TaskTemplate {
   createdByUserId String?
   createdAt   DateTime     @default(now())
 
+  // Catégorie par défaut appliquée aux tâches générées (créée/retrouvée par nom dans le
+  // foyer cible à l'instanciation), utile pour les templates système qui ne peuvent pas
+  // référencer une Category d'un foyer précis.
+  defaultCategoryName  String?
+  defaultCategoryIcon  String?
+  defaultCategoryColor String?
+  defaultCategoryKind  String?
+
   household Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
   createdBy User?      @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
   items     TaskTemplateItem[]
@@ -198,9 +206,18 @@ model TaskTemplateItem {
   description String?
   categoryId  String?
   zoneId      String?
+  // Nom de zone en secours (templates système : la Zone est créée/retrouvée par nom
+  // dans le foyer cible à l'instanciation, faute de pouvoir référencer une Zone précise).
+  zoneName    String?
   // Rétroplanning : décalage en jours par rapport à la date de l'événement.
   // Négatif = avant l'événement (ex: -7 = J-7), 0 = jour J, positif = après.
   offsetDays  Int?
+  // Périodicité de la tâche générée (façon Sweepy) : "NONE"|"DAILY"|"WEEKLY"|"MONTHLY"|"CUSTOM_DAYS".
+  // Laisser vide pour une tâche ponctuelle (ex: rétroplanning d'évènement).
+  recurrenceType     String?
+  recurrenceInterval Int?
+  // Priorité par défaut de la tâche générée ("LOW"|"MEDIUM"|"HIGH")
+  priority    String?
   // Si vrai, une tâche est générée par membre du foyer sélectionné (ex: valise par enfant)
   perPerson   Boolean  @default(false)
   sortOrder   Int      @default(0)

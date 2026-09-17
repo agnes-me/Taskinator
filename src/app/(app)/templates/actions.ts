@@ -70,7 +70,7 @@ export async function instantiateTemplate(formData: FormData) {
   if (!templateId || !eventName || !eventDateRaw) return;
 
   const template = await prisma.taskTemplate.findFirst({
-    where: { id: templateId, householdId: household.id },
+    where: { id: templateId, OR: [{ householdId: household.id }, { householdId: null }] },
     include: { items: true },
   });
   if (!template) return;
@@ -88,12 +88,51 @@ export async function instantiateTemplate(formData: FormData) {
     },
   });
 
+  // Templates système : la catégorie par défaut est retrouvée/créée dans CE foyer,
+  // faute de pouvoir référencer directement une Category d'un foyer précis.
+  let defaultCategoryId: string | null = null;
+  if (template.defaultCategoryName) {
+    const existing = await prisma.category.findFirst({
+      where: { householdId: household.id, name: template.defaultCategoryName },
+    });
+    defaultCategoryId = existing
+      ? existing.id
+      : (
+          await prisma.category.create({
+            data: {
+              householdId: household.id,
+              name: template.defaultCategoryName,
+              icon: template.defaultCategoryIcon ?? '✅',
+              color: template.defaultCategoryColor ?? '#0d9488',
+              kind: template.defaultCategoryKind ?? 'OTHER',
+            },
+          })
+        ).id;
+  }
+
+  // Idem pour les zones nommées par les éléments du template (ex: "Cuisine", "Garage"...).
+  const zoneCache = new Map<string, string>();
+  async function resolveZoneId(zoneName: string): Promise<string> {
+    const cached = zoneCache.get(zoneName);
+    if (cached) return cached;
+    const existing = await prisma.zone.findFirst({ where: { householdId: household.id, name: zoneName } });
+    const zoneId = existing
+      ? existing.id
+      : (await prisma.zone.create({ data: { householdId: household.id, name: zoneName } })).id;
+    zoneCache.set(zoneName, zoneId);
+    return zoneId;
+  }
+
   const tasksToCreate: {
     householdId: string;
     title: string;
+    description: string | null;
     categoryId: string | null;
     zoneId: string | null;
     assigneeId: string | null;
+    priority: string;
+    recurrenceType: string;
+    recurrenceInterval: number;
     dueDate: Date;
     eventId: string;
     templateItemId: string;
@@ -104,6 +143,12 @@ export async function instantiateTemplate(formData: FormData) {
     const dueDate = new Date(eventDate);
     dueDate.setDate(dueDate.getDate() + (item.offsetDays ?? 0));
 
+    const categoryId = item.categoryId ?? defaultCategoryId;
+    const zoneId = item.zoneId ?? (item.zoneName ? await resolveZoneId(item.zoneName) : null);
+    const priority = item.priority ?? 'MEDIUM';
+    const recurrenceType = item.recurrenceType ?? 'NONE';
+    const recurrenceInterval = item.recurrenceInterval ?? 1;
+
     if (item.perPerson && selectedProfileIds.length > 0) {
       for (const profileId of selectedProfileIds) {
         const profile = await prisma.profile.findFirst({ where: { id: profileId, householdId: household.id } });
@@ -111,9 +156,13 @@ export async function instantiateTemplate(formData: FormData) {
         tasksToCreate.push({
           householdId: household.id,
           title: `${item.title} — ${profile.displayName}`,
-          categoryId: item.categoryId,
-          zoneId: item.zoneId,
+          description: item.description,
+          categoryId,
+          zoneId,
           assigneeId: profile.id,
+          priority,
+          recurrenceType,
+          recurrenceInterval,
           dueDate,
           eventId: event.id,
           templateItemId: item.id,
@@ -124,9 +173,13 @@ export async function instantiateTemplate(formData: FormData) {
       tasksToCreate.push({
         householdId: household.id,
         title: item.title,
-        categoryId: item.categoryId,
-        zoneId: item.zoneId,
+        description: item.description,
+        categoryId,
+        zoneId,
         assigneeId: null,
+        priority,
+        recurrenceType,
+        recurrenceInterval,
         dueDate,
         eventId: event.id,
         templateItemId: item.id,
