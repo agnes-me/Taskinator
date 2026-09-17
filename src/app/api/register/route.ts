@@ -10,8 +10,10 @@ const schema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   mode: z.enum(['create', 'join']),
-  householdName: z.string().min(1).max(80).optional(),
-  inviteCode: z.string().min(1).max(20).optional(),
+  // Le formulaire envoie toujours les deux champs (l'un vide selon le mode choisi) :
+  // pas de min(1) ici, la présence réelle est vérifiée plus bas selon le mode.
+  householdName: z.string().max(80).optional(),
+  inviteCode: z.string().max(20).optional(),
 });
 
 export async function POST(req: Request) {
