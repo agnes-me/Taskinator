@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { requireSessionAndHousehold } from '@/lib/require-session';
 
@@ -42,8 +43,11 @@ export async function createZone(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
   const icon = String(formData.get('icon') ?? '🏠').trim() || '🏠';
   if (!name) return;
-  await prisma.zone.create({ data: { householdId: household.id, name, icon } });
+  const zone = await prisma.zone.create({ data: { householdId: household.id, name, icon } });
   revalidatePath('/settings');
+  // On file directement vers la zone créée : si un template correspond à son nom
+  // (ex: "Cuisine"), ses tâches types sont proposées tout de suite.
+  redirect(`/zones/${zone.id}`);
 }
 
 export async function deleteZone(zoneId: string) {

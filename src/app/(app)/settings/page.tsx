@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { requireSessionAndHousehold } from '@/lib/require-session';
 import {
@@ -98,9 +99,9 @@ export default async function SettingsPage() {
         <ul className="divide-y divide-slate-100 dark:divide-slate-800">
           {zones.map((zone) => (
             <li key={zone.id} className="flex items-center justify-between py-2">
-              <span>
+              <Link href={`/zones/${zone.id}`} className="hover:underline">
                 {zone.icon} {zone.name}
-              </span>
+              </Link>
               <form action={deleteZone.bind(null, zone.id)}>
                 <button className="text-sm text-red-600 hover:underline">Supprimer</button>
               </form>
