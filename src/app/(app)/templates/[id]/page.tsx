@@ -111,7 +111,9 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
             {isEventPlanning && (
               <input
                 className="input"
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="-?[0-9]*"
                 name="offsetDays"
                 placeholder="Décalage (jours), ex: -7"
                 title="Nombre de jours avant (négatif) ou après (positif) la date de l'évènement"

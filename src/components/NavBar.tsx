@@ -43,7 +43,7 @@ export function NavBar() {
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-10 flex justify-around border-t border-slate-200 bg-white py-1 dark:border-slate-800 dark:bg-slate-950 md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-10 flex justify-around overflow-x-auto border-t border-slate-200 bg-white py-1 dark:border-slate-800 dark:bg-slate-950 md:hidden">
         {LINKS.map((link) => (
           <Link
             key={link.href}
@@ -58,6 +58,13 @@ export function NavBar() {
             {link.label}
           </Link>
         ))}
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400"
+        >
+          <span className="text-lg leading-none">🚪</span>
+          Déconnexion
+        </button>
       </nav>
     </>
   );
