@@ -34,7 +34,10 @@ export function computeNextDueDate(params: {
     case 'MONTHLY': {
       const next = new Date(base);
       next.setMonth(next.getMonth() + interval);
-      return next;
+      // "Tous les X mois, le samedi" : on recale sur le prochain jour visé
+      // (jusqu'à 6 jours plus tard) plutôt que de garder le même quantième.
+      const singleWeekday = parseSingleWeekday(recurrenceWeekdays);
+      return singleWeekday ? snapForwardToWeekday(next, singleWeekday) : next;
     }
     case 'CUSTOM_DAYS': {
       const next = new Date(base);
@@ -44,6 +47,23 @@ export function computeNextDueDate(params: {
     default:
       return null;
   }
+}
+
+function parseSingleWeekday(csv: string | null): number | null {
+  if (!csv) return null;
+  const n = parseInt(csv.split(',')[0]?.trim() ?? '', 10);
+  return n >= 1 && n <= 7 ? n : null;
+}
+
+/** Avance `date` (0 à 6 jours) jusqu'au prochain jour correspondant au jour ISO visé (1=lundi...7=dimanche). */
+function snapForwardToWeekday(date: Date, isoWeekday: number): Date {
+  const cursor = new Date(date);
+  for (let i = 0; i < 7; i++) {
+    const currentIso = cursor.getDay() === 0 ? 7 : cursor.getDay();
+    if (currentIso === isoWeekday) return cursor;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return cursor;
 }
 
 /** 1=lundi ... 7=dimanche (ISO). Retourne la prochaine date >= from+1j qui tombe sur un des jours listés. */
@@ -75,14 +95,6 @@ export function isRemindersPaused(pausedUntil: Date | null | undefined): boolean
   return pausedUntil.getTime() > Date.now();
 }
 
-export const RECURRENCE_LABELS: Record<RecurrenceType, string> = {
-  NONE: 'Ponctuelle',
-  DAILY: 'Tous les jours',
-  WEEKLY: 'Toutes les semaines',
-  MONTHLY: 'Tous les mois',
-  CUSTOM_DAYS: 'Intervalle personnalisé (jours)',
-};
-
 export const WEEKDAY_LABELS: Record<number, string> = {
   1: 'Lun',
   2: 'Mar',
@@ -92,3 +104,46 @@ export const WEEKDAY_LABELS: Record<number, string> = {
   6: 'Sam',
   7: 'Dim',
 };
+
+export const WEEKDAY_FULL_LABELS: Record<number, string> = {
+  1: 'lundi',
+  2: 'mardi',
+  3: 'mercredi',
+  4: 'jeudi',
+  5: 'vendredi',
+  6: 'samedi',
+  7: 'dimanche',
+};
+
+/**
+ * Libellé naturel de la périodicité, ex: "Tous les 3 mois, le samedi",
+ * "Toutes les 2 semaines", "Tous les jours" — au lieu d'un cryptique "(×3)".
+ */
+export function buildRecurrenceLabel(
+  type: RecurrenceType,
+  interval: number,
+  weekdaysCsv: string | null,
+): string {
+  const n = Math.max(1, interval || 1);
+  const weekdays = (weekdaysCsv ?? '')
+    .split(',')
+    .map((s) => parseInt(s.trim(), 10))
+    .filter((d) => d >= 1 && d <= 7);
+  const weekdayNames = weekdays.map((d) => WEEKDAY_FULL_LABELS[d]);
+  const weekdaySuffix =
+    weekdayNames.length === 0 ? '' : weekdayNames.length === 1 ? `, le ${weekdayNames[0]}` : `, les ${weekdayNames.join(', ')}`;
+
+  switch (type) {
+    case 'NONE':
+      return 'Ponctuelle';
+    case 'DAILY':
+    case 'CUSTOM_DAYS':
+      return n === 1 ? 'Tous les jours' : `Tous les ${n} jours`;
+    case 'WEEKLY':
+      return (n === 1 ? 'Toutes les semaines' : `Toutes les ${n} semaines`) + weekdaySuffix;
+    case 'MONTHLY':
+      return (n === 1 ? 'Tous les mois' : `Tous les ${n} mois`) + weekdaySuffix;
+    default:
+      return 'Ponctuelle';
+  }
+}

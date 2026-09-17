@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { saveTask } from '@/app/(app)/tasks/actions';
-import { WEEKDAY_LABELS } from '@/lib/recurrence';
+import { WEEKDAY_LABELS, WEEKDAY_FULL_LABELS } from '@/lib/recurrence';
 
 type Option = { id: string; name?: string; displayName?: string; icon?: string };
 
@@ -31,12 +31,15 @@ export function TaskForm({
   profiles,
   onDone,
   initialTask,
+  householdId,
 }: {
   categories: Option[];
   zones: Option[];
   profiles: Option[];
   onDone?: () => void;
   initialTask?: EditableTask;
+  /** Conteneur cible pour une NOUVELLE tâche (vue multi-conteneurs). Ignoré en édition. */
+  householdId?: string;
 }) {
   const [recurrenceType, setRecurrenceType] = useState(initialTask?.recurrenceType ?? 'NONE');
   const selectedWeekdays = new Set((initialTask?.recurrenceWeekdays ?? '').split(',').filter(Boolean));
@@ -50,6 +53,7 @@ export function TaskForm({
       className="card space-y-3"
     >
       {initialTask && <input type="hidden" name="id" value={initialTask.id} />}
+      {!initialTask && householdId && <input type="hidden" name="householdId" value={householdId} />}
       <div>
         <label className="label">Titre</label>
         <input
@@ -149,6 +153,23 @@ export function TaskForm({
                 <input type="checkbox" name="weekday" value={value} defaultChecked={selectedWeekdays.has(value)} /> {label}
               </label>
             ))}
+          </div>
+        )}
+
+        {recurrenceType === 'MONTHLY' && (
+          <div className="mt-2">
+            <label className="label">Toujours un jour précis ? (optionnel)</label>
+            <select className="input" name="weekday" defaultValue={[...selectedWeekdays][0] ?? ''}>
+              <option value="">Même quantième chaque fois</option>
+              {Object.entries(WEEKDAY_FULL_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  Le {label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-slate-400">
+              Ex: &quot;tous les 2 mois, le samedi&quot; → la tâche revient toujours un samedi.
+            </p>
           </div>
         )}
       </div>

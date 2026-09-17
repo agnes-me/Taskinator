@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { requireSessionAndHousehold } from '@/lib/require-session';
-import { RECURRENCE_LABELS } from '@/lib/recurrence';
+import { buildRecurrenceLabel } from '@/lib/recurrence';
 import type { RecurrenceType } from '@/lib/types';
 import { addTemplateItem, deleteTemplate, deleteTemplateItem, instantiateTemplate } from '../actions';
 
@@ -58,8 +58,12 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
                 )}
                 {item.recurrenceType && item.recurrenceType !== 'NONE' && (
                   <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
-                    🔁 {RECURRENCE_LABELS[item.recurrenceType as RecurrenceType]}
-                    {item.recurrenceInterval && item.recurrenceInterval > 1 ? ` (×${item.recurrenceInterval})` : ''}
+                    🔁{' '}
+                    {buildRecurrenceLabel(
+                      item.recurrenceType as RecurrenceType,
+                      item.recurrenceInterval ?? 1,
+                      null,
+                    )}
                   </span>
                 )}
                 {item.perPerson && (

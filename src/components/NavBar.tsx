@@ -7,6 +7,7 @@ import { switchContainer } from '@/app/(app)/containers/actions';
 
 const LINKS = [
   { href: '/dashboard', label: 'Tableau de bord', icon: '🏡' },
+  { href: '/overview', label: 'Vue globale', icon: '🧭' },
   { href: '/tasks', label: 'Tâches', icon: '✅' },
   { href: '/events', label: 'Évènements', icon: '📅' },
   { href: '/templates', label: 'Templates', icon: '📋' },

@@ -1,5 +1,5 @@
 import { completeTask, deleteTask, pauseTask, resumeTask } from '@/app/(app)/tasks/actions';
-import { RECURRENCE_LABELS } from '@/lib/recurrence';
+import { buildRecurrenceLabel } from '@/lib/recurrence';
 import { buildGoogleCalendarLink } from '@/lib/ics';
 import type { Priority, RecurrenceType } from '@/lib/types';
 
@@ -18,6 +18,8 @@ export type TaskCardData = {
   dueDate: Date | null;
   priority: string;
   recurrenceType: string;
+  recurrenceInterval: number;
+  recurrenceWeekdays: string | null;
   pausedUntil: Date | null;
   pauseReason: string | null;
   category: { name: string; icon: string; color: string } | null;
@@ -64,7 +66,7 @@ export function TaskCard({ task, isHouseholdPaused }: { task: TaskCardData; isHo
         )}
         {recurrenceType !== 'NONE' && (
           <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
-            🔁 {RECURRENCE_LABELS[recurrenceType]}
+            🔁 {buildRecurrenceLabel(recurrenceType, task.recurrenceInterval, task.recurrenceWeekdays)}
           </span>
         )}
         {task.dueDate && (

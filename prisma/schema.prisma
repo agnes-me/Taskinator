@@ -24,12 +24,14 @@ model User {
   createdTemplates TaskTemplate[]
 }
 
-// Un foyer = une "équipe" qui partage les listes de tâches
+// Un foyer = une "équipe" qui partage les listes de tâches (= un "conteneur")
 model Household {
   id                    String    @id @default(cuid())
   name                  String
   inviteCode            String    @unique
   icsToken              String    @unique
+  // Conteneur personnel créé automatiquement pour chaque utilisateur (non partagé par défaut).
+  isPersonal            Boolean   @default(false)
   remindersPausedUntil  DateTime? // pause globale des rappels (ex: vacances)
   remindersPauseReason  String?
   createdAt             DateTime  @default(now())

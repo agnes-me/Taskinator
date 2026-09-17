@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getCurrentHousehold, getUserHouseholds } from '@/lib/current-household';
+import { ensurePersonalHousehold } from '@/lib/ensure-personal-household';
 import { NavBar } from '@/components/NavBar';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +16,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect('/register');
   }
 
-  const households = await getUserHouseholds(session.user.id);
+  let households = await getUserHouseholds(session.user.id);
+  // Comptes créés avant l'introduction du conteneur perso : on le crée à la volée.
+  if (!households.some((h) => h.household.isPersonal)) {
+    await ensurePersonalHousehold(session.user.id, session.user.name ?? 'Moi');
+    households = await getUserHouseholds(session.user.id);
+  }
 
   return (
     <div className="min-h-screen pb-16 md:pb-0">

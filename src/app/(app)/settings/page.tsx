@@ -91,6 +91,10 @@ export default async function SettingsPage() {
 
       <section className="card space-y-3">
         <h2 className="font-semibold">🗺️ Zones de la maison</h2>
+        <p className="text-sm text-slate-500">
+          <strong>Où</strong> se fait la tâche : une pièce ou un endroit (Cuisine, Garage,
+          Jardin...). Une tâche peut avoir zéro, une seule zone.
+        </p>
         <ul className="divide-y divide-slate-100 dark:divide-slate-800">
           {zones.map((zone) => (
             <li key={zone.id} className="flex items-center justify-between py-2">
@@ -112,6 +116,13 @@ export default async function SettingsPage() {
 
       <section className="card space-y-3">
         <h2 className="font-semibold">🏷️ Catégories</h2>
+        <p className="text-sm text-slate-500">
+          <strong>Quel genre</strong> de tâche c&apos;est (Ménage, Courses, Administratif...),
+          indépendamment de l&apos;endroit. Ça sert à filtrer/colorer vos tâches et à les
+          regrouper — deux tâches dans des zones différentes peuvent partager la même
+          catégorie (ex: &quot;Passer l&apos;aspirateur&quot; au salon et à la chambre sont
+          toutes les deux &quot;Ménage&quot;).
+        </p>
         <ul className="divide-y divide-slate-100 dark:divide-slate-800">
           {categories.map((category) => (
             <li key={category.id} className="flex items-center justify-between py-2">

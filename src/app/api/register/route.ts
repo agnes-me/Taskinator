@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { generateCode, generateToken } from '@/lib/ids';
 import { seedDefaultsForHousehold } from '@/lib/seed-defaults';
+import { ensurePersonalHousehold } from '@/lib/ensure-personal-household';
 
 const schema = z.object({
   name: z.string().min(1).max(80),
@@ -74,6 +75,8 @@ export async function POST(req: Request) {
     });
     await seedDefaultsForHousehold(household.id);
   }
+
+  await ensurePersonalHousehold(user.id, name);
 
   return NextResponse.json({ ok: true });
 }
