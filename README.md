@@ -7,8 +7,7 @@ personnalisables.
 ## Stack technique
 
 - **Next.js 16** (App Router, Server Actions) + TypeScript
-- **Prisma** + **SQLite** en local (zéro dépendance externe pour démarrer ; il suffit de
-  changer `DATABASE_URL` pour pointer vers Postgres en production)
+- **Prisma** + **PostgreSQL** (une base gratuite Render/Neon/Supabase suffit pour tester)
 - **NextAuth** (Credentials) pour l'authentification
 - **Tailwind CSS** pour l'interface
 - Manifest PWA (installable sur mobile, en attendant une vraie application native)
@@ -47,8 +46,8 @@ personnalisables.
 
 ```bash
 npm install
-cp .env.example .env      # SQLite par défaut, rien à changer pour tester
-npm run db:push           # crée la base SQLite à partir du schéma
+cp .env.example .env      # renseigner DATABASE_URL (Postgres local, Docker, ou Render/Neon/Supabase)
+npm run db:push           # crée les tables à partir du schéma
 npm run db:seed           # jeu de données de démo (voir identifiants ci-dessous)
 npm run dev
 ```
@@ -65,13 +64,17 @@ Compte de démo créé par le seed : `demo@taskinator.local` / `demo1234`.
 | `npm run db:push` | Synchronise le schéma sans migration (pratique en local) |
 | `npm run db:seed` | Jeu de données de démonstration |
 
-### Passer en production (Postgres)
+### Déploiement (testé sur Render)
 
-Changer uniquement `datasource db { provider = "postgresql" }` dans
-`prisma/schema.prisma` et `DATABASE_URL` dans `.env`, puis `npm run db:migrate`.
-Note : les champs "enum" (priorité, statut, périodicité...) sont stockés en `String`
-pour rester compatibles SQLite ; les valeurs valides sont documentées dans
-`src/lib/types.ts`.
+- Un service web Node (`npm install && npx prisma generate && npx prisma db push && npm run build`
+  comme build command, `npm start` comme start command)
+- Une base Postgres (gratuite pour tester), reliée via `DATABASE_URL`
+- Variables d'env : `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` (l'URL publique du
+  service)
+
+Note : les champs "enum" (priorité, statut, périodicité...) sont stockés en `String` dans
+le schéma (choix fait pour rester compatible SQLite en local si besoin) ; les valeurs
+valides sont documentées dans `src/lib/types.ts`.
 
 ## Roadmap
 
