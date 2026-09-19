@@ -17,11 +17,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
+  const { data: profile } = await supabase.from('profiles').select('theme_gradient').eq('id', user.id).maybeSingle();
+  const gradientColors = profile?.theme_gradient?.length ? profile.theme_gradient : ['#14b8a6', '#6366f1'];
+  const userGradient = `linear-gradient(135deg, ${gradientColors.join(', ')})`;
+
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="flex min-h-screen flex-col md:flex-row" style={{ ['--user-gradient' as string]: userGradient }}>
       <aside className="card m-3 flex shrink-0 flex-col gap-4 p-4 md:w-64">
         <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold">
-          <span>🧺</span> Taskinator
+          <span className="gradient-surface flex h-8 w-8 items-center justify-center rounded-xl text-base">🧺</span> Taskinator
         </Link>
 
         <nav className="flex flex-col gap-1">
@@ -56,6 +60,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="mt-auto flex flex-col gap-2 border-t border-[var(--border)] pt-3">
+          <Link href="/settings" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+            🎨 Personnaliser
+          </Link>
           {isAdmin && (
             <Link href="/admin/moderation" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
               🛡️ Modération marketplace

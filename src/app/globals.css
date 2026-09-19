@@ -10,6 +10,9 @@
   --text: #1c1f2b;
   --text-muted: #6b7086;
   --container-color: #14b8a6;
+  /* Dégradé personnel (paramétrable dans Réglages) ; valeur par défaut si non défini. */
+  --user-gradient: linear-gradient(135deg, #14b8a6, #6366f1);
+  --user-gradient-filter: none;
 }
 
 .dark {
@@ -19,6 +22,13 @@
   --border: #2d3043;
   --text: #eef0fb;
   --text-muted: #9498b0;
+  /* Assombrit légèrement le dégradé choisi plutôt que de demander un 2ᵉ jeu de couleurs. */
+  --user-gradient-filter: brightness(0.78) saturate(1.08);
+}
+
+.gradient-surface {
+  background: var(--user-gradient);
+  filter: var(--user-gradient-filter);
 }
 
 * {
@@ -58,11 +68,12 @@ body {
   transform: scale(0.98);
 }
 .btn-primary {
-  background: var(--container-color);
+  background: var(--user-gradient);
+  filter: var(--user-gradient-filter);
   color: white;
 }
 .btn-primary:hover {
-  filter: brightness(0.93);
+  filter: var(--user-gradient-filter) brightness(0.93);
 }
 .btn-ghost {
   background: transparent;

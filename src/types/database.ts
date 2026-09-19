@@ -10,9 +10,23 @@ export interface Database {
   public: {
     Tables: {
       profiles: {
-        Row: { id: string; email: string; display_name: string | null; avatar_color: string; created_at: string };
-        Insert: { id: string; email: string; display_name?: string | null; avatar_color?: string; created_at?: string };
-        Update: Partial<{ display_name: string | null; avatar_color: string }>;
+        Row: {
+          id: string;
+          email: string;
+          display_name: string | null;
+          avatar_color: string;
+          theme_gradient: string[];
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          display_name?: string | null;
+          avatar_color?: string;
+          theme_gradient?: string[];
+          created_at?: string;
+        };
+        Update: Partial<{ display_name: string | null; avatar_color: string; theme_gradient: string[] }>;
       };
       households: {
         Row: { id: string; name: string; created_at: string };
