@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 
-export default async function HomePage() {
-  const session = await getServerSession(authOptions);
-  redirect(session ? '/dashboard' : '/login');
+export default async function RootPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  redirect(user ? '/dashboard' : '/login');
 }

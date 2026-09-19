@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class',
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
@@ -17,6 +18,15 @@ const config: Config = {
           800: '#115e59',
           900: '#134e4a',
         },
+        fresh: {
+          high: '#22c55e',
+          mid: '#f59e0b',
+          low: '#ef4444',
+        },
+        container: 'var(--container-color, #14b8a6)',
+      },
+      borderRadius: {
+        xl2: '1.25rem',
       },
     },
   },

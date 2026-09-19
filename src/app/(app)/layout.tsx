@@ -1,35 +1,75 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { getCurrentHousehold, getUserHouseholds } from '@/lib/current-household';
-import { ensurePersonalHousehold } from '@/lib/ensure-personal-household';
-import { NavBar } from '@/components/NavBar';
+import { createClient } from '@/lib/supabase/server';
+import { getHouseholdsWithContainers } from '@/lib/data/nav';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { SignOutButton } from '@/components/SignOutButton';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    redirect('/login');
-  }
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  const household = await getCurrentHousehold(session.user.id);
-  if (!household) {
-    redirect('/register');
-  }
+  const households = await getHouseholdsWithContainers(supabase);
+  if (households.length === 0) redirect('/onboarding');
 
-  let households = await getUserHouseholds(session.user.id);
-  // Comptes créés avant l'introduction du conteneur perso : on le crée à la volée.
-  if (!households.some((h) => h.household.isPersonal)) {
-    await ensurePersonalHousehold(session.user.id, session.user.name ?? 'Moi');
-    households = await getUserHouseholds(session.user.id);
-  }
+  const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   return (
-    <div className="min-h-screen pb-16 md:pb-0">
-      <NavBar
-        activeHousehold={{ id: household.id, name: household.name }}
-        households={households.map((h) => ({ id: h.household.id, name: h.household.name }))}
-      />
-      <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+    <div className="flex min-h-screen flex-col md:flex-row">
+      <aside className="card m-3 flex shrink-0 flex-col gap-4 p-4 md:w-64">
+        <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold">
+          <span>🧺</span> Taskinator
+        </Link>
+
+        <nav className="flex flex-col gap-1">
+          <Link href="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+            📊 Tableau de bord
+          </Link>
+        </nav>
+
+        <div className="flex flex-col gap-4 overflow-y-auto">
+          {households.map((h) => (
+            <div key={h.id}>
+              <p className="px-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{h.name}</p>
+              <div className="mt-1 flex flex-col gap-1">
+                {h.containers.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/c/${c.id}`}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]"
+                  >
+                    <span
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]"
+                      style={{ background: c.color + '33' }}
+                    >
+                      {c.icon}
+                    </span>
+                    {c.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-auto flex flex-col gap-2 border-t border-[var(--border)] pt-3">
+          {isAdmin && (
+            <Link href="/admin/moderation" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+              🛡️ Modération marketplace
+            </Link>
+          )}
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-xs text-[var(--text-muted)]">{user.email}</span>
+            <ThemeToggle />
+          </div>
+          <SignOutButton />
+        </div>
+      </aside>
+
+      <main className="min-w-0 flex-1 p-3 md:p-6">{children}</main>
     </div>
   );
 }

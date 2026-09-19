@@ -1,111 +1,118 @@
 # Taskinator
 
-Application de gestion de tâches partagées en équipe (foyer) : ménage récurrent par zone
-(façon Sweepy), courses, valises, et rétroplanning d'évènements à partir de templates
-personnalisables.
+Application de gestion de tâches et de ménage, multi-foyer dès le départ : des **conteneurs**
+(Perso, Pro, Maison principale, Maison secondaire…) avec rôles admin/membre/invité, des
+tâches récurrentes avec sous-tâches et indicateur de propreté dégressif (façon Tody/Sweepy),
+des templates de pièce et d'événement (rétroplanning) partageables via une marketplace
+modérée, et une interface web claire/sombre avec thème de couleur par conteneur.
+
+Ce dépôt est une reconstruction complète (v2) à partir d'un cahier des charges détaillé,
+en remplacement d'une première version plus sommaire (Prisma/NextAuth).
 
 ## Stack technique
 
-- **Next.js 16** (App Router, Server Actions) + TypeScript
-- **Prisma** + **PostgreSQL** (une base gratuite Render/Neon/Supabase suffit pour tester)
-- **NextAuth** (Credentials) pour l'authentification
-- **Tailwind CSS** pour l'interface
-- Manifest PWA (installable sur mobile, en attendant une vraie application native)
+- **Next.js 16** (App Router, Server Actions) + TypeScript + Tailwind CSS
+- **Supabase** : Postgres managé, auth, Row Level Security (isolation multi-tenant),
+  Realtime (à activer en Phase suivante pour la synchro temps réel), Storage (photos de
+  complétion des tâches)
+- Déploiement gratuit visé : Vercel/Netlify/Cloudflare Pages (web) + Supabase (offre gratuite)
 
-## Concepts principaux
-
-- **Foyer (Household)** : l'équipe qui partage ses listes. On le crée ou on le rejoint avec
-  un code d'invitation.
-- **Profils** : les membres du foyer, y compris les enfants qui n'ont pas de compte de
-  connexion. Utilisés pour assigner des tâches et personnaliser les templates (ex : une
-  valise par enfant).
-- **Zones** : les pièces/zones de la maison (Cuisine, Salle de bain...), rattachées aux
-  tâches de ménage.
-- **Catégories** : Ménage, Courses, Valises, Évènements, Administratif, Autre.
-- **Tâches** : titre, catégorie, zone, assigné, priorité, échéance, et une **périodicité**
-  (ponctuelle, quotidienne, hebdomadaire avec jours précis, mensuelle, intervalle
-  personnalisé) — à la manière de Sweepy. Une tâche récurrente terminée recalcule
-  automatiquement sa prochaine échéance.
-- **Pause des rappels** : au niveau d'une tâche (ex : travaux, absence ponctuelle) ou de
-  tout le foyer (vacances) — dans les deux cas avec une date de fin et une raison
-  optionnelle.
-- **Templates** : listes types réutilisables et personnalisables.
-  - Type *Liste simple* (ex : valise de vacances) : chaque élément peut être marqué
-    « par personne » pour générer une tâche par membre sélectionné.
-  - Type *Rétroplanning* (ex : recevoir des invités, courses pour un repas) : chaque
-    élément a un décalage en jours (`offsetDays`) par rapport à une date d'évènement.
-    En instanciant le template sur une date donnée, toutes les tâches sont générées avec
-    leur échéance calculée automatiquement (J-14, J-7, J-1, jour J...).
-- **Évènements** : l'occasion concrète (nom + date) sur laquelle un template est appliqué ;
-  regroupe les tâches générées.
-- **Calendrier** : chaque foyer a un flux ICS (`/api/calendar/{householdId}/{token}.ics`)
-  abonnable depuis Google Calendar, Apple Calendar ou Outlook, et chaque tâche datée a un
-  lien direct « Ajouter à Google Calendar ».
+Aucune dépendance payante n'est requise pour développer et utiliser l'application telle
+qu'elle est aujourd'hui.
 
 ## Démarrer en local
 
-```bash
-npm install
-cp .env.example .env      # renseigner DATABASE_URL (Postgres local, Docker, ou Render/Neon/Supabase)
-npm run db:push           # crée les tables à partir du schéma
-npm run db:seed           # jeu de données de démo (voir identifiants ci-dessous)
-npm run dev
-```
+1. Créer un projet gratuit sur [supabase.com](https://supabase.com).
+2. Dans **SQL Editor**, exécuter le contenu de `supabase/migrations/0001_init.sql`
+   (schéma complet : tables, RLS, triggers, fonctions RPC, bucket de stockage).
+3. Copier `.env.example` en `.env.local` et renseigner :
+   - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Project Settings → API)
+   - `SUPABASE_SERVICE_ROLE_KEY` (uniquement pour le script de seed, jamais exposée au client)
+   - `NEXT_PUBLIC_ADMIN_EMAIL` (l'administratrice principale de la marketplace)
+4. Installer les dépendances et importer la bibliothèque de templates système (28 pièces,
+   232 tâches types — cuisine, salle de bain, jardin, véhicule…) :
 
-Compte de démo créé par le seed : `demo@taskinator.local` / `demo1234`.
+   ```bash
+   npm install
+   npm run db:seed-templates
+   npm run dev
+   ```
 
-### Scripts utiles
+5. Ouvrir `http://localhost:3000`, créer un compte (Supabase Auth envoie un e-mail de
+   confirmation), puis suivre l'onboarding pour créer votre premier foyer et conteneur.
+
+## Modèle de données (`supabase/migrations/0001_init.sql`)
+
+- **Foyer (`households`)** : unité d'isolation la plus haute (RLS stricte, aucune fuite
+  entre foyers).
+- **Conteneur (`containers`)** : espace de tâches cloisonné avec ses propres membres et
+  rôles (`container_members.role` : `admin` / `member` / `guest`), sa couleur de thème,
+  sa pause globale (vacances).
+- **Pièces (`rooms`)** : listes par zone de la maison, avec durée de validité (`freshness_days`)
+  et pause propre.
+- **Tâches (`tasks`)** : récurrence, priorité, échéance et time-blocking optionnel
+  (`start_at`/`duration_minutes`/`on_calendar`), sous-tâches sur 2 niveaux
+  (`parent_task_id`), saisonnalité, pause, historique de complétion avec photo/commentaire
+  (`task_completions`, stockage Supabase Storage bucket `task-photos`).
+- **Templates (`room_templates`/`event_templates` + `*_items`)** : personnels, partagés
+  dans un conteneur, ou publiés dans la **marketplace** publique après **modération
+  manuelle** (le champ `moderation_status` passe à `pending` à la publication ; seule
+  l'administratrice — `NEXT_PUBLIC_ADMIN_EMAIL` — peut approuver/refuser, page
+  `/admin/moderation`).
+- **Droits** : appliqués par Row Level Security au niveau ligne (pas seulement côté
+  interface). Un trigger dédié (`enforce_task_update_rules`) restreint les invité·e·s à ne
+  modifier que le statut des tâches qui leur sont assignées — la table `container_members`
+  isole déjà chaque conteneur, ce qui permettra d'affiner ces droits par tâche/liste plus
+  tard sans refonte du schéma.
+
+## Ce qui est implémenté (Phases 0, 1, et une bonne partie de la Phase 2)
+
+- Authentification (Supabase Auth), onboarding foyer + conteneur
+- Conteneurs multiples, rôles, invitations par lien (avec expiration)
+- Pièces avec indicateur de propreté dégressif (vert → orange → rouge), pause et
+  saisonnalité gelant l'indicateur
+- Tâches : récurrence (quotidienne/hebdo/mensuelle/personnalisée), priorité, assignation
+  multiple, sous-tâches (2 niveaux), pause, complétion avec commentaire + photo
+- Templates de pièce : bibliothèque système pré-remplie, templates personnels/partagés,
+  duplication, application en un clic, publication + modération marketplace
+- Templates d'événement avec rétroplanning (décalage en jours J-30/J-7/J+1…), génération
+  automatique des tâches datées
+- Tableau de bord multi-conteneurs, mode sombre natif, thème de couleur par conteneur,
+  design responsive (mobile + web)
+
+## Ce qui n'est **pas** implémenté (hors de portée d'une session de code)
+
+Le cahier des charges vise une application native Android et un serveur calendrier
+auto-hébergé — deux chantiers distincts qui demandent des outils que cet environnement de
+développement n'a pas (SDK Android, accès à votre NAS/Raspberry Pi) :
+
+- **Application Android native** (Kotlin + Jetpack Compose) et widgets Glance — l'appli web
+  actuelle est responsive et installable en PWA en attendant, mais ce n'est pas un
+  remplacement du natif prévu en Phase 4 de la roadmap.
+- **Calendrier CalDAV bidirectionnel** (serveur Radicale auto-hébergé + synchronisation) —
+  le modèle de données prévoit déjà la bascule tâche/événement (`on_calendar`, `start_at`,
+  `duration_minutes`) pour ne pas avoir à le refondre quand ce chantier sera lancé.
+- **Notifications push** (Firebase Cloud Messaging) et **rappels**.
+- **E-mail de modération automatique** à la publication d'un template — nécessite une clé
+  API d'un service mail (Resend, Postmark…) non configurée ici ; en attendant, consultez
+  `/admin/moderation` régulièrement.
+- **Synchronisation temps réel** entre membres (les canaux Realtime de Supabase sont prêts
+  côté base, mais pas encore branchés côté client — actuellement il faut rafraîchir la page).
+- **Droits fins par tâche/liste** au-delà du rôle par conteneur (prévu non prioritaire en v1
+  par le cahier des charges lui-même).
+
+## Scripts utiles
 
 | Commande | Description |
 | --- | --- |
 | `npm run dev` | Serveur de développement |
-| `npm run build` | Build de production (génère le client Prisma + build Next.js) |
-| `npm run db:migrate` | Migration Prisma (dev) |
-| `npm run db:push` | Synchronise le schéma sans migration (pratique en local) |
-| `npm run db:seed` | Jeu de données de démonstration |
+| `npm run build` | Build de production |
+| `npm run typecheck` | Vérification TypeScript seule |
+| `npm run db:seed-templates` | (Ré)importe la bibliothèque de templates système |
 
-### Déploiement (testé sur Render)
+## Déploiement
 
-- Un service web Node (`npm install && npx prisma generate && npx prisma db push && npm run build`
-  comme build command, `npm start` comme start command)
-- Une base Postgres (gratuite pour tester), reliée via `DATABASE_URL`
-- Variables d'env : `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` (l'URL publique du
-  service)
-
-Note : les champs "enum" (priorité, statut, périodicité...) sont stockés en `String` dans
-le schéma (choix fait pour rester compatible SQLite en local si besoin) ; les valeurs
-valides sont documentées dans `src/lib/types.ts`.
-
-## Roadmap
-
-Ce dépôt couvre la version web (utilisable dès maintenant, avec un manifest PWA pour
-l'installer sur l'écran d'accueil d'un téléphone). Les prochaines étapes vers l'usage
-cible décrit par l'utilisateur :
-
-1. **Application mobile native avec widgets**
-   - Un client React Native / Expo (ou Kotlin/Swift natifs) consommant les mêmes routes
-     API que le web (à extraire proprement en API REST/JSON dédiée si besoin, au-delà des
-     Server Actions actuelles qui sont spécifiques à Next.js).
-   - Widgets iOS (WidgetKit) / Android (App Widgets) affichant les tâches du jour et
-     permettant de cocher une tâche sans ouvrir l'application.
-   - Notifications push natives pour les rappels (au lieu du flux ICS uniquement).
-
-2. **Synchronisation Google Calendar bidirectionnelle**
-   - Le flux ICS actuel est un abonnement en lecture (Google/Apple/Outlook peuvent
-     l'ajouter). Pour une vraie intégration bidirectionnelle (créer/modifier un évènement
-     Google Calendar qui remonte dans Taskinator), il faut implémenter OAuth Google
-     (Google Calendar API), stocker les tokens par utilisateur, et gérer la synchronisation
-     dans les deux sens.
-
-3. **Notifications & rappels proactifs**
-   - Aujourd'hui, la pause des rappels est gérée mais l'envoi actif de rappels (email/push)
-     n'est pas implémenté : à ajouter via une tâche planifiée (cron) qui regarde les tâches
-     à échéance proche et non « pausées ».
-
-4. **Historique & statistiques**
-   - Le modèle `TaskCompletion` trace déjà qui a fait quoi et quand ; une page de
-     statistiques par membre/zone/catégorie serait une suite naturelle.
-
-5. **Templates partagés/système**
-   - Le modèle prévoit des templates globaux (`householdId` nul, `isSystem`) pour proposer
-     une bibliothèque de templates prêts à l'emploi au-delà de ceux créés par chaque foyer.
+- **Web** : Vercel/Netlify/Cloudflare Pages, variables d'env identiques à `.env.local`
+  (sans `SUPABASE_SERVICE_ROLE_KEY`, réservée au seed local).
+- **Base** : le projet Supabase créé plus haut ; au-delà des paliers gratuits, coût
+  symbolique seulement en cas de forte croissance d'usage.
