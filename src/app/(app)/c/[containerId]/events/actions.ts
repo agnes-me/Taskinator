@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { Priority, RecurrenceType, TemplateVisibility } from '@/types/database';
@@ -22,24 +23,23 @@ export async function createEventTemplate(
   if (!user) return { error: 'Non authentifié.' };
   if (!data.name.trim()) return { error: 'Le nom est requis.' };
 
-  const { data: tpl, error } = await supabase
-    .from('event_templates')
-    .insert({
-      name: data.name.trim(),
-      icon: data.icon,
-      visibility: data.visibility,
-      owner_container_id: data.visibility === 'container' ? containerId : null,
-      created_by: user.id,
-    })
-    .select('id')
-    .single();
+  const templateId = randomUUID();
+  const { error } = await supabase.from('event_templates').insert({
+    id: templateId,
+    name: data.name.trim(),
+    icon: data.icon,
+    visibility: data.visibility,
+    owner_container_id: data.visibility === 'container' ? containerId : null,
+    created_by: user.id,
+  });
 
-  if (error || !tpl) return { error: 'Impossible de créer le template.' };
+  if (error) return { error: 'Impossible de créer le template.' };
 
   if (data.items.length) {
-    await supabase.from('event_template_items').insert(
-      data.items.map((item, i) => ({ ...item, event_template_id: tpl.id, sort_order: i })),
+    const { error: itemsError } = await supabase.from('event_template_items').insert(
+      data.items.map((item, i) => ({ ...item, event_template_id: templateId, sort_order: i })),
     );
+    if (itemsError) return { error: "Le template a été créé mais l'ajout des étapes a échoué." };
   }
 
   revalidatePath(`/c/${containerId}/events`);

@@ -1,8 +1,15 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { Priority, RecurrenceType, TemplateVisibility } from '@/types/database';
+
+// Les policies de sécurité (RLS) de room_templates se référencent elles-mêmes pour la
+// visibilité (personnel/conteneur/public) : PostgreSQL exige alors que la ligne insérée soit
+// déjà visible au moment même de l'insertion pour pouvoir la renvoyer (`.select().single()`),
+// ce qu'un `INSERT ... RETURNING` ne garantit pas toujours pour ce genre de policy
+// auto-référentielle. On contourne en générant l'UUID côté client : plus besoin de RETURNING.
 
 export interface TemplateItemInput {
   title: string;
@@ -23,28 +30,47 @@ export async function createRoomTemplate(
   if (!user) return { error: 'Non authentifié.' };
   if (!data.name.trim()) return { error: 'Le nom est requis.' };
 
-  const { data: tpl, error } = await supabase
-    .from('room_templates')
-    .insert({
-      name: data.name.trim(),
-      icon: data.icon,
-      visibility: data.visibility,
-      owner_container_id: data.visibility === 'container' ? containerId : null,
-      created_by: user.id,
-    })
-    .select('id')
-    .single();
+  const templateId = randomUUID();
+  const { error } = await supabase.from('room_templates').insert({
+    id: templateId,
+    name: data.name.trim(),
+    icon: data.icon,
+    visibility: data.visibility,
+    owner_container_id: data.visibility === 'container' ? containerId : null,
+    created_by: user.id,
+  });
 
-  if (error || !tpl) return { error: 'Impossible de créer le template.' };
+  if (error) return { error: 'Impossible de créer le template.' };
 
   if (data.items.length) {
-    await supabase.from('room_template_items').insert(
-      data.items.map((item, i) => ({ ...item, template_id: tpl.id, sort_order: i })),
+    const { error: itemsError } = await supabase.from('room_template_items').insert(
+      data.items.map((item, i) => ({ ...item, template_id: templateId, sort_order: i })),
     );
+    if (itemsError) return { error: "Le template a été créé mais l'ajout des tâches a échoué." };
   }
 
   revalidatePath(`/c/${containerId}/templates`);
   return {};
+}
+
+export async function createRoomFromTemplate(containerId: string, templateId: string, roomName: string, roomIcon: string) {
+  const supabase = await createClient();
+  if (!roomName.trim()) return { error: 'Le nom de la pièce est requis.' };
+
+  const { data: room, error: roomError } = await supabase
+    .from('rooms')
+    .insert({ container_id: containerId, name: roomName.trim(), icon: roomIcon })
+    .select('id')
+    .single();
+
+  if (roomError || !room) return { error: 'Impossible de créer la pièce.' };
+
+  const { error: applyError } = await supabase.rpc('apply_room_template', { p_template_id: templateId, p_room_id: room.id });
+  if (applyError) return { error: "La pièce a été créée mais l'application du template a échoué." };
+
+  revalidatePath(`/c/${containerId}`);
+  revalidatePath(`/c/${containerId}/tasks`);
+  return { roomId: room.id };
 }
 
 export async function deleteRoomTemplate(containerId: string, templateId: string) {
@@ -68,15 +94,14 @@ export async function duplicateRoomTemplate(containerId: string, templateId: str
 
   if (!source) return { error: 'Template introuvable.' };
 
-  const { data: copy, error } = await supabase
+  const copyId = randomUUID();
+  const { error } = await supabase
     .from('room_templates')
-    .insert({ name: `${source.name} (copie)`, icon: source.icon, visibility: 'personal', created_by: user.id })
-    .select('id')
-    .single();
-  if (error || !copy) return { error: 'Impossible de dupliquer.' };
+    .insert({ id: copyId, name: `${source.name} (copie)`, icon: source.icon, visibility: 'personal', created_by: user.id });
+  if (error) return { error: 'Impossible de dupliquer.' };
 
   if (items?.length) {
-    await supabase.from('room_template_items').insert(items.map((item) => ({ ...item, template_id: copy.id })));
+    await supabase.from('room_template_items').insert(items.map((item) => ({ ...item, template_id: copyId })));
   }
 
   revalidatePath(`/c/${containerId}/templates`);

@@ -5,6 +5,7 @@ import type { TemplateSummary } from '@/lib/data/templates';
 import type { Priority, RecurrenceType } from '@/types/database';
 import {
   createRoomTemplate,
+  createRoomFromTemplate,
   deleteRoomTemplate,
   duplicateRoomTemplate,
   publishRoomTemplate,
@@ -32,10 +33,22 @@ function TemplateCard({
   canManage: boolean;
   currentUserId: string;
 }) {
+  const [mode, setMode] = useState<'existing' | 'new'>(rooms.length > 0 ? 'existing' : 'new');
   const [roomId, setRoomId] = useState(rooms[0]?.id ?? '');
+  const [newRoomName, setNewRoomName] = useState(tpl.name);
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const isOwner = tpl.created_by === currentUserId;
+
+  function apply() {
+    startTransition(async () => {
+      const res =
+        mode === 'existing'
+          ? await applyRoomTemplateToRoom(containerId, tpl.id, roomId)
+          : await createRoomFromTemplate(containerId, tpl.id, newRoomName, tpl.icon);
+      setMsg(res?.error ?? 'Appliqué !');
+    });
+  }
 
   return (
     <div className="card flex flex-col gap-2 p-4">
@@ -49,27 +62,43 @@ function TemplateCard({
       </div>
       <p className="text-xs text-[var(--text-muted)]">{tpl.itemCount} tâche(s)</p>
 
-      {rooms.length > 0 && canManage && (
-        <div className="flex items-center gap-2">
-          <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="input !py-1 text-sm">
-            {rooms.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-          <button
-            disabled={pending || !roomId}
-            className="btn btn-primary !py-1 text-sm"
-            onClick={() =>
-              startTransition(async () => {
-                const res = await applyRoomTemplateToRoom(containerId, tpl.id, roomId);
-                setMsg(res?.error ?? 'Appliqué !');
-              })
-            }
-          >
-            Appliquer
-          </button>
+      {canManage && (
+        <div className="flex flex-col gap-2">
+          {rooms.length > 0 && (
+            <div className="flex gap-3 text-xs text-[var(--text-muted)]">
+              <label className="flex items-center gap-1">
+                <input type="radio" checked={mode === 'existing'} onChange={() => setMode('existing')} /> Pièce existante
+              </label>
+              <label className="flex items-center gap-1">
+                <input type="radio" checked={mode === 'new'} onChange={() => setMode('new')} /> Nouvelle pièce
+              </label>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            {mode === 'existing' && rooms.length > 0 ? (
+              <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="input !py-1 text-sm">
+                {rooms.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                value={newRoomName}
+                onChange={(e) => setNewRoomName(e.target.value)}
+                placeholder="Nom de la nouvelle pièce"
+                className="input !py-1 flex-1 text-sm"
+              />
+            )}
+            <button
+              disabled={pending || (mode === 'existing' ? !roomId : !newRoomName.trim())}
+              className="btn btn-primary !py-1 text-sm"
+              onClick={apply}
+            >
+              Appliquer
+            </button>
+          </div>
         </div>
       )}
       {msg && <p className="text-xs text-[var(--text-muted)]">{msg}</p>}
@@ -155,6 +184,12 @@ function NewTemplateForm({ containerId, onDone }: { containerId: string; onDone:
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium">Tâches du template</span>
+        <div className="hidden flex-wrap gap-2 text-xs text-[var(--text-muted)] sm:flex">
+          <span className="flex-1">Titre</span>
+          <span className="w-[148px]">Récurrence</span>
+          <span className="w-[110px]">Priorité</span>
+          <span className="w-4" />
+        </div>
         {items.map((item, i) => (
           <div key={i} className="flex flex-wrap items-center gap-2">
             <input
@@ -164,9 +199,10 @@ function NewTemplateForm({ containerId, onDone }: { containerId: string; onDone:
               className="input flex-1 !py-1 text-sm"
             />
             <select
+              aria-label="Récurrence"
               value={item.recurrence_type}
               onChange={(e) => updateItem(i, { recurrence_type: e.target.value as RecurrenceType })}
-              className="input !py-1 text-sm"
+              className="input w-[148px] !py-1 text-sm"
             >
               <option value="none">Ponctuelle</option>
               <option value="daily">Quotidienne</option>
@@ -175,9 +211,10 @@ function NewTemplateForm({ containerId, onDone }: { containerId: string; onDone:
               <option value="custom_days">Tous les X jours</option>
             </select>
             <select
+              aria-label="Priorité"
               value={item.priority}
               onChange={(e) => updateItem(i, { priority: e.target.value as Priority })}
-              className="input !py-1 text-sm"
+              className="input w-[110px] !py-1 text-sm"
             >
               <option value="low">Basse</option>
               <option value="medium">Moyenne</option>

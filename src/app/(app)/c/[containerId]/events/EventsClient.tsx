@@ -93,6 +93,12 @@ function NewEventTemplateForm({ containerId, onDone }: { containerId: string; on
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium">Étapes (décalage en jours par rapport au jour J)</span>
+        <div className="hidden flex-wrap gap-2 text-xs text-[var(--text-muted)] sm:flex">
+          <span className="flex-1">Titre de l'étape</span>
+          <span className="w-24">Jour (J-30, J+1…)</span>
+          <span className="w-[110px]">Priorité</span>
+          <span className="w-4" />
+        </div>
         {items.map((item, i) => (
           <div key={i} className="flex flex-wrap items-center gap-2">
             <input
@@ -101,19 +107,20 @@ function NewEventTemplateForm({ containerId, onDone }: { containerId: string; on
               placeholder="Réserver le camion"
               className="input flex-1 !py-1 text-sm"
             />
-            <label className="flex items-center gap-1 text-xs">
+            <label className="flex items-center gap-1 text-xs" title="Décalage en jours par rapport à la date de l'événement (jour J)">
               J
               <input
                 type="number"
                 value={item.offset_days}
                 onChange={(e) => updateItem(i, { offset_days: Number(e.target.value) })}
-                className="input !py-1 w-20 text-sm"
+                className="input !py-1 w-16 text-sm"
               />
             </label>
             <select
+              aria-label="Priorité"
               value={item.priority}
               onChange={(e) => updateItem(i, { priority: e.target.value as Priority })}
-              className="input !py-1 text-sm"
+              className="input w-[110px] !py-1 text-sm"
             >
               <option value="low">Basse</option>
               <option value="medium">Moyenne</option>
