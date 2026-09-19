@@ -12,7 +12,8 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-bold">Réglages</h1>
+        <h1 className="text-gradient text-2xl font-extrabold">Réglages</h1>
+        <div className="gradient-bar mt-2 mb-1" />
         <p className="text-sm text-[var(--text-muted)]">Personnalisation propre à ton compte — visible uniquement par toi.</p>
       </div>
 

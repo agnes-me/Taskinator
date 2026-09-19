@@ -13,7 +13,8 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-xl font-bold">Tableau de bord</h1>
+        <h1 className="text-gradient text-2xl font-extrabold">Tableau de bord</h1>
+        <div className="gradient-bar mt-2 mb-1" />
         <p className="text-sm text-[var(--text-muted)]">Vue d'ensemble de vos foyers et conteneurs.</p>
       </div>
 

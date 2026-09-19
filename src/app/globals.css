@@ -31,6 +31,22 @@
   filter: var(--user-gradient-filter);
 }
 
+.text-gradient {
+  background: var(--user-gradient);
+  filter: var(--user-gradient-filter);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-bar {
+  height: 4px;
+  width: 3rem;
+  border-radius: 999px;
+  background: var(--user-gradient);
+  filter: var(--user-gradient-filter);
+}
+
 * {
   border-color: var(--border);
 }

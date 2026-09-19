@@ -23,56 +23,61 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row" style={{ ['--user-gradient' as string]: userGradient }}>
-      <aside className="card m-3 flex shrink-0 flex-col gap-4 p-4 md:w-64">
-        <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold">
-          <span className="gradient-surface flex h-8 w-8 items-center justify-center rounded-xl text-base">🧺</span> Taskinator
+      <aside className="card flex shrink-0 flex-col overflow-hidden p-0 md:m-3 md:w-64">
+        <Link
+          href="/dashboard"
+          className="gradient-surface flex items-center gap-2 px-4 py-5 text-lg font-bold text-white"
+        >
+          <span className="text-2xl">🧺</span> Taskinator
         </Link>
 
-        <nav className="flex flex-col gap-1">
-          <Link href="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
-            📊 Tableau de bord
-          </Link>
-        </nav>
-
-        <div className="flex flex-col gap-4 overflow-y-auto">
-          {households.map((h) => (
-            <div key={h.id}>
-              <p className="px-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{h.name}</p>
-              <div className="mt-1 flex flex-col gap-1">
-                {h.containers.map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/c/${c.id}`}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]"
-                  >
-                    <span
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]"
-                      style={{ background: c.color + '33' }}
-                    >
-                      {c.icon}
-                    </span>
-                    {c.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-auto flex flex-col gap-2 border-t border-[var(--border)] pt-3">
-          <Link href="/settings" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
-            🎨 Personnaliser
-          </Link>
-          {isAdmin && (
-            <Link href="/admin/moderation" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
-              🛡️ Modération marketplace
+        <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 pt-4">
+          <nav className="flex flex-col gap-1">
+            <Link href="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+              📊 Tableau de bord
             </Link>
-          )}
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-xs text-[var(--text-muted)]">{user.email}</span>
-            <ThemeToggle />
+          </nav>
+
+          <div className="flex flex-col gap-4 overflow-y-auto">
+            {households.map((h) => (
+              <div key={h.id}>
+                <p className="px-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{h.name}</p>
+                <div className="mt-1 flex flex-col gap-1">
+                  {h.containers.map((c) => (
+                    <Link
+                      key={c.id}
+                      href={`/c/${c.id}`}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]"
+                    >
+                      <span
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]"
+                        style={{ background: c.color + '33' }}
+                      >
+                        {c.icon}
+                      </span>
+                      {c.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-          <SignOutButton />
+
+          <div className="mt-auto flex flex-col gap-2 border-t border-[var(--border)] pt-3">
+            <Link href="/settings" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+              🎨 Personnaliser
+            </Link>
+            {isAdmin && (
+              <Link href="/admin/moderation" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+                🛡️ Modération marketplace
+              </Link>
+            )}
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate text-xs text-[var(--text-muted)]">{user.email}</span>
+              <ThemeToggle />
+            </div>
+            <SignOutButton />
+          </div>
         </div>
       </aside>
 
