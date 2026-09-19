@@ -1,166 +1,200 @@
-import { completeTask, deleteTask, pauseTask, resumeTask } from '@/app/(app)/tasks/actions';
-import { buildRecurrenceLabel } from '@/lib/recurrence';
-import { buildGoogleCalendarLink } from '@/lib/ics';
-import type { Priority, RecurrenceType } from '@/lib/types';
-import { TaskForm } from './TaskForm';
+'use client';
 
-type Option = { id: string; name?: string; displayName?: string; icon?: string };
+import { useState, useTransition } from 'react';
+import type { TaskRow as TaskRowType } from '@/lib/data/tasks';
+import { FreshnessBar } from '@/components/FreshnessBar';
+import { recurrenceLabel, PRIORITY_LABELS } from '@/lib/recurrence';
+import { formatDate } from '@/lib/utils';
+import { completeTask, reopenTask, deleteTask, pauseTask, resumeTask, createTask } from '@/app/(app)/c/[containerId]/tasks/actions';
+import { TaskForm, type ContainerMember } from './TaskForm';
 
-export type TaskRowData = {
-  id: string;
-  title: string;
-  description: string | null;
-  categoryId: string | null;
-  zoneId: string | null;
-  assigneeId: string | null;
-  dueDate: Date | null;
-  priority: string;
-  recurrenceType: string;
-  recurrenceInterval: number;
-  recurrenceWeekdays: string | null;
-  pausedUntil: Date | null;
-  pauseReason: string | null;
-  category: { name: string; icon: string; color: string } | null;
-  zone: { name: string; icon: string } | null;
-  assignee: { displayName: string; color: string } | null;
-};
+const PRIORITY_COLOR: Record<string, string> = { low: 'bg-slate-400/20 text-slate-500', medium: 'bg-amber-400/20 text-amber-600', high: 'bg-rose-400/20 text-rose-600' };
 
-const PRIORITY_LABELS: Record<Priority, string> = { LOW: 'Basse', MEDIUM: 'Moyenne', HIGH: 'Haute' };
-const PRIORITY_DOT: Record<Priority, string> = { LOW: 'bg-slate-300', MEDIUM: 'bg-amber-400', HIGH: 'bg-red-500' };
-
-/** Ligne de tâche épurée pour le tableau de bord : repliée par défaut, dépliable pour voir
- * le détail et la modifier sur place, sans changer de page. */
 export function TaskRow({
   task,
-  categories,
-  zones,
-  profiles,
-  isHouseholdPaused,
+  containerId,
+  members,
+  rooms,
+  currentUserId,
+  isGuest,
+  canEdit,
+  depth = 0,
 }: {
-  task: TaskRowData;
-  categories: Option[];
-  zones: Option[];
-  profiles: Option[];
-  isHouseholdPaused: boolean;
+  task: TaskRowType;
+  containerId: string;
+  members: ContainerMember[];
+  rooms: { id: string; name: string }[];
+  currentUserId: string;
+  isGuest: boolean;
+  canEdit: boolean;
+  depth?: number;
 }) {
-  const priority = task.priority as Priority;
-  const isTaskPaused = task.pausedUntil && task.pausedUntil > new Date();
-  const overdue = task.dueDate && task.dueDate < new Date() && !isTaskPaused && !isHouseholdPaused;
+  const [completing, setCompleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [addingSub, setAddingSub] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  const isAssignee = task.assignees.some((a) => a.user_id === currentUserId);
+  const canComplete = canEdit || (isGuest && isAssignee);
+  const isPaused = task.paused_until && new Date(task.paused_until) > new Date();
+
+  if (editing) {
+    return (
+      <div className="card p-4" style={{ marginLeft: depth * 20 }}>
+        <TaskForm
+          containerId={containerId}
+          members={members}
+          rooms={rooms}
+          task={task}
+          fixedRoomId={undefined}
+          onDone={() => setEditing(false)}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="card flex items-start gap-2 !py-2.5">
-      <form action={completeTask.bind(null, task.id)} className="pt-0.5">
-        <button
-          type="submit"
-          aria-label="Marquer comme fait"
-          className="h-5 w-5 shrink-0 rounded-full border-2 border-slate-300 transition hover:border-brand-500 hover:bg-brand-50 dark:border-slate-600 dark:hover:bg-brand-900/30"
-        />
-      </form>
-
-      <details className="min-w-0 flex-1">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
-          <span className="flex min-w-0 items-center gap-2">
-            <span className={`h-2 w-2 shrink-0 rounded-full ${PRIORITY_DOT[priority]}`} title={PRIORITY_LABELS[priority]} />
-            <span className="truncate text-sm font-medium">{task.title}</span>
-          </span>
-          <span className="flex shrink-0 items-center gap-1.5 text-xs text-slate-400">
-            {(isTaskPaused || isHouseholdPaused) && <span title="Rappels en pause">⏸️</span>}
-            {task.dueDate && (
-              <span className={overdue ? 'font-medium text-red-600 dark:text-red-400' : ''}>
-                {task.dueDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-              </span>
-            )}
-            <span className="text-slate-300 dark:text-slate-600">▾</span>
-          </span>
-        </summary>
-
-        <div className="mt-2 space-y-2 border-t border-slate-100 pt-2 dark:border-slate-800">
-          {task.description && <p className="text-sm text-slate-500">{task.description}</p>}
-
-          <div className="flex flex-wrap gap-1.5 text-xs">
-            {task.category && (
-              <span
-                className="rounded-full px-2 py-0.5"
-                style={{ backgroundColor: `${task.category.color}22`, color: task.category.color }}
-              >
-                {task.category.icon} {task.category.name}
-              </span>
-            )}
-            {task.zone && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                {task.zone.icon} {task.zone.name}
-              </span>
-            )}
-            {task.assignee && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                👤 {task.assignee.displayName}
-              </span>
-            )}
-            {task.recurrenceType !== 'NONE' && (
-              <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
-                🔁 {buildRecurrenceLabel(task.recurrenceType as RecurrenceType, task.recurrenceInterval, task.recurrenceWeekdays)}
-              </span>
-            )}
+    <div className="card flex flex-col gap-2 p-3" style={{ marginLeft: depth * 20 }}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              disabled={!canComplete || pending || task.status === 'done'}
+              onClick={() => setCompleting((s) => !s)}
+              className="btn btn-ghost !px-2 !py-1 text-xs disabled:opacity-40"
+              title={task.status === 'done' ? 'Déjà faite' : 'Marquer comme faite'}
+            >
+              {task.status === 'done' ? '✅' : '⬜️'}
+            </button>
+            <span className={task.status === 'done' ? 'font-medium line-through opacity-60' : 'font-medium'}>{task.title}</span>
+            <span className={`chip ${PRIORITY_COLOR[task.priority]}`}>{PRIORITY_LABELS[task.priority]}</span>
+            {isPaused && <span className="chip bg-fresh-mid/20 text-fresh-mid">⏸ pause</span>}
+            {task.on_calendar && <span className="chip bg-brand-500/10 text-brand-600">📅</span>}
           </div>
-
-          {(isTaskPaused || isHouseholdPaused) && (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              ⏸️ Rappels en pause
-              {task.pausedUntil ? ` jusqu'au ${task.pausedUntil.toLocaleDateString('fr-FR')}` : ''}
-              {task.pauseReason ? ` — ${task.pauseReason}` : ''}
-            </p>
+          {task.description && <p className="mt-1 text-sm text-[var(--text-muted)]">{task.description}</p>}
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
+            <span>{recurrenceLabel(task.recurrence_type, task.recurrence_interval, task.recurrence_weekdays)}</span>
+            {task.due_date && <span>· Échéance {formatDate(task.due_date)}</span>}
+            {task.room && <span>· {task.room.icon} {task.room.name}</span>}
+            {task.assignees.length > 0 && <span>· 👤 {task.assignees.map((a) => a.display_name || a.email).join(', ')}</span>}
+          </div>
+          {task.freshness && (
+            <div className="mt-2 max-w-xs">
+              <FreshnessBar freshness={task.freshness} compact />
+            </div>
           )}
-
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            {task.dueDate && (
-              <a
-                className="btn-secondary text-xs"
-                href={buildGoogleCalendarLink({ title: task.title, description: task.description, dueDate: task.dueDate })}
-                target="_blank"
-                rel="noreferrer"
-              >
-                + Google Cal.
-              </a>
-            )}
-
-            {isTaskPaused ? (
-              <form action={resumeTask.bind(null, task.id)}>
-                <button className="btn-secondary text-xs">Reprendre</button>
-              </form>
-            ) : (
-              <details className="relative">
-                <summary className="btn-secondary inline-block cursor-pointer text-xs">Pause</summary>
-                <form
-                  action={pauseTask}
-                  className="absolute z-10 mt-2 w-56 space-y-2 rounded-xl border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900"
-                >
-                  <input type="hidden" name="taskId" value={task.id} />
-                  <div>
-                    <label className="label">Jusqu&apos;au</label>
-                    <input className="input" type="date" name="until" required />
-                  </div>
-                  <div>
-                    <label className="label">Raison</label>
-                    <input className="input" name="reason" placeholder="Vacances..." />
-                  </div>
-                  <button className="btn-primary w-full text-sm">Mettre en pause</button>
-                </form>
-              </details>
-            )}
-
-            <details className="w-full">
-              <summary className="btn-secondary inline-block cursor-pointer text-xs">✏️ Modifier</summary>
-              <div className="mt-2">
-                <TaskForm categories={categories} zones={zones} profiles={profiles} initialTask={task} />
-              </div>
-            </details>
-
-            <form action={deleteTask.bind(null, task.id)}>
-              <button className="text-xs text-red-600 hover:underline">Supprimer</button>
-            </form>
-          </div>
         </div>
-      </details>
+
+        <div className="flex shrink-0 items-center gap-1">
+          {canEdit && (
+            <>
+              <button className="btn btn-ghost !px-2 !py-1 text-xs" onClick={() => setEditing(true)}>
+                ✏️
+              </button>
+              <button
+                className="btn btn-ghost !px-2 !py-1 text-xs"
+                onClick={() => {
+                  if (isPaused) startTransition(() => resumeTask(task.id, containerId));
+                  else {
+                    const days = window.prompt('Mettre en pause pendant combien de jours ?', '14');
+                    if (!days) return;
+                    const until = new Date(Date.now() + Number(days) * 86_400_000).toISOString();
+                    startTransition(() => pauseTask(task.id, containerId, until, ''));
+                  }
+                }}
+              >
+                {isPaused ? '▶️' : '⏸'}
+              </button>
+              {task.status === 'done' && task.recurrence_type === 'none' && (
+                <button className="btn btn-ghost !px-2 !py-1 text-xs" onClick={() => startTransition(() => reopenTask(task.id, containerId))}>
+                  ↺
+                </button>
+              )}
+              <button
+                className="btn btn-ghost !px-2 !py-1 text-xs text-fresh-low"
+                onClick={() => {
+                  if (window.confirm('Supprimer cette tâche ?')) startTransition(() => deleteTask(task.id, containerId));
+                }}
+              >
+                🗑
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {completing && (
+        <form
+          className="flex flex-col gap-2 rounded-lg border border-[var(--border)] p-3"
+          action={(fd) =>
+            startTransition(async () => {
+              await completeTask(task.id, containerId, fd);
+              setCompleting(false);
+            })
+          }
+        >
+          <label className="text-xs font-medium">
+            Commentaire (optionnel)
+            <input name="comment" className="input mt-1 w-full" placeholder="Tout est fait !" />
+          </label>
+          <label className="text-xs font-medium">
+            Photo (optionnel)
+            <input name="photo" type="file" accept="image/*" className="input mt-1 w-full" />
+          </label>
+          <div className="flex gap-2">
+            <button type="submit" disabled={pending} className="btn btn-primary !py-1 text-sm">
+              Valider
+            </button>
+            <button type="button" className="btn btn-ghost !py-1 text-sm" onClick={() => setCompleting(false)}>
+              Annuler
+            </button>
+          </div>
+        </form>
+      )}
+
+      {depth === 0 && (
+        <div className="flex flex-col gap-2 pl-2">
+          {task.subtasks.map((sub) => (
+            <TaskRow
+              key={sub.id}
+              task={sub}
+              containerId={containerId}
+              members={members}
+              rooms={rooms}
+              currentUserId={currentUserId}
+              isGuest={isGuest}
+              canEdit={canEdit}
+              depth={1}
+            />
+          ))}
+          {canEdit && !addingSub && (
+            <button className="self-start text-xs text-[var(--text-muted)] hover:underline" onClick={() => setAddingSub(true)}>
+              + sous-tâche
+            </button>
+          )}
+          {canEdit && addingSub && (
+            <form
+              className="flex items-center gap-2"
+              action={(fd) =>
+                startTransition(async () => {
+                  fd.set('parentTaskId', task.id);
+                  await createTask(containerId, fd);
+                  setAddingSub(false);
+                })
+              }
+            >
+              <input name="title" required autoFocus placeholder="Titre de la sous-tâche" className="input flex-1 !py-1 text-sm" />
+              <button type="submit" className="btn btn-primary !py-1 text-sm">
+                Ajouter
+              </button>
+              <button type="button" className="btn btn-ghost !py-1 text-sm" onClick={() => setAddingSub(false)}>
+                ✕
+              </button>
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
 }
