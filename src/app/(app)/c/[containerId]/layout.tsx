@@ -17,8 +17,8 @@ export default async function ContainerLayout({
   const tabs = [
     { href: `/c/${containerId}`, label: '🧹 Pièces' },
     { href: `/c/${containerId}/tasks`, label: '✅ Tâches' },
+    { href: `/c/${containerId}/calendar`, label: '📅 Calendrier' },
     { href: `/c/${containerId}/events`, label: '🎉 Événements' },
-    { href: `/c/${containerId}/members`, label: '👥 Membres' },
   ];
 
   return (
@@ -38,6 +38,9 @@ export default async function ContainerLayout({
             )}
           </div>
         </div>
+        <Link href={`/c/${containerId}/members`} className="text-sm text-[var(--text-muted)] hover:underline">
+          👥 Membres
+        </Link>
       </header>
 
       <nav className="mb-6 flex gap-1 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1">

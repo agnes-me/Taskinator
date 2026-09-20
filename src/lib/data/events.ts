@@ -1,5 +1,5 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
-import type { Database } from '@/types/database';
+import type { TaskRow } from '@/lib/data/tasks';
 
 export interface EventSummary {
   id: string;
@@ -7,9 +7,10 @@ export interface EventSummary {
   event_date: string;
   taskCount: number;
   doneCount: number;
+  tasks: TaskRow[];
 }
 
-export async function listEvents(supabase: SupabaseServerClient, containerId: string): Promise<EventSummary[]> {
+export async function listEvents(supabase: SupabaseServerClient, containerId: string, tasks: TaskRow[]): Promise<EventSummary[]> {
   const { data: events } = await supabase
     .from('events')
     .select('id, name, event_date')
@@ -18,14 +19,8 @@ export async function listEvents(supabase: SupabaseServerClient, containerId: st
 
   if (!events || events.length === 0) return [];
 
-  const { data: tasks } = await supabase
-    .from('tasks')
-    .select('source_event_id, status')
-    .eq('container_id', containerId)
-    .in('source_event_id', events.map((e) => e.id));
-
   return events.map((e) => {
-    const related = (tasks ?? []).filter((t) => t.source_event_id === e.id);
-    return { ...e, taskCount: related.length, doneCount: related.filter((t) => t.status === 'done').length };
+    const related = tasks.filter((t) => t.event?.id === e.id);
+    return { ...e, taskCount: related.length, doneCount: related.filter((t) => t.status === 'done').length, tasks: related };
   });
 }

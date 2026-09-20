@@ -5,6 +5,8 @@ import type { TemplateSummary } from '@/lib/data/templates';
 import type { EventSummary } from '@/lib/data/events';
 import type { Priority, RecurrenceType } from '@/types/database';
 import { formatDate, todayISO } from '@/lib/utils';
+import { TaskRow } from '@/components/TaskRow';
+import type { ContainerMember } from '@/components/TaskForm';
 import {
   createEventTemplate,
   deleteEventTemplate,
@@ -273,17 +275,77 @@ function EventTemplateCard({
   );
 }
 
+function EventCard({
+  event,
+  containerId,
+  members,
+  rooms,
+  currentUserId,
+  isGuest,
+  canEdit,
+}: {
+  event: EventSummary;
+  containerId: string;
+  members: ContainerMember[];
+  rooms: { id: string; name: string }[];
+  currentUserId: string;
+  isGuest: boolean;
+  canEdit: boolean;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="card p-3 text-sm">
+      <button className="flex w-full items-center justify-between gap-2 text-left" onClick={() => setExpanded((e) => !e)}>
+        <span>
+          {expanded ? '▾' : '▸'} {event.name} — {formatDate(event.event_date)}
+        </span>
+        <span className="shrink-0 text-[var(--text-muted)]">
+          {event.doneCount}/{event.taskCount} tâches faites
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 flex flex-col gap-2 border-t border-[var(--border)] pt-3">
+          {event.tasks.length === 0 ? (
+            <p className="text-xs text-[var(--text-muted)]">Aucune tâche de rétroplanning pour cet événement.</p>
+          ) : (
+            event.tasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                containerId={containerId}
+                members={members}
+                rooms={rooms}
+                currentUserId={currentUserId}
+                isGuest={isGuest}
+                canEdit={canEdit}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function EventsClient({
   containerId,
   templates,
   events,
+  members,
+  rooms,
   canManage,
+  isGuest,
   currentUserId,
 }: {
   containerId: string;
   templates: TemplateSummary[];
   events: EventSummary[];
+  members: ContainerMember[];
+  rooms: { id: string; name: string }[];
   canManage: boolean;
+  isGuest: boolean;
   currentUserId: string;
 }) {
   const [showForm, setShowForm] = useState(false);
@@ -298,18 +360,20 @@ export function EventsClient({
         {events.length === 0 ? (
           <p className="card p-4 text-sm text-[var(--text-muted)]">Aucun événement pour l'instant.</p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             {events.map((e) => (
-              <li key={e.id} className="card flex items-center justify-between p-3 text-sm">
-                <span>
-                  {e.name} — {formatDate(e.event_date)}
-                </span>
-                <span className="text-[var(--text-muted)]">
-                  {e.doneCount}/{e.taskCount} tâches faites
-                </span>
-              </li>
+              <EventCard
+                key={e.id}
+                event={e}
+                containerId={containerId}
+                members={members}
+                rooms={rooms}
+                currentUserId={currentUserId}
+                isGuest={isGuest}
+                canEdit={canManage}
+              />
             ))}
-          </ul>
+          </div>
         )}
       </div>
 

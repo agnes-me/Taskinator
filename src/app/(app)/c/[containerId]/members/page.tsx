@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
 import { MembersClient } from './MembersClient';
@@ -34,12 +35,17 @@ export default async function MembersPage({ params }: { params: Promise<{ contai
     : { data: [] };
 
   return (
-    <MembersClient
-      containerId={containerId}
-      members={members}
-      invitations={invitations ?? []}
-      currentUserId={user?.id ?? ''}
-      isAdmin={isAdmin}
-    />
+    <div className="flex flex-col gap-4">
+      <Link href={`/c/${containerId}`} className="self-start text-sm text-[var(--text-muted)] hover:underline">
+        ← Retour aux pièces
+      </Link>
+      <MembersClient
+        containerId={containerId}
+        members={members}
+        invitations={invitations ?? []}
+        currentUserId={user?.id ?? ''}
+        isAdmin={isAdmin}
+      />
+    </div>
   );
 }

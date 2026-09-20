@@ -91,6 +91,28 @@ export async function listTasks(
   return roots;
 }
 
+export interface CalendarTask {
+  id: string;
+  title: string;
+  due_date: string;
+  priority: Priority;
+  status: TaskStatus;
+  room: { icon: string; name: string } | null;
+  event: { name: string } | null;
+}
+
+export async function listTasksWithDueDates(supabase: SupabaseServerClient, containerId: string): Promise<CalendarTask[]> {
+  const { data } = await supabase
+    .from('tasks')
+    .select('id, title, due_date, priority, status, room:rooms(icon, name), event:events!tasks_source_event_id_fkey(name)')
+    .eq('container_id', containerId)
+    .not('due_date', 'is', null)
+    .is('parent_task_id', null)
+    .neq('status', 'cancelled');
+
+  return (data ?? []) as unknown as CalendarTask[];
+}
+
 export async function getTaskWithHistory(supabase: SupabaseServerClient, taskId: string) {
   const { data: task } = await supabase.from('tasks').select(TASK_SELECT).eq('id', taskId).maybeSingle();
   const { data: completions } = await supabase
