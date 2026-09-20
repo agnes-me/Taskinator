@@ -47,6 +47,17 @@
   filter: var(--user-gradient-filter);
 }
 
+/* La sidebar entière porte le dégradé : les boutons "ghost" qu'elle contient (thème,
+   déconnexion) doivent rester lisibles en blanc plutôt qu'utiliser les couleurs de surface
+   pensées pour un fond neutre. */
+.sidebar-gradient .btn-ghost {
+  border-color: rgb(255 255 255 / 40%);
+  color: white;
+}
+.sidebar-gradient .btn-ghost:hover {
+  background: rgb(255 255 255 / 15%);
+}
+
 * {
   border-color: var(--border);
 }

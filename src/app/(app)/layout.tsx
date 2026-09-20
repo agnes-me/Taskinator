@@ -23,17 +23,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row" style={{ ['--user-gradient' as string]: userGradient }}>
-      <aside className="card flex shrink-0 flex-col overflow-hidden p-0 md:m-3 md:w-64">
-        <Link
-          href="/dashboard"
-          className="gradient-surface flex items-center gap-2 px-4 py-5 text-lg font-bold text-white"
-        >
+      <aside className="gradient-surface sidebar-gradient m-3 flex shrink-0 flex-col overflow-hidden rounded-[1.25rem] text-white shadow-lg md:w-64">
+        <Link href="/dashboard" className="flex items-center gap-2 px-4 pb-2 pt-5 text-lg font-bold">
           <span className="text-2xl">🧺</span> Taskinator
         </Link>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 pt-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 pt-2">
           <nav className="flex flex-col gap-1">
-            <Link href="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+            <Link href="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
               📊 Tableau de bord
             </Link>
           </nav>
@@ -41,18 +38,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="flex flex-col gap-4 overflow-y-auto">
             {households.map((h) => (
               <div key={h.id}>
-                <p className="px-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{h.name}</p>
+                <p className="px-3 text-xs font-semibold uppercase tracking-wide text-white/70">{h.name}</p>
                 <div className="mt-1 flex flex-col gap-1">
                   {h.containers.map((c) => (
                     <Link
                       key={c.id}
                       href={`/c/${c.id}`}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15"
                     >
-                      <span
-                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]"
-                        style={{ background: c.color + '33' }}
-                      >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/25 text-[11px]">
                         {c.icon}
                       </span>
                       {c.name}
@@ -63,17 +57,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             ))}
           </div>
 
-          <div className="mt-auto flex flex-col gap-2 border-t border-[var(--border)] pt-3">
-            <Link href="/settings" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+          <div className="mt-auto flex flex-col gap-2 border-t border-white/25 pt-3">
+            <Link href="/settings" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
               🎨 Personnaliser
             </Link>
             {isAdmin && (
-              <Link href="/admin/moderation" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]">
+              <Link href="/admin/moderation" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
                 🛡️ Modération marketplace
               </Link>
             )}
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-xs text-[var(--text-muted)]">{user.email}</span>
+              <span className="truncate text-xs text-white/70">{user.email}</span>
               <ThemeToggle />
             </div>
             <SignOutButton />
