@@ -62,6 +62,21 @@ class TaskRepository(private val http: SupabaseHttp) {
         tasks
     }
 
+    /** Tâches triées par urgence, filtrées par conteneur et/ou catégorie (les deux optionnels). */
+    suspend fun getFilteredTasks(containerId: String?, roomId: String?): List<TaskItem> = withContext(Dispatchers.IO) {
+        val urlBuilder = "${SupabaseConfig.REST_URL}/tasks".toHttpUrl().newBuilder()
+            .addQueryParameter("parent_task_id", "is.null")
+            .addQueryParameter("status", "not.in.(done,cancelled)")
+            .addQueryParameter("select", "id,title,description,status,priority,due_date,container_id,rooms(id,name,icon)")
+        if (containerId != null) urlBuilder.addQueryParameter("container_id", "eq.$containerId")
+        if (roomId != null) urlBuilder.addQueryParameter("room_id", "eq.$roomId")
+        val request = Request.Builder().url(urlBuilder.build()).get().build()
+        val tasks: List<TaskItem> = http.client.executeOrThrow(request).use { resp ->
+            json.decodeFromString(resp.body!!.string())
+        }
+        tasks.sortedWith(taskUrgencyComparator)
+    }
+
     suspend fun completeTask(taskId: String, userId: String) = withContext(Dispatchers.IO) {
         val body = json.encodeToString(
             NewTaskCompletion.serializer(),

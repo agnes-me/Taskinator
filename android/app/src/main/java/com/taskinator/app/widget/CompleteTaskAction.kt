@@ -5,7 +5,7 @@ import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.state.updateAppWidgetState
-import androidx.glance.appwidget.update
+import androidx.glance.appwidget.updateAll
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import com.taskinator.app.TaskinatorApplication
 
@@ -23,6 +23,6 @@ class CompleteTaskAction : ActionCallback {
         updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
             prefs.toMutablePreferences().apply { this[TASKS_STATE_KEY] = json }
         }
-        TaskinatorWidget().update(context, glanceId)
+        TaskinatorWidget().updateAll(context)
     }
 }

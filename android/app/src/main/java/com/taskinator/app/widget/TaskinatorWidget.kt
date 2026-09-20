@@ -33,7 +33,6 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.layout.width
-import androidx.glance.material3.GlanceTheme
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -53,9 +52,7 @@ internal val TASK_ID_KEY = ActionParameters.Key<String>("task_id")
 class TaskinatorWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
-            GlanceTheme {
-                WidgetContent()
-            }
+            WidgetContent()
         }
     }
 }
@@ -74,7 +71,7 @@ private fun WidgetContent() {
             .background(Color(0xFFFFFFFF))
             .cornerRadius(20.dp)
             .padding(12.dp)
-            .clickable(actionStartActivity<MainActivity>()),
+            .clickable(actionStartActivity(MainActivity::class.java)),
     ) {
         Text(
             text = "✅ Mes tâches",

@@ -1,6 +1,7 @@
 package com.taskinator.app.data
 
 import com.taskinator.app.data.models.Household
+import com.taskinator.app.data.models.Room
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
@@ -22,5 +23,18 @@ class ContainerRepository(private val http: SupabaseHttp) {
             json.decodeFromString(resp.body!!.string())
         }
         households
+    }
+
+    suspend fun getRooms(containerId: String): List<Room> = withContext(Dispatchers.IO) {
+        val url = "${SupabaseConfig.REST_URL}/rooms".toHttpUrl().newBuilder()
+            .addQueryParameter("container_id", "eq.$containerId")
+            .addQueryParameter("select", "id,name,icon")
+            .addQueryParameter("order", "sort_order.asc")
+            .build()
+        val request = Request.Builder().url(url).get().build()
+        val rooms: List<Room> = http.client.executeOrThrow(request).use { resp ->
+            json.decodeFromString(resp.body!!.string())
+        }
+        rooms
     }
 }
