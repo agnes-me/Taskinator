@@ -8,6 +8,96 @@ import { createRoom, deleteRoom, pauseContainer, resumeContainer } from './actio
 
 const ICONS = ['🍳', '🛁', '🛏️', '🛋️', '🚪', '🖥️', '🧺', '🚗', '🌿', '🏊', '🧹'];
 
+function RoomCard({
+  room,
+  containerId,
+  canEdit,
+}: {
+  room: RoomWithFreshness;
+  containerId: string;
+  canEdit: boolean;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [pending, startTransition] = useTransition();
+  const canConfirm = confirmText.trim().toLowerCase() === room.name.trim().toLowerCase();
+
+  return (
+    <div className="card flex flex-col gap-3 p-4">
+      <div className="flex items-center justify-between">
+        <Link href={`/c/${containerId}/rooms/${room.id}`} className="flex items-center gap-2 font-semibold hover:underline">
+          <span className="text-xl">{room.icon}</span> {room.name}
+        </Link>
+        {canEdit && (
+          <div className="relative">
+            <button
+              className="rounded-lg px-2 py-1 text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Options de la pièce"
+            >
+              ⋯
+            </button>
+            {menuOpen && (
+              <div className="card absolute right-0 top-full z-10 mt-1 w-40 p-1 shadow-lg">
+                <button
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-fresh-low hover:bg-[var(--surface-muted)]"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setConfirming(true);
+                  }}
+                >
+                  Supprimer…
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {confirming && (
+        <div className="flex flex-col gap-2 rounded-lg border border-fresh-low/40 bg-fresh-low/5 p-3 text-sm">
+          <p>
+            Pour confirmer, tape le nom de la pièce (<strong>{room.name}</strong>). Les tâches associées seront conservées mais ne
+            seront plus rattachées à une pièce.
+          </p>
+          <input
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder={room.name}
+            className="input !py-1 text-sm"
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button
+              disabled={!canConfirm || pending}
+              className="btn btn-primary !bg-fresh-low !py-1 text-sm disabled:opacity-40"
+              onClick={() => startTransition(() => deleteRoom(containerId, room.id))}
+            >
+              Supprimer définitivement
+            </button>
+            <button
+              className="btn btn-ghost !py-1 text-sm"
+              onClick={() => {
+                setConfirming(false);
+                setConfirmText('');
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      <FreshnessBar freshness={room.freshness} />
+      <p className="text-xs text-[var(--text-muted)]">
+        {room.taskCount} tâche{room.taskCount > 1 ? 's' : ''} récurrente{room.taskCount > 1 ? 's' : ''}
+        {room.paused_until && new Date(room.paused_until) > new Date() ? ' · ⏸ en pause' : ''}
+      </p>
+    </div>
+  );
+}
+
 export function RoomsClient({
   containerId,
   rooms,
@@ -102,28 +192,7 @@ export function RoomsClient({
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => (
-            <div key={room.id} className="card flex flex-col gap-3 p-4">
-              <div className="flex items-center justify-between">
-                <Link href={`/c/${containerId}/rooms/${room.id}`} className="flex items-center gap-2 font-semibold hover:underline">
-                  <span className="text-xl">{room.icon}</span> {room.name}
-                </Link>
-                {canEdit && (
-                  <button
-                    className="text-xs text-[var(--text-muted)] hover:text-fresh-low"
-                    onClick={() => {
-                      if (window.confirm(`Supprimer la pièce « ${room.name} » ?`)) startTransition(() => deleteRoom(containerId, room.id));
-                    }}
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-              <FreshnessBar freshness={room.freshness} />
-              <p className="text-xs text-[var(--text-muted)]">
-                {room.taskCount} tâche{room.taskCount > 1 ? 's' : ''} récurrente{room.taskCount > 1 ? 's' : ''}
-                {room.paused_until && new Date(room.paused_until) > new Date() ? ' · ⏸ en pause' : ''}
-              </p>
-            </div>
+            <RoomCard key={room.id} room={room} containerId={containerId} canEdit={canEdit} />
           ))}
         </div>
       )}
