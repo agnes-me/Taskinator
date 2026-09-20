@@ -6,6 +6,17 @@ import { TaskRow } from './TaskRow';
 import { TaskForm, type ContainerMember } from './TaskForm';
 import { STATUS_LABELS } from '@/lib/recurrence';
 
+const PRIORITY_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
+
+function byUrgency(a: TaskRowType, b: TaskRowType): number {
+  const pr = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
+  if (pr !== 0) return pr;
+  if (a.due_date && b.due_date) return a.due_date < b.due_date ? -1 : a.due_date > b.due_date ? 1 : 0;
+  if (a.due_date) return -1;
+  if (b.due_date) return 1;
+  return 0;
+}
+
 export function TaskListSection({
   containerId,
   tasks,
@@ -59,7 +70,7 @@ export function TaskListSection({
         <p className="card p-6 text-center text-sm text-[var(--text-muted)]">Aucune tâche ici pour l'instant.</p>
       ) : (
         groups.map((g) => {
-          const groupTasks = tasks.filter((t) => t.status === g.key);
+          const groupTasks = tasks.filter((t) => t.status === g.key).sort(byUrgency);
           if (groupTasks.length === 0) return null;
           return (
             <div key={g.key}>

@@ -15,6 +15,7 @@ export default async function TasksPage({
 }) {
   const { containerId } = await params;
   const { room, status } = await searchParams;
+  const isEventFilter = room === '__event__';
   const supabase = await createClient();
   const user = await getAuthUser();
 
@@ -23,10 +24,12 @@ export default async function TasksPage({
     getContainerMembers(supabase, containerId),
     supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
     listTasks(supabase, containerId, {
-      roomId: room || undefined,
+      roomId: room && !isEventFilter ? room : undefined,
       status: (status as 'todo' | 'in_progress' | 'done' | 'cancelled') || undefined,
     }),
   ]);
+
+  const filteredTasks = isEventFilter ? tasks.filter((t) => t.event) : tasks;
 
   const canEdit = role === 'admin' || role === 'member';
   const isGuest = role === 'guest';
@@ -38,11 +41,12 @@ export default async function TasksPage({
         {(rooms ?? []).map((r) => (
           <FilterLink key={r.id} containerId={containerId} label={r.name} active={room === r.id} params={{ room: r.id, status }} />
         ))}
+        <FilterLink containerId={containerId} label="🎉 Événements" active={isEventFilter} params={{ room: '__event__', status }} />
       </div>
 
       <TaskListSection
         containerId={containerId}
-        tasks={tasks}
+        tasks={filteredTasks}
         members={members}
         rooms={rooms ?? []}
         currentUserId={user?.id ?? ''}
