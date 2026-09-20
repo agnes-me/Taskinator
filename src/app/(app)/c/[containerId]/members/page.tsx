@@ -1,12 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
 import { MembersClient } from './MembersClient';
 
 export default async function MembersPage({ params }: { params: Promise<{ containerId: string }> }) {
   const { containerId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const { data: memberRows } = await supabase
     .from('container_members')

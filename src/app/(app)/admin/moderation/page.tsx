@@ -1,15 +1,14 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
 import { listPendingModeration } from '@/lib/data/templates';
 import { ModerationClient } from './ModerationClient';
 
 export default async function ModerationPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getAuthUser();
   if (!user || user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) redirect('/dashboard');
+
+  const supabase = await createClient();
 
   const { roomTemplates, eventTemplates } = await listPendingModeration(supabase);
 

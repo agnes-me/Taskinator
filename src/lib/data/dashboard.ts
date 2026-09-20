@@ -1,4 +1,5 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
 import type { Database } from '@/types/database';
 import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
 import { todayISO, addDaysISO } from '@/lib/utils';
@@ -64,9 +65,7 @@ export interface MyTask {
 }
 
 export async function getMyUpcomingTasks(supabase: SupabaseServerClient): Promise<MyTask[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) return [];
 
   const { data: assigned } = await supabase.from('task_assignees').select('task_id').eq('user_id', user.id);

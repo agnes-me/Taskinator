@@ -1,12 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
 import { ThemeGradientForm } from './ThemeGradientForm';
 
 export default async function SettingsPage() {
+  const user = await getAuthUser();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const { data: profile } = await supabase.from('profiles').select('theme_gradient, display_name').eq('id', user?.id ?? '').maybeSingle();
 
   return (

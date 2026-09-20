@@ -1,23 +1,23 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
 import { getHouseholdsWithContainers } from '@/lib/data/nav';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SignOutButton } from '@/components/SignOutButton';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) redirect('/login');
 
-  const households = await getHouseholdsWithContainers(supabase);
+  const supabase = await createClient();
+  const [households, { data: profile }] = await Promise.all([
+    getHouseholdsWithContainers(supabase),
+    supabase.from('profiles').select('theme_gradient').eq('id', user.id).maybeSingle(),
+  ]);
   if (households.length === 0) redirect('/onboarding');
 
   const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-
-  const { data: profile } = await supabase.from('profiles').select('theme_gradient').eq('id', user.id).maybeSingle();
   const gradientColors = profile?.theme_gradient?.length ? profile.theme_gradient : ['#14b8a6', '#6366f1'];
   const userGradient = `linear-gradient(135deg, ${gradientColors.join(', ')})`;
 

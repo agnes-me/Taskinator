@@ -7,7 +7,7 @@ export default async function ContainerHomePage({ params }: { params: Promise<{ 
   const { containerId } = await params;
   const supabase = await createClient();
   const [{ container, role }, rooms] = await Promise.all([
-    getContainerContext(supabase, containerId),
+    getContainerContext(containerId),
     getRoomsWithFreshness(supabase, containerId),
   ]);
 

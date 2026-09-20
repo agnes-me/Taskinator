@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
 import { getContainerContext } from '@/lib/data/nav';
 import { getContainerMembers } from '@/lib/data/members';
 import { listTasks } from '@/lib/data/tasks';
@@ -15,13 +16,10 @@ export default async function TasksPage({
   const { containerId } = await params;
   const { room, status } = await searchParams;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const [{ role }, members, { data: rooms }, tasks] = await Promise.all([
-    getContainerContext(supabase, containerId),
+    getContainerContext(containerId),
     getContainerMembers(supabase, containerId),
     supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
     listTasks(supabase, containerId, {

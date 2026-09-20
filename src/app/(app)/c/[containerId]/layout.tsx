@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
 import { getContainerContext } from '@/lib/data/nav';
 
 export default async function ContainerLayout({
@@ -11,8 +10,7 @@ export default async function ContainerLayout({
   params: Promise<{ containerId: string }>;
 }) {
   const { containerId } = await params;
-  const supabase = await createClient();
-  const { container, role } = await getContainerContext(supabase, containerId);
+  const { container, role } = await getContainerContext(containerId);
 
   if (!container || !role) notFound();
 

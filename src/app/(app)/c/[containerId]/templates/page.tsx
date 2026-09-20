@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
 import { getContainerContext } from '@/lib/data/nav';
 import { listRoomTemplates } from '@/lib/data/templates';
 import { TemplatesClient } from './TemplatesClient';
@@ -6,12 +7,10 @@ import { TemplatesClient } from './TemplatesClient';
 export default async function TemplatesPage({ params }: { params: Promise<{ containerId: string }> }) {
   const { containerId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const [{ role }, templates, { data: rooms }] = await Promise.all([
-    getContainerContext(supabase, containerId),
+    getContainerContext(containerId),
     listRoomTemplates(supabase, containerId),
     supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
   ]);

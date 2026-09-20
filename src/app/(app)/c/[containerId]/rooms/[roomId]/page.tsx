@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
 import { getContainerContext } from '@/lib/data/nav';
 import { getContainerMembers } from '@/lib/data/members';
 import { listTasks } from '@/lib/data/tasks';
@@ -10,12 +11,10 @@ import { RoomPauseControl } from './RoomPauseControl';
 export default async function RoomPage({ params }: { params: Promise<{ containerId: string; roomId: string }> }) {
   const { containerId, roomId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const [{ role }, { data: room }, members, tasks] = await Promise.all([
-    getContainerContext(supabase, containerId),
+    getContainerContext(containerId),
     supabase.from('rooms').select('id, name, icon, freshness_days, paused_until, pause_reason').eq('id', roomId).maybeSingle(),
     getContainerMembers(supabase, containerId),
     listTasks(supabase, containerId, { roomId }),
