@@ -9,8 +9,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -129,7 +129,7 @@ private fun ConfigScreen(app: TaskinatorApplication, onConfirm: (String?, String
             )
 
             Text("Conteneur", style = MaterialTheme.typography.labelLarge)
-            LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 260.dp)) {
                 item {
                     SelectableRow(
                         label = "🗂️ Tous les conteneurs",

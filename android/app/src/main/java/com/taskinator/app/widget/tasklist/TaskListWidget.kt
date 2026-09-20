@@ -2,6 +2,7 @@ package com.taskinator.app.widget.tasklist
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,7 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
+import androidx.glance.LocalContext
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.action.ActionParameters
@@ -77,6 +79,7 @@ private fun TaskListWidgetContent() {
     val containerName = prefs[FILTER_CONTAINER_NAME_KEY]
     val roomName = prefs[FILTER_ROOM_NAME_KEY]
     val subtitle = listOfNotNull(containerName, roomName).joinToString(" · ").ifBlank { "Tous les conteneurs" }
+    val context = LocalContext.current
 
     Column(
         modifier = GlanceModifier
@@ -84,7 +87,7 @@ private fun TaskListWidgetContent() {
             .background(Color(0xFFFFFFFF))
             .cornerRadius(20.dp)
             .padding(12.dp)
-            .clickable(actionStartActivity(MainActivity::class.java)),
+            .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
         Text(
             text = "📋 Mes tâches",

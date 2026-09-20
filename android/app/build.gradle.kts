@@ -26,6 +26,18 @@ android {
         )
     }
 
+    // Keystore de debug committée (android/keystore/debug.keystore) plutôt que celle,
+    // auto-générée et donc différente à chaque machine/run CI, que Gradle utiliserait sinon —
+    // indispensable pour un identifiant client OAuth Google stable (lié à l'empreinte SHA-1).
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("../keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -80,6 +92,10 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // Connexion Google (widget Calendrier) : autorisation OAuth incrémentale (scope Calendar
+    // lecture seule) via l'API Identity/Authorization de Google Play Services.
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     // Widget d'écran d'accueil
     implementation("androidx.glance:glance-appwidget:1.1.1")

@@ -1,5 +1,6 @@
 package com.taskinator.app.ui.dashboard
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Card
@@ -23,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.taskinator.app.TaskinatorApplication
@@ -30,6 +33,7 @@ import com.taskinator.app.data.models.Container
 import com.taskinator.app.data.models.Household
 import com.taskinator.app.data.models.TaskItem
 import com.taskinator.app.ui.SimpleViewModelFactory
+import com.taskinator.app.ui.settings.GoogleCalendarConnectActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,12 +45,16 @@ fun DashboardScreen(
     val viewModel: DashboardViewModel = viewModel(
         factory = SimpleViewModelFactory { DashboardViewModel(app.container) },
     )
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Taskinator") },
                 actions = {
+                    IconButton(onClick = { context.startActivity(Intent(context, GoogleCalendarConnectActivity::class.java)) }) {
+                        Icon(Icons.Filled.CalendarMonth, contentDescription = "Connecter Google Calendar")
+                    }
                     IconButton(onClick = { viewModel.signOut(onSignedOut) }) {
                         Icon(Icons.Filled.Logout, contentDescription = "Se déconnecter")
                     }

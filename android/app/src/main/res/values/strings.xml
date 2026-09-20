@@ -4,4 +4,6 @@
     <string name="widget_description">Tes prochaines tâches, avec case à cocher.</string>
     <string name="task_list_widget_name">Taskinator — Liste filtrable</string>
     <string name="task_list_widget_description">Tâches d\'un conteneur/catégorie au choix, triées par importance et par date.</string>
+    <string name="calendar_widget_name">Taskinator — Calendrier</string>
+    <string name="calendar_widget_description">Tâches Taskinator et événements Google Calendar fusionnés, par ordre chronologique.</string>
 </resources>
