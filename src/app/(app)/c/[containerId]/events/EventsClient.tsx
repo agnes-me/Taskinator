@@ -5,7 +5,15 @@ import type { TemplateSummary } from '@/lib/data/templates';
 import type { EventSummary } from '@/lib/data/events';
 import type { Priority, RecurrenceType } from '@/types/database';
 import { formatDate, todayISO } from '@/lib/utils';
-import { createEventTemplate, deleteEventTemplate, publishEventTemplate, applyEventTemplate, type EventTemplateItemInput } from './actions';
+import {
+  createEventTemplate,
+  deleteEventTemplate,
+  publishEventTemplate,
+  applyEventTemplate,
+  getEventTemplateItems,
+  updateEventTemplate,
+  type EventTemplateItemInput,
+} from './actions';
 
 function ApplyTemplateForm({ containerId, templates }: { containerId: string; templates: TemplateSummary[] }) {
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? '');
@@ -57,13 +65,32 @@ function ApplyTemplateForm({ containerId, templates }: { containerId: string; te
   );
 }
 
-function NewEventTemplateForm({ containerId, onDone }: { containerId: string; onDone: () => void }) {
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState('🎉');
+function EventTemplateForm({
+  containerId,
+  onDone,
+  onCancel,
+  templateId,
+  initialName,
+  initialIcon,
+  initialItems,
+}: {
+  containerId: string;
+  onDone: () => void;
+  onCancel?: () => void;
+  templateId?: string;
+  initialName?: string;
+  initialIcon?: string;
+  initialItems?: EventTemplateItemInput[];
+}) {
+  const isEdit = Boolean(templateId);
+  const [name, setName] = useState(initialName ?? '');
+  const [icon, setIcon] = useState(initialIcon ?? '🎉');
   const [visibility, setVisibility] = useState<'personal' | 'container'>('personal');
-  const [items, setItems] = useState<EventTemplateItemInput[]>([
-    { title: '', offset_days: -7, priority: 'medium', recurrence_type: 'none' },
-  ]);
+  const [items, setItems] = useState<EventTemplateItemInput[]>(
+    initialItems && initialItems.length > 0
+      ? initialItems
+      : [{ title: '', offset_days: -7, priority: 'medium', recurrence_type: 'none' }],
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -82,13 +109,15 @@ function NewEventTemplateForm({ containerId, onDone }: { containerId: string; on
           Icône
           <input value={icon} onChange={(e) => setIcon(e.target.value)} className="input mt-1 w-16 text-center" />
         </label>
-        <label className="text-sm">
-          Visibilité
-          <select value={visibility} onChange={(e) => setVisibility(e.target.value as 'personal' | 'container')} className="input mt-1">
-            <option value="personal">Personnel</option>
-            <option value="container">Partagé dans ce conteneur</option>
-          </select>
-        </label>
+        {!isEdit && (
+          <label className="text-sm">
+            Visibilité
+            <select value={visibility} onChange={(e) => setVisibility(e.target.value as 'personal' | 'container')} className="input mt-1">
+              <option value="personal">Personnel</option>
+              <option value="container">Partagé dans ce conteneur</option>
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -149,18 +178,96 @@ function NewEventTemplateForm({ containerId, onDone }: { containerId: string; on
               setError('Le nom est requis.');
               return;
             }
+            const cleanItems = items.filter((i) => i.title.trim());
             startTransition(async () => {
-              const res = await createEventTemplate(containerId, { name, icon, visibility, items: items.filter((i) => i.title.trim()) });
+              const res =
+                isEdit && templateId
+                  ? await updateEventTemplate(containerId, templateId, { name, icon, items: cleanItems })
+                  : await createEventTemplate(containerId, { name, icon, visibility, items: cleanItems });
               if (res?.error) setError(res.error);
               else onDone();
             });
           }}
         >
-          Créer le template
+          {isEdit ? 'Enregistrer' : 'Créer le template'}
         </button>
-        <button className="btn btn-ghost" onClick={onDone}>
+        <button className="btn btn-ghost" onClick={onCancel ?? onDone}>
           Annuler
         </button>
+      </div>
+    </div>
+  );
+}
+
+function EventTemplateCard({
+  t,
+  containerId,
+  currentUserId,
+}: {
+  t: TemplateSummary;
+  containerId: string;
+  currentUserId: string;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [editing, setEditing] = useState(false);
+  const [editItems, setEditItems] = useState<EventTemplateItemInput[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const isOwner = t.created_by === currentUserId;
+
+  function openEdit() {
+    startTransition(async () => {
+      const res = await getEventTemplateItems(t.id);
+      if ('error' in res) setLoadError(res.error);
+      else {
+        setEditItems(res.items);
+        setEditing(true);
+      }
+    });
+  }
+
+  if (editing && editItems) {
+    return (
+      <EventTemplateForm
+        containerId={containerId}
+        templateId={t.id}
+        initialName={t.name}
+        initialIcon={t.icon}
+        initialItems={editItems}
+        onDone={() => setEditing(false)}
+        onCancel={() => setEditing(false)}
+      />
+    );
+  }
+
+  return (
+    <div className="card flex flex-col gap-2 p-4">
+      <span className="font-semibold">
+        {t.icon} {t.name}
+      </span>
+      <p className="text-xs text-[var(--text-muted)]">{t.itemCount} étape(s)</p>
+      {loadError && <p className="text-xs text-fresh-low">{loadError}</p>}
+      <div className="flex flex-wrap gap-2 text-xs">
+        {isOwner && (
+          <button className="text-[var(--text-muted)] hover:underline" onClick={openEdit}>
+            Voir / Modifier
+          </button>
+        )}
+        {isOwner && t.visibility !== 'public' && (
+          <button className="text-[var(--text-muted)] hover:underline" onClick={() => startTransition(() => void publishEventTemplate(containerId, t.id))}>
+            Publier sur la marketplace
+          </button>
+        )}
+        {isOwner && (
+          <button
+            disabled={pending}
+            className="text-fresh-low hover:underline"
+            onClick={() => {
+              if (window.confirm('Supprimer ce template ?')) startTransition(() => deleteEventTemplate(containerId, t.id));
+            }}
+          >
+            Supprimer
+          </button>
+        )}
       </div>
     </div>
   );
@@ -180,7 +287,6 @@ export function EventsClient({
   currentUserId: string;
 }) {
   const [showForm, setShowForm] = useState(false);
-  const [pending, startTransition] = useTransition();
 
   return (
     <div className="flex flex-col gap-6">
@@ -214,34 +320,11 @@ export function EventsClient({
               + Nouveau template
             </button>
           ) : (
-            <NewEventTemplateForm containerId={containerId} onDone={() => setShowForm(false)} />
+            <EventTemplateForm containerId={containerId} onDone={() => setShowForm(false)} />
           )}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {templates.map((t) => (
-              <div key={t.id} className="card flex flex-col gap-2 p-4">
-                <span className="font-semibold">
-                  {t.icon} {t.name}
-                </span>
-                <p className="text-xs text-[var(--text-muted)]">{t.itemCount} étape(s)</p>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  {t.created_by === currentUserId && t.visibility !== 'public' && (
-                    <button className="text-[var(--text-muted)] hover:underline" onClick={() => startTransition(() => void publishEventTemplate(containerId, t.id))}>
-                      Publier sur la marketplace
-                    </button>
-                  )}
-                  {t.created_by === currentUserId && (
-                    <button
-                      disabled={pending}
-                      className="text-fresh-low hover:underline"
-                      onClick={() => {
-                        if (window.confirm('Supprimer ce template ?')) startTransition(() => deleteEventTemplate(containerId, t.id));
-                      }}
-                    >
-                      Supprimer
-                    </button>
-                  )}
-                </div>
-              </div>
+              <EventTemplateCard key={t.id} t={t} containerId={containerId} currentUserId={currentUserId} />
             ))}
           </div>
         </div>

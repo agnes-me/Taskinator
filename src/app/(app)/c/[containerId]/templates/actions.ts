@@ -73,6 +73,40 @@ export async function createRoomFromTemplate(containerId: string, templateId: st
   return { roomId: room.id };
 }
 
+export async function getRoomTemplateItems(templateId: string): Promise<{ error: string } | { items: TemplateItemInput[] }> {
+  const supabase = await createClient();
+  const { data: items, error } = await supabase
+    .from('room_template_items')
+    .select('title, recurrence_type, recurrence_interval, priority, freshness_days')
+    .eq('template_id', templateId)
+    .order('sort_order');
+  if (error) return { error: 'Impossible de charger le template.' };
+  return { items: items ?? [] };
+}
+
+export async function updateRoomTemplate(
+  containerId: string,
+  templateId: string,
+  data: { name: string; icon: string; items: TemplateItemInput[] },
+) {
+  if (!data.name.trim()) return { error: 'Le nom est requis.' };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from('room_templates').update({ name: data.name.trim(), icon: data.icon }).eq('id', templateId);
+  if (error) return { error: 'Impossible de modifier le template (droits insuffisants ?).' };
+
+  await supabase.from('room_template_items').delete().eq('template_id', templateId);
+  if (data.items.length) {
+    const { error: itemsError } = await supabase.from('room_template_items').insert(
+      data.items.map((item, i) => ({ ...item, template_id: templateId, sort_order: i })),
+    );
+    if (itemsError) return { error: "Le template a été renommé mais la mise à jour des tâches a échoué." };
+  }
+
+  revalidatePath(`/c/${containerId}/templates`);
+  return {};
+}
+
 export async function deleteRoomTemplate(containerId: string, templateId: string) {
   const supabase = await createClient();
   await supabase.from('room_templates').delete().eq('id', templateId);

@@ -10,6 +10,8 @@ import {
   duplicateRoomTemplate,
   publishRoomTemplate,
   applyRoomTemplateToRoom,
+  getRoomTemplateItems,
+  updateRoomTemplate,
   type TemplateItemInput,
 } from './actions';
 
@@ -38,6 +40,9 @@ function TemplateCard({
   const [newRoomName, setNewRoomName] = useState(tpl.name);
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editItems, setEditItems] = useState<TemplateItemInput[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const isOwner = tpl.created_by === currentUserId;
 
   function apply() {
@@ -48,6 +53,31 @@ function TemplateCard({
           : await createRoomFromTemplate(containerId, tpl.id, newRoomName, tpl.icon);
       setMsg(res?.error ?? 'Appliqué !');
     });
+  }
+
+  function openEdit() {
+    startTransition(async () => {
+      const res = await getRoomTemplateItems(tpl.id);
+      if ('error' in res) setLoadError(res.error);
+      else {
+        setEditItems(res.items);
+        setEditing(true);
+      }
+    });
+  }
+
+  if (editing && editItems) {
+    return (
+      <RoomTemplateForm
+        containerId={containerId}
+        templateId={tpl.id}
+        initialName={tpl.name}
+        initialIcon={tpl.icon}
+        initialItems={editItems}
+        onDone={() => setEditing(false)}
+        onCancel={() => setEditing(false)}
+      />
+    );
   }
 
   return (
@@ -61,6 +91,7 @@ function TemplateCard({
         )}
       </div>
       <p className="text-xs text-[var(--text-muted)]">{tpl.itemCount} tâche(s)</p>
+      {loadError && <p className="text-xs text-fresh-low">{loadError}</p>}
 
       {canManage && (
         <div className="flex flex-col gap-2">
@@ -104,6 +135,11 @@ function TemplateCard({
       {msg && <p className="text-xs text-[var(--text-muted)]">{msg}</p>}
 
       <div className="flex flex-wrap gap-2 text-xs">
+        {isOwner && (
+          <button className="text-[var(--text-muted)] hover:underline" onClick={openEdit}>
+            Voir / Modifier
+          </button>
+        )}
         {canManage && (
           <button
             className="text-[var(--text-muted)] hover:underline"
@@ -135,13 +171,32 @@ function TemplateCard({
   );
 }
 
-function NewTemplateForm({ containerId, onDone }: { containerId: string; onDone: () => void }) {
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState('🧹');
+function RoomTemplateForm({
+  containerId,
+  onDone,
+  onCancel,
+  templateId,
+  initialName,
+  initialIcon,
+  initialItems,
+}: {
+  containerId: string;
+  onDone: () => void;
+  onCancel?: () => void;
+  templateId?: string;
+  initialName?: string;
+  initialIcon?: string;
+  initialItems?: TemplateItemInput[];
+}) {
+  const isEdit = Boolean(templateId);
+  const [name, setName] = useState(initialName ?? '');
+  const [icon, setIcon] = useState(initialIcon ?? '🧹');
   const [visibility, setVisibility] = useState<'personal' | 'container'>('personal');
-  const [items, setItems] = useState<TemplateItemInput[]>([
-    { title: '', recurrence_type: 'weekly', recurrence_interval: 1, priority: 'medium', freshness_days: null },
-  ]);
+  const [items, setItems] = useState<TemplateItemInput[]>(
+    initialItems && initialItems.length > 0
+      ? initialItems
+      : [{ title: '', recurrence_type: 'weekly', recurrence_interval: 1, priority: 'medium', freshness_days: null }],
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -156,7 +211,10 @@ function NewTemplateForm({ containerId, onDone }: { containerId: string; onDone:
       return;
     }
     startTransition(async () => {
-      const res = await createRoomTemplate(containerId, { name, icon, visibility, items: cleanItems });
+      const res =
+        isEdit && templateId
+          ? await updateRoomTemplate(containerId, templateId, { name, icon, items: cleanItems })
+          : await createRoomTemplate(containerId, { name, icon, visibility, items: cleanItems });
       if (res?.error) setError(res.error);
       else onDone();
     });
@@ -173,13 +231,15 @@ function NewTemplateForm({ containerId, onDone }: { containerId: string; onDone:
           Icône
           <input value={icon} onChange={(e) => setIcon(e.target.value)} className="input mt-1 w-16 text-center" />
         </label>
-        <label className="text-sm">
-          Visibilité
-          <select value={visibility} onChange={(e) => setVisibility(e.target.value as 'personal' | 'container')} className="input mt-1">
-            <option value="personal">Personnel</option>
-            <option value="container">Partagé dans ce conteneur</option>
-          </select>
-        </label>
+        {!isEdit && (
+          <label className="text-sm">
+            Visibilité
+            <select value={visibility} onChange={(e) => setVisibility(e.target.value as 'personal' | 'container')} className="input mt-1">
+              <option value="personal">Personnel</option>
+              <option value="container">Partagé dans ce conteneur</option>
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -241,9 +301,9 @@ function NewTemplateForm({ containerId, onDone }: { containerId: string; onDone:
       {error && <p className="text-sm text-fresh-low">{error}</p>}
       <div className="flex gap-2">
         <button disabled={pending} className="btn btn-primary" onClick={submit}>
-          Créer le template
+          {isEdit ? 'Enregistrer' : 'Créer le template'}
         </button>
-        <button className="btn btn-ghost" onClick={onDone}>
+        <button className="btn btn-ghost" onClick={onCancel ?? onDone}>
           Annuler
         </button>
       </div>
@@ -288,7 +348,7 @@ export function TemplatesClient({
               + Nouveau template
             </button>
           ) : (
-            <NewTemplateForm containerId={containerId} onDone={() => setShowForm(false)} />
+            <RoomTemplateForm containerId={containerId} onDone={() => setShowForm(false)} />
           )}
         </div>
       )}
