@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react';
 import type { TaskRow as TaskRowType } from '@/lib/data/tasks';
 import { FreshnessBar } from '@/components/FreshnessBar';
-import { FRESHNESS_COLORS } from '@/lib/cleanliness';
 import { recurrenceLabel, PRIORITY_LABELS } from '@/lib/recurrence';
 import { formatDate } from '@/lib/utils';
 import { completeTask, reopenTask, deleteTask, pauseTask, resumeTask, createTask } from '@/app/(app)/c/[containerId]/tasks/actions';
@@ -43,6 +42,12 @@ export function TaskRow({
   const isPaused = task.paused_until && new Date(task.paused_until) > new Date();
   const doneSubtasks = task.subtasks.filter((s) => s.status === 'done').length;
 
+  function quickComplete() {
+    startTransition(async () => {
+      await completeTask(task.id, containerId, new FormData());
+    });
+  }
+
   if (editing) {
     return (
       <div className="card p-4" style={{ marginLeft: depth * 20 }}>
@@ -65,7 +70,7 @@ export function TaskRow({
       <div className="flex items-center gap-2">
         <button
           disabled={!canComplete || pending || task.status === 'done'}
-          onClick={() => setCompleting((s) => !s)}
+          onClick={quickComplete}
           className="btn btn-ghost !px-2 !py-1 text-xs disabled:opacity-40"
           title={task.status === 'done' ? 'Déjà faite' : 'Marquer comme faite'}
         >
@@ -88,13 +93,26 @@ export function TaskRow({
         </button>
 
         <div className="flex shrink-0 items-center gap-2 text-xs text-[var(--text-muted)]">
+          {task.room && (
+            <span className="flex items-center gap-1" title={task.room.name}>
+              <span>{task.room.icon}</span>
+              <span className="hidden max-w-[90px] truncate sm:inline">{task.room.name}</span>
+            </span>
+          )}
           {task.due_date && <span className="hidden sm:inline">{formatDate(task.due_date)}</span>}
           {task.freshness && (
             <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: FRESHNESS_COLORS[task.freshness.level], opacity: task.freshness.frozen ? 0.35 : 1 }}
-              title="Fraîcheur"
-            />
+              className="w-10 shrink-0"
+              title={
+                task.freshness.frozen
+                  ? 'En pause'
+                  : task.freshness.outOfSeason
+                    ? 'Hors saison'
+                    : `Fraîcheur ${task.freshness.percent}%`
+              }
+            >
+              <FreshnessBar freshness={task.freshness} compact />
+            </span>
           )}
           {task.assignees.length > 0 && (
             <span className="hidden items-center gap-1 sm:flex" title={task.assignees.map((a) => a.display_name || a.email).join(', ')}>
@@ -148,6 +166,15 @@ export function TaskRow({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              {canComplete && task.status !== 'done' && !completing && (
+                <button
+                  className="btn btn-ghost !px-2 !py-1 text-xs"
+                  onClick={() => setCompleting(true)}
+                  title="Terminer avec une photo ou un commentaire"
+                >
+                  📷
+                </button>
+              )}
               {canEdit && (
                 <>
                   <button className="btn btn-ghost !px-2 !py-1 text-xs" onClick={() => setEditing(true)}>
