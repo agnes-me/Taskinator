@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
 import { getContainerContext } from '@/lib/data/nav';
@@ -22,15 +23,20 @@ export default async function TemplatesPage({ params }: { params: Promise<{ cont
   const marketplace = templates.filter((t) => !t.is_system && t.visibility === 'public' && t.moderation_status === 'approved');
 
   return (
-    <TemplatesClient
-      containerId={containerId}
-      system={system}
-      container={container}
-      personal={personal}
-      marketplace={marketplace}
-      rooms={rooms ?? []}
-      canManage={canManage}
-      currentUserId={user?.id ?? ''}
-    />
+    <div className="flex flex-col gap-4">
+      <Link href={`/c/${containerId}`} className="self-start text-sm text-[var(--text-muted)] hover:underline">
+        ← Retour aux pièces
+      </Link>
+      <TemplatesClient
+        containerId={containerId}
+        system={system}
+        container={container}
+        personal={personal}
+        marketplace={marketplace}
+        rooms={rooms ?? []}
+        canManage={canManage}
+        currentUserId={user?.id ?? ''}
+      />
+    </div>
   );
 }

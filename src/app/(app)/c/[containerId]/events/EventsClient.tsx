@@ -287,6 +287,7 @@ export function EventsClient({
   currentUserId: string;
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   return (
     <div className="flex flex-col gap-6">
@@ -314,19 +315,28 @@ export function EventsClient({
 
       {canManage && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-[var(--text-muted)]">Templates d'événement (rétroplanning)</h3>
-          {!showForm ? (
-            <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-              + Nouveau template
-            </button>
-          ) : (
-            <EventTemplateForm containerId={containerId} onDone={() => setShowForm(false)} />
+          <button
+            className="flex items-center gap-1 text-sm text-[var(--text-muted)] hover:underline"
+            onClick={() => setShowTemplates((s) => !s)}
+          >
+            {showTemplates ? '▾' : '▸'} Gérer les templates d'événement ({templates.length})
+          </button>
+          {showTemplates && (
+            <div className="mt-3">
+              {!showForm ? (
+                <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+                  + Nouveau template
+                </button>
+              ) : (
+                <EventTemplateForm containerId={containerId} onDone={() => setShowForm(false)} />
+              )}
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {templates.map((t) => (
+                  <EventTemplateCard key={t.id} t={t} containerId={containerId} currentUserId={currentUserId} />
+                ))}
+              </div>
+            </div>
           )}
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.map((t) => (
-              <EventTemplateCard key={t.id} t={t} containerId={containerId} currentUserId={currentUserId} />
-            ))}
-          </div>
         </div>
       )}
     </div>

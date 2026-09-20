@@ -26,6 +26,7 @@ export interface TaskRow {
   paused_until: string | null;
   pause_reason: string | null;
   room?: { id: string; name: string; icon: string; freshness_days: number } | null;
+  event?: { id: string; name: string } | null;
   assignees: { user_id: string; email: string; display_name: string | null }[];
   subtasks: TaskRow[];
   freshness: FreshnessResult | null;
@@ -36,7 +37,8 @@ const TASK_SELECT = `
   recurrence_type, recurrence_interval, recurrence_weekdays, due_date, start_at, duration_minutes,
   on_calendar, freshness_days, last_completed_at, completion_mode,
   seasonal_start_month, seasonal_end_month, paused_until, pause_reason,
-  room:rooms(id, name, icon, freshness_days)
+  room:rooms(id, name, icon, freshness_days),
+  event:events!tasks_source_event_id_fkey(id, name)
 `;
 
 export async function listTasks(

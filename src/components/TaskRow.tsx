@@ -99,6 +99,12 @@ export function TaskRow({
               <span className="hidden max-w-[90px] truncate sm:inline">{task.room.name}</span>
             </span>
           )}
+          {!task.room && task.event && (
+            <span className="flex items-center gap-1" title={task.event.name}>
+              <span>🎉</span>
+              <span className="hidden max-w-[90px] truncate sm:inline">{task.event.name}</span>
+            </span>
+          )}
           {task.due_date && <span className="hidden sm:inline">{formatDate(task.due_date)}</span>}
           {task.freshness && (
             <span
@@ -156,6 +162,7 @@ export function TaskRow({
                     · {task.room.icon} {task.room.name}
                   </span>
                 )}
+                {task.event && <span>· 🎉 {task.event.name}</span>}
                 {task.assignees.length > 0 && <span>· 👤 {task.assignees.map((a) => a.display_name || a.email).join(', ')}</span>}
               </div>
               {task.freshness && (

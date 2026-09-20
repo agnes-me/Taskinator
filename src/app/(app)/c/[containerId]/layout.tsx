@@ -17,7 +17,6 @@ export default async function ContainerLayout({
   const tabs = [
     { href: `/c/${containerId}`, label: '🧹 Pièces' },
     { href: `/c/${containerId}/tasks`, label: '✅ Tâches' },
-    { href: `/c/${containerId}/templates`, label: '📋 Templates' },
     { href: `/c/${containerId}/events`, label: '🎉 Événements' },
     { href: `/c/${containerId}/members`, label: '👥 Membres' },
   ];

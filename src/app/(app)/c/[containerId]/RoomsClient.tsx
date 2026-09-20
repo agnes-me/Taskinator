@@ -140,9 +140,14 @@ export function RoomsClient({
               </button>
             )}
           </div>
-          <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
-            + Nouvelle pièce
-          </button>
+          <div className="flex items-center gap-3">
+            <Link href={`/c/${containerId}/templates`} className="text-sm text-[var(--text-muted)] hover:underline">
+              📋 Templates
+            </Link>
+            <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
+              + Nouvelle pièce
+            </button>
+          </div>
         </div>
       )}
 
@@ -187,7 +192,7 @@ export function RoomsClient({
 
       {rooms.length === 0 ? (
         <p className="card p-6 text-center text-sm text-[var(--text-muted)]">
-          Aucune pièce pour l'instant. Créez-en une, ou appliquez un template depuis l'onglet Templates.
+          Aucune pièce pour l'instant. Créez-en une, ou appliquez un template depuis le lien Templates ci-dessus.
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
