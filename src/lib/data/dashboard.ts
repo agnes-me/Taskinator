@@ -10,6 +10,8 @@ export interface DashboardContainer {
   icon: string;
   color: string;
   freshness: FreshnessResult;
+  openCount: number;
+  overdueCount: number;
 }
 export interface DashboardHousehold {
   id: string;
@@ -26,14 +28,16 @@ export async function getDashboardHouseholds(supabase: SupabaseServerClient): Pr
   if (!households) return [];
 
   const containerIds = households.flatMap((h) => (h.containers ?? []).map((c) => c.id));
+  const today = todayISO();
+  // Toutes les tâches (récurrentes ou non, y compris celles générées par un événement) servent
+  // à compiler le nombre à faire/en retard ; seul le sous-ensemble récurrent sert à la fraîcheur.
   const { data: tasks } = containerIds.length
     ? await supabase
         .from('tasks')
-        .select('container_id, recurrence_type, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status')
+        .select('container_id, recurrence_type, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status, due_date')
         .in('container_id', containerIds)
         .is('parent_task_id', null)
         .neq('status', 'cancelled')
-        .neq('recurrence_type', 'none')
     : { data: [] };
 
   return households.map((h) => ({
@@ -41,7 +45,8 @@ export async function getDashboardHouseholds(supabase: SupabaseServerClient): Pr
     name: h.name,
     containers: (h.containers ?? []).map((c) => {
       const containerTasks = (tasks ?? []).filter((t) => t.container_id === c.id);
-      const results = containerTasks.map((t) =>
+      const recurringTasks = containerTasks.filter((t) => t.recurrence_type !== 'none');
+      const results = recurringTasks.map((t) =>
         computeFreshness({
           lastCompletedAt: t.last_completed_at,
           freshnessDays: t.freshness_days ?? 7,
@@ -50,7 +55,9 @@ export async function getDashboardHouseholds(supabase: SupabaseServerClient): Pr
           seasonalEndMonth: t.seasonal_end_month,
         }),
       );
-      return { ...c, freshness: aggregateFreshness(results) };
+      const openTasks = containerTasks.filter((t) => t.status === 'todo' || t.status === 'in_progress');
+      const overdueCount = openTasks.filter((t) => t.due_date && t.due_date < today).length;
+      return { ...c, freshness: aggregateFreshness(results), openCount: openTasks.length, overdueCount };
     }),
   }));
 }

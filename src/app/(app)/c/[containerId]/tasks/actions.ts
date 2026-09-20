@@ -24,11 +24,19 @@ function parseTaskFields(formData: FormData) {
   };
 }
 
+function revalidateTaskPaths(containerId: string) {
+  revalidatePath(`/c/${containerId}/tasks`);
+  revalidatePath(`/c/${containerId}`);
+  revalidatePath(`/c/${containerId}/events`);
+  revalidatePath(`/c/${containerId}/calendar`);
+}
+
 export async function createTask(containerId: string, formData: FormData) {
   const fields = parseTaskFields(formData);
   if (!fields.title) return { error: 'Le titre est requis.' };
 
   const parentTaskId = String(formData.get('parentTaskId') ?? '') || null;
+  const sourceEventId = String(formData.get('eventId') ?? '') || null;
   const assigneeIds = formData.getAll('assigneeId').map(String).filter(Boolean);
 
   const supabase = await createClient();
@@ -39,7 +47,7 @@ export async function createTask(containerId: string, formData: FormData) {
 
   const { data: task, error } = await supabase
     .from('tasks')
-    .insert({ ...fields, container_id: containerId, parent_task_id: parentTaskId, created_by: user.id })
+    .insert({ ...fields, container_id: containerId, parent_task_id: parentTaskId, source_event_id: sourceEventId, created_by: user.id })
     .select('id')
     .single();
 
@@ -49,8 +57,7 @@ export async function createTask(containerId: string, formData: FormData) {
     await supabase.from('task_assignees').insert(assigneeIds.map((user_id) => ({ task_id: task.id, user_id })));
   }
 
-  revalidatePath(`/c/${containerId}/tasks`);
-  revalidatePath(`/c/${containerId}`);
+  revalidateTaskPaths(containerId);
   return {};
 }
 
@@ -68,16 +75,14 @@ export async function updateTask(taskId: string, containerId: string, formData: 
     await supabase.from('task_assignees').insert(assigneeIds.map((user_id) => ({ task_id: taskId, user_id })));
   }
 
-  revalidatePath(`/c/${containerId}/tasks`);
-  revalidatePath(`/c/${containerId}`);
+  revalidateTaskPaths(containerId);
   return {};
 }
 
 export async function deleteTask(taskId: string, containerId: string) {
   const supabase = await createClient();
   await supabase.from('tasks').delete().eq('id', taskId);
-  revalidatePath(`/c/${containerId}/tasks`);
-  revalidatePath(`/c/${containerId}`);
+  revalidateTaskPaths(containerId);
 }
 
 export async function completeTask(taskId: string, containerId: string, formData: FormData) {
@@ -100,30 +105,26 @@ export async function completeTask(taskId: string, containerId: string, formData
   const { error } = await supabase.from('task_completions').insert({ task_id: taskId, completed_by: user.id, comment, photo_url: photoUrl });
   if (error) return { error: "Impossible d'enregistrer la complétion (droits insuffisants ?)." };
 
-  revalidatePath(`/c/${containerId}/tasks`);
-  revalidatePath(`/c/${containerId}`);
+  revalidateTaskPaths(containerId);
   return {};
 }
 
 export async function reopenTask(taskId: string, containerId: string) {
   const supabase = await createClient();
   await supabase.from('tasks').update({ status: 'todo' }).eq('id', taskId);
-  revalidatePath(`/c/${containerId}/tasks`);
-  revalidatePath(`/c/${containerId}`);
+  revalidateTaskPaths(containerId);
 }
 
 export async function pauseTask(taskId: string, containerId: string, untilISO: string, reason: string) {
   const supabase = await createClient();
   await supabase.from('tasks').update({ paused_until: untilISO, pause_reason: reason || null }).eq('id', taskId);
-  revalidatePath(`/c/${containerId}/tasks`);
-  revalidatePath(`/c/${containerId}`);
+  revalidateTaskPaths(containerId);
 }
 
 export async function resumeTask(taskId: string, containerId: string) {
   const supabase = await createClient();
   await supabase.from('tasks').update({ paused_until: null, pause_reason: null }).eq('id', taskId);
-  revalidatePath(`/c/${containerId}/tasks`);
-  revalidatePath(`/c/${containerId}`);
+  revalidateTaskPaths(containerId);
 }
 
 export async function getTaskPhotoUrl(path: string) {

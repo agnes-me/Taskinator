@@ -52,6 +52,12 @@ export default async function DashboardPage() {
                   <span className="font-semibold">{c.name}</span>
                 </div>
                 <FreshnessBar freshness={c.freshness} />
+                <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                  <span>
+                    {c.openCount} tâche{c.openCount !== 1 ? 's' : ''} à faire
+                  </span>
+                  {c.overdueCount > 0 && <span className="font-semibold text-fresh-low">{c.overdueCount} en retard</span>}
+                </div>
               </Link>
             ))}
           </div>

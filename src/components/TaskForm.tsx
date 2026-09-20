@@ -23,6 +23,7 @@ export function TaskForm({
   rooms,
   task,
   fixedRoomId,
+  fixedEventId,
   onDone,
   onCancel,
 }: {
@@ -31,6 +32,7 @@ export function TaskForm({
   rooms: { id: string; name: string }[];
   task?: TaskRowType;
   fixedRoomId?: string;
+  fixedEventId?: string;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -52,6 +54,7 @@ export function TaskForm({
   return (
     <form action={submit} className="flex flex-col gap-3">
       {fixedRoomId && <input type="hidden" name="roomId" value={fixedRoomId} />}
+      {fixedEventId && <input type="hidden" name="eventId" value={fixedEventId} />}
       <label className="text-sm font-medium">
         Titre
         <input name="title" required defaultValue={task?.title ?? ''} className="input mt-1 w-full" />

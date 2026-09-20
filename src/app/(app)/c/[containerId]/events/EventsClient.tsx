@@ -6,7 +6,7 @@ import type { EventSummary } from '@/lib/data/events';
 import type { Priority, RecurrenceType } from '@/types/database';
 import { formatDate, todayISO } from '@/lib/utils';
 import { TaskRow } from '@/components/TaskRow';
-import type { ContainerMember } from '@/components/TaskForm';
+import { TaskForm, type ContainerMember } from '@/components/TaskForm';
 import {
   createEventTemplate,
   deleteEventTemplate,
@@ -293,6 +293,7 @@ function EventCard({
   canEdit: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [addingTask, setAddingTask] = useState(false);
 
   return (
     <div className="card p-3 text-sm">
@@ -322,6 +323,24 @@ function EventCard({
                 canEdit={canEdit}
               />
             ))
+          )}
+
+          {canEdit && !addingTask && (
+            <button className="self-start text-xs text-[var(--text-muted)] hover:underline" onClick={() => setAddingTask(true)}>
+              + Ajouter une tâche
+            </button>
+          )}
+          {canEdit && addingTask && (
+            <div className="card p-3">
+              <TaskForm
+                containerId={containerId}
+                members={members}
+                rooms={rooms}
+                fixedEventId={event.id}
+                onDone={() => setAddingTask(false)}
+                onCancel={() => setAddingTask(false)}
+              />
+            </div>
           )}
         </div>
       )}
