@@ -6,7 +6,13 @@ import { FreshnessBar } from '@/components/FreshnessBar';
 import type { RoomWithFreshness } from '@/lib/data/rooms';
 import { createRoom, deleteRoom, pauseContainer, resumeContainer } from './actions';
 
-const ICONS = ['🍳', '🛁', '🛏️', '🛋️', '🚪', '🖥️', '🧺', '🚗', '🌿', '🏊', '🧹'];
+const ICONS = [
+  '🍳', '🛁', '🛏️', '🛋️', '🚪', '🖥️', '🧺', '🚗', '🌿', '🏊', '🧹',
+  '💼', '📊', '💻', '📁', '💰', '🧾', '🏦', '💊', '🏥', '🧘',
+  '👶', '🧸', '🎒', '🐶', '🐱', '🛒', '🛍️', '🌳', '🌱', '🚲',
+  '✈️', '🧳', '🗺️', '🎉', '🎂', '🎁', '📅', '📦', '🔧', '🎨',
+  '📚', '🎵', '⚽', '🍽️', '📱', '⭐',
+];
 
 function RoomCard({
   room,
@@ -175,12 +181,16 @@ export function RoomsClient({
             </select>
           </label>
           <label className="text-sm">
-            Validité (jours)
+            Fraîcheur par défaut (jours)
             <input name="freshnessDays" type="number" min={1} defaultValue={7} className="input mt-1 w-24" />
           </label>
           <button type="submit" disabled={pending} className="btn btn-primary">
             Créer
           </button>
+          <p className="w-full text-xs text-[var(--text-muted)]">
+            Délai par défaut, en jours, avant qu'une tâche récurrente de cette catégorie soit considérée « à refaire » (sert à
+            l'indicateur de fraîcheur de la catégorie) — chaque tâche peut ensuite avoir son propre délai.
+          </p>
           {error && <p className="w-full text-sm text-fresh-low">{error}</p>}
         </form>
       )}
