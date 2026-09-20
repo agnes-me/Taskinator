@@ -34,7 +34,7 @@ export default async function TasksPage({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2 text-sm">
-        <FilterLink containerId={containerId} label="Toutes les pièces" active={!room} params={{ status }} />
+        <FilterLink containerId={containerId} label="Toutes les catégories" active={!room} params={{ status }} />
         {(rooms ?? []).map((r) => (
           <FilterLink key={r.id} containerId={containerId} label={r.name} active={room === r.id} params={{ room: r.id, status }} />
         ))}

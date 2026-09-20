@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen flex-col md:flex-row" style={{ ['--user-gradient' as string]: userGradient }}>
       <aside className="gradient-surface sidebar-gradient m-3 flex shrink-0 flex-col overflow-hidden rounded-[1.25rem] text-white shadow-lg md:w-64">
         <Link href="/dashboard" className="flex items-center gap-2 px-4 pb-2 pt-5 text-lg font-bold">
-          <span className="text-2xl">🧺</span> Taskinator
+          <span className="text-2xl">✅</span> Taskinator
         </Link>
 
         <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 pt-2">

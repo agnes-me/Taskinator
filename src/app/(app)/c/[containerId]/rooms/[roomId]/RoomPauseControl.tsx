@@ -15,7 +15,7 @@ export function RoomPauseControl({ containerId, roomId, pausedUntil }: { contain
         if (isPaused) {
           startTransition(() => resumeRoom(containerId, roomId));
         } else {
-          const days = window.prompt('Mettre cette pièce en pause pendant combien de jours ?', '14');
+          const days = window.prompt('Mettre cette catégorie en pause pendant combien de jours ?', '14');
           if (!days) return;
           const until = new Date(Date.now() + Number(days) * 86_400_000).toISOString();
           startTransition(() => pauseRoom(containerId, roomId, until, ''));

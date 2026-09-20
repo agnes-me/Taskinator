@@ -1,11 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
 import { ThemeGradientForm } from './ThemeGradientForm';
+import { GoogleCalendarForm } from './GoogleCalendarForm';
 
 export default async function SettingsPage() {
   const user = await getAuthUser();
   const supabase = await createClient();
-  const { data: profile } = await supabase.from('profiles').select('theme_gradient, display_name').eq('id', user?.id ?? '').maybeSingle();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('theme_gradient, display_name, google_ical_url')
+    .eq('id', user?.id ?? '')
+    .maybeSingle();
 
   return (
     <div className="flex flex-col gap-6">
@@ -16,6 +21,7 @@ export default async function SettingsPage() {
       </div>
 
       <ThemeGradientForm initialColors={profile?.theme_gradient ?? ['#14b8a6', '#6366f1']} />
+      <GoogleCalendarForm initialUrl={profile?.google_ical_url ?? ''} />
     </div>
   );
 }

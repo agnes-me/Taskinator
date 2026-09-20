@@ -1,7 +1,7 @@
 /**
  * Indicateur de propreté/fraîcheur dégressif (façon Tody/Sweepy) : 100% juste après
  * complétion, qui décroît jusqu'à 0% à l'échéance de validité (freshness_days).
- * Une tâche/pièce/conteneur en pause (vacances, blessure...) ou hors saison est gelée.
+ * Une tâche/catégorie/conteneur en pause (vacances, blessure...) ou hors saison est gelée.
  */
 export type FreshnessLevel = 'high' | 'mid' | 'low';
 
@@ -54,7 +54,7 @@ export function computeFreshness(input: FreshnessInput): FreshnessResult {
   return { percent, level, frozen, outOfSeason, daysSinceCompletion: Math.round(daysSince) };
 }
 
-/** Agrège plusieurs indicateurs (ex: toutes les tâches d'une pièce) en une moyenne pondérée. */
+/** Agrège plusieurs indicateurs (ex: toutes les tâches d'une catégorie) en une moyenne pondérée. */
 export function aggregateFreshness(results: FreshnessResult[]): FreshnessResult {
   if (results.length === 0) {
     return { percent: 100, level: 'high', frozen: false, outOfSeason: false, daysSinceCompletion: null };

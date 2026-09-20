@@ -42,7 +42,7 @@ export function ModerationClient({ roomTemplates, eventTemplates }: { roomTempla
     <div className="flex flex-col gap-6">
       {roomTemplates.length > 0 && (
         <div>
-          <h2 className="mb-2 font-semibold">Templates de pièce en attente</h2>
+          <h2 className="mb-2 font-semibold">Templates de catégorie en attente</h2>
           <ul className="flex flex-col gap-2">
             {roomTemplates.map((t) => (
               <Row key={t.id} item={t} kind="room" />

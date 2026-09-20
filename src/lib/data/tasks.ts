@@ -95,8 +95,11 @@ export interface CalendarTask {
   id: string;
   title: string;
   due_date: string;
+  start_at: string | null;
+  on_calendar: boolean;
   priority: Priority;
   status: TaskStatus;
+  room_id: string | null;
   room: { icon: string; name: string } | null;
   event: { name: string } | null;
 }
@@ -104,7 +107,9 @@ export interface CalendarTask {
 export async function listTasksWithDueDates(supabase: SupabaseServerClient, containerId: string): Promise<CalendarTask[]> {
   const { data } = await supabase
     .from('tasks')
-    .select('id, title, due_date, priority, status, room:rooms(icon, name), event:events!tasks_source_event_id_fkey(name)')
+    .select(
+      'id, title, due_date, start_at, on_calendar, priority, status, room_id, room:rooms(icon, name), event:events!tasks_source_event_id_fkey(name)',
+    )
     .eq('container_id', containerId)
     .not('due_date', 'is', null)
     .is('parent_task_id', null)

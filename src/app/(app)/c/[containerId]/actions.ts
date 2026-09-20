@@ -7,7 +7,7 @@ export async function createRoom(containerId: string, formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
   const icon = String(formData.get('icon') ?? '🧹');
   const freshnessDays = Number(formData.get('freshnessDays') ?? 7);
-  if (!name) return { error: 'Le nom de la pièce est requis.' };
+  if (!name) return { error: 'Le nom de la catégorie est requis.' };
 
   const supabase = await createClient();
   const { error } = await supabase.from('rooms').insert({
@@ -16,7 +16,7 @@ export async function createRoom(containerId: string, formData: FormData) {
     icon,
     freshness_days: Number.isFinite(freshnessDays) && freshnessDays > 0 ? freshnessDays : 7,
   });
-  if (error) return { error: 'Impossible de créer la pièce.' };
+  if (error) return { error: 'Impossible de créer la catégorie.' };
   revalidatePath(`/c/${containerId}`);
   return {};
 }

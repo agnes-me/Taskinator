@@ -34,7 +34,7 @@ function RoomCard({
             <button
               className="rounded-lg px-2 py-1 text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
               onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Options de la pièce"
+              aria-label="Options de la catégorie"
             >
               ⋯
             </button>
@@ -58,8 +58,8 @@ function RoomCard({
       {confirming && (
         <div className="flex flex-col gap-2 rounded-lg border border-fresh-low/40 bg-fresh-low/5 p-3 text-sm">
           <p>
-            Pour confirmer, tape le nom de la pièce (<strong>{room.name}</strong>). Les tâches associées seront conservées mais ne
-            seront plus rattachées à une pièce.
+            Pour confirmer, tape le nom de la catégorie (<strong>{room.name}</strong>). Les tâches associées seront conservées
+            mais ne seront plus rattachées à une catégorie.
           </p>
           <input
             value={confirmText}
@@ -140,14 +140,9 @@ export function RoomsClient({
               </button>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <Link href={`/c/${containerId}/templates`} className="text-sm text-[var(--text-muted)] hover:underline">
-              📋 Templates
-            </Link>
-            <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
-              + Nouvelle pièce
-            </button>
-          </div>
+          <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
+            + Nouvelle catégorie
+          </button>
         </div>
       )}
 
@@ -192,7 +187,7 @@ export function RoomsClient({
 
       {rooms.length === 0 ? (
         <p className="card p-6 text-center text-sm text-[var(--text-muted)]">
-          Aucune pièce pour l'instant. Créez-en une, ou appliquez un template depuis le lien Templates ci-dessus.
+          Aucune catégorie pour l'instant. Créez-en une, ou appliquez un template depuis « ⚙️ Paramètres ».
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

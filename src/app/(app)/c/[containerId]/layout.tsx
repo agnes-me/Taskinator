@@ -15,7 +15,7 @@ export default async function ContainerLayout({
   if (!container || !role) notFound();
 
   const tabs = [
-    { href: `/c/${containerId}`, label: '🧹 Pièces' },
+    { href: `/c/${containerId}`, label: '🧹 Catégories' },
     { href: `/c/${containerId}/tasks`, label: '✅ Tâches' },
     { href: `/c/${containerId}/calendar`, label: '📅 Calendrier' },
     { href: `/c/${containerId}/events`, label: '🎉 Événements' },
@@ -38,8 +38,8 @@ export default async function ContainerLayout({
             )}
           </div>
         </div>
-        <Link href={`/c/${containerId}/members`} className="text-sm text-[var(--text-muted)] hover:underline">
-          👥 Membres
+        <Link href={`/c/${containerId}/settings`} className="text-sm text-[var(--text-muted)] hover:underline">
+          ⚙️ Paramètres
         </Link>
       </header>
 

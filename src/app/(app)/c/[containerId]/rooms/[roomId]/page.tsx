@@ -29,7 +29,7 @@ export default async function RoomPage({ params }: { params: Promise<{ container
       <div className="flex items-center justify-between">
         <div>
           <Link href={`/c/${containerId}`} className="text-sm text-[var(--text-muted)] hover:underline">
-            ← Toutes les pièces
+            ← Toutes les catégories
           </Link>
           <h2 className="text-lg font-bold">
             {room.icon} {room.name}
@@ -37,7 +37,7 @@ export default async function RoomPage({ params }: { params: Promise<{ container
         </div>
         {canEdit && (
           <div className="flex items-center gap-2">
-            <Link href={`/c/${containerId}/templates?applyTo=${room.id}`} className="btn btn-ghost text-sm">
+            <Link href={`/c/${containerId}/settings?tab=rooms`} className="btn btn-ghost text-sm">
               Appliquer un template
             </Link>
             <RoomPauseControl containerId={containerId} roomId={room.id} pausedUntil={room.paused_until} />

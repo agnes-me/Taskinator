@@ -55,7 +55,7 @@ export async function createRoomTemplate(
 
 export async function createRoomFromTemplate(containerId: string, templateId: string, roomName: string, roomIcon: string) {
   const supabase = await createClient();
-  if (!roomName.trim()) return { error: 'Le nom de la pièce est requis.' };
+  if (!roomName.trim()) return { error: 'Le nom de la catégorie est requis.' };
 
   const { data: room, error: roomError } = await supabase
     .from('rooms')
@@ -63,10 +63,10 @@ export async function createRoomFromTemplate(containerId: string, templateId: st
     .select('id')
     .single();
 
-  if (roomError || !room) return { error: 'Impossible de créer la pièce.' };
+  if (roomError || !room) return { error: 'Impossible de créer la catégorie.' };
 
   const { error: applyError } = await supabase.rpc('apply_room_template', { p_template_id: templateId, p_room_id: room.id });
-  if (applyError) return { error: "La pièce a été créée mais l'application du template a échoué." };
+  if (applyError) return { error: "La catégorie a été créée mais l'application du template a échoué." };
 
   revalidatePath(`/c/${containerId}`);
   revalidatePath(`/c/${containerId}/tasks`);

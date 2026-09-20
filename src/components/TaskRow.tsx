@@ -48,6 +48,14 @@ export function TaskRow({
     });
   }
 
+  function quickToggle() {
+    if (task.status === 'done') {
+      startTransition(() => reopenTask(task.id, containerId));
+    } else {
+      quickComplete();
+    }
+  }
+
   if (editing) {
     return (
       <div className="card p-4" style={{ marginLeft: depth * 20 }}>
@@ -69,10 +77,10 @@ export function TaskRow({
       {/* Ligne compacte : toujours visible, pour voir beaucoup de tâches d'un coup. */}
       <div className="flex items-center gap-2">
         <button
-          disabled={!canComplete || pending || task.status === 'done'}
-          onClick={quickComplete}
+          disabled={!canComplete || pending}
+          onClick={quickToggle}
           className="btn btn-ghost !px-2 !py-1 text-xs disabled:opacity-40"
-          title={task.status === 'done' ? 'Déjà faite' : 'Marquer comme faite'}
+          title={task.status === 'done' ? 'Décocher (annuler)' : 'Marquer comme faite'}
         >
           {task.status === 'done' ? '✅' : '⬜️'}
         </button>

@@ -67,7 +67,7 @@ export function TaskForm({
       <div className="flex flex-wrap gap-3">
         {!fixedRoomId && (
           <label className="text-sm">
-            Pièce
+            Catégorie
             <select name="roomId" defaultValue={task?.room_id ?? ''} className="input mt-1">
               <option value="">—</option>
               {rooms.map((r) => (
@@ -123,7 +123,7 @@ export function TaskForm({
           {recurrenceType !== 'none' && (
             <label className="text-sm">
               Fraîcheur (jours avant dégradation)
-              <input name="freshnessDays" type="number" min={1} defaultValue={task?.freshness_days ?? ''} placeholder="défaut pièce" className="input ml-1 w-28" />
+              <input name="freshnessDays" type="number" min={1} defaultValue={task?.freshness_days ?? ''} placeholder="défaut catégorie" className="input ml-1 w-28" />
             </label>
           )}
         </div>

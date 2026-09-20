@@ -33,7 +33,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="card w-full max-w-sm p-8">
         <div className="mb-6 text-center">
-          <div className="text-3xl">🧺</div>
+          <div className="text-3xl">✅</div>
           <h1 className="mt-2 text-xl font-bold">Taskinator</h1>
           <p className="text-sm text-[var(--text-muted)]">Connectez-vous à votre foyer</p>
         </div>

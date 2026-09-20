@@ -127,6 +127,18 @@ export async function resumeTask(taskId: string, containerId: string) {
   revalidateTaskPaths(containerId);
 }
 
+export async function rescheduleTask(
+  taskId: string,
+  containerId: string,
+  patch: { due_date?: string; start_at?: string | null; on_calendar?: boolean },
+) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('tasks').update(patch).eq('id', taskId);
+  if (error) return { error: 'Impossible de déplacer la tâche.' };
+  revalidateTaskPaths(containerId);
+  return {};
+}
+
 export async function getTaskPhotoUrl(path: string) {
   const supabase = await createClient();
   const { data } = await supabase.storage.from('task-photos').createSignedUrl(path, 3600);

@@ -28,6 +28,25 @@ export async function updateThemeGradient(colors: string[]) {
   return {};
 }
 
+export async function updateGoogleIcalUrl(url: string) {
+  const cleaned = url.trim();
+  if (cleaned && !/^https:\/\/.+\.ics(\?.*)?$/i.test(cleaned) && !cleaned.includes('calendar.google.com')) {
+    return { error: "Ça ne ressemble pas à une adresse iCal (elle devrait finir par .ics ou venir de calendar.google.com)." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié.' };
+
+  const { error } = await supabase.from('profiles').update({ google_ical_url: cleaned || null }).eq('id', user.id);
+  if (error) return { error: "Impossible d'enregistrer l'adresse." };
+
+  revalidatePath('/', 'layout');
+  return {};
+}
+
 export async function updateDisplayName(name: string) {
   const supabase = await createClient();
   const {

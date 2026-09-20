@@ -98,10 +98,10 @@ function TemplateCard({
           {rooms.length > 0 && (
             <div className="flex gap-3 text-xs text-[var(--text-muted)]">
               <label className="flex items-center gap-1">
-                <input type="radio" checked={mode === 'existing'} onChange={() => setMode('existing')} /> Pièce existante
+                <input type="radio" checked={mode === 'existing'} onChange={() => setMode('existing')} /> Catégorie existante
               </label>
               <label className="flex items-center gap-1">
-                <input type="radio" checked={mode === 'new'} onChange={() => setMode('new')} /> Nouvelle pièce
+                <input type="radio" checked={mode === 'new'} onChange={() => setMode('new')} /> Nouvelle catégorie
               </label>
             </div>
           )}
@@ -118,7 +118,7 @@ function TemplateCard({
               <input
                 value={newRoomName}
                 onChange={(e) => setNewRoomName(e.target.value)}
-                placeholder="Nom de la nouvelle pièce"
+                placeholder="Nom de la nouvelle catégorie"
                 className="input !py-1 flex-1 text-sm"
               />
             )}
@@ -335,7 +335,7 @@ export function TemplatesClient({
   const sections: { title: string; items: TemplateSummary[] }[] = [
     { title: 'Mes templates', items: personal },
     { title: 'Partagés dans ce conteneur', items: container },
-    { title: 'Bibliothèque système (par pièce)', items: system },
+    { title: 'Bibliothèque système (par catégorie)', items: system },
     { title: 'Marketplace communautaire', items: marketplace },
   ];
 

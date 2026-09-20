@@ -28,7 +28,7 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="card w-full max-w-sm p-8">
         <div className="mb-6 text-center">
-          <div className="text-3xl">🧺</div>
+          <div className="text-3xl">✅</div>
           <h1 className="mt-2 text-xl font-bold">Créer un compte</h1>
         </div>
         <form action={formAction} className="flex flex-col gap-3">
