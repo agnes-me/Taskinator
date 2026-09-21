@@ -1,6 +1,7 @@
 package com.taskinator.app.ui.container
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,11 +15,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +45,15 @@ import com.taskinator.app.ui.theme.FreshMid
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContainerTasksScreen(app: TaskinatorApplication, containerId: String, containerName: String, onBack: () -> Unit) {
+fun ContainerTasksScreen(
+    app: TaskinatorApplication,
+    containerId: String,
+    containerName: String,
+    onBack: () -> Unit,
+    onNewTask: () -> Unit,
+    onEditTask: (String) -> Unit,
+    onManageRooms: () -> Unit,
+) {
     val viewModel: ContainerTasksViewModel = viewModel(
         factory = SimpleViewModelFactory { ContainerTasksViewModel(containerId, app.container) },
     )
@@ -55,7 +67,17 @@ fun ContainerTasksScreen(app: TaskinatorApplication, containerId: String, contai
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
                     }
                 },
+                actions = {
+                    IconButton(onClick = onManageRooms) {
+                        Icon(Icons.Filled.Category, contentDescription = "Gérer les catégories")
+                    }
+                },
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onNewTask) {
+                Icon(Icons.Filled.Add, contentDescription = "Nouvelle tâche")
+            }
         },
     ) { padding ->
         if (viewModel.isLoading && viewModel.tasks.isEmpty()) {
@@ -87,7 +109,7 @@ fun ContainerTasksScreen(app: TaskinatorApplication, containerId: String, contai
                 }
             }
             items(viewModel.tasks, key = { it.id }) { task ->
-                TaskRowItem(task = task, onToggle = { viewModel.completeTask(task.id) })
+                TaskRowItem(task = task, onToggle = { viewModel.completeTask(task.id) }, onClick = { onEditTask(task.id) })
             }
         }
     }
@@ -100,9 +122,9 @@ private fun priorityColor(priority: String): Color = when (priority) {
 }
 
 @Composable
-private fun TaskRowItem(task: TaskItem, onToggle: () -> Unit) {
+private fun TaskRowItem(task: TaskItem, onToggle: () -> Unit, onClick: () -> Unit) {
     val done = task.status == "done"
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable(onClick = onClick)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

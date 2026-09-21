@@ -43,6 +43,7 @@ data class Room(
     val id: String,
     val name: String,
     val icon: String,
+    @SerialName("freshness_days") val freshnessDays: Int = 7,
 )
 
 @Serializable

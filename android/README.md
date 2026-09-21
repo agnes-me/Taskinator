@@ -47,6 +47,18 @@ d'accueil Android → Widgets → Taskinator → glisser le widget voulu.
 - Tableau de bord : mes tâches à venir (7 prochains jours, assignées à moi),
   liste des conteneurs, lien vers la connexion Google Calendar.
 - Liste des tâches d'un conteneur, avec case à cocher pour les valider.
+- **Créer, modifier et supprimer une tâche** depuis le mobile (titre,
+  description, priorité, catégorie, échéance) — bouton + sur l'écran d'un
+  conteneur, tap sur une tâche existante pour la modifier.
+- **Créer, modifier et supprimer un conteneur** (nom, icône, couleur) —
+  bouton + à côté du nom de chaque foyer sur le tableau de bord, icône
+  crayon sur chaque conteneur pour le modifier.
+- **Gérer les catégories d'un conteneur** (créer/modifier/supprimer, avec
+  les mêmes icônes que sur le web et la fraîcheur par défaut) — bouton 🗂️
+  sur l'écran d'un conteneur.
+- **Vue calendrier** (mois/semaine, bouton 📅 sur le tableau de bord) :
+  toutes les tâches du foyer par échéance, fusionnées avec Google Calendar
+  si connecté.
 - **Widget « Mes tâches »** : tâches à venir, case à cocher directement
   depuis le widget (sans ouvrir l'appli), tap sur le widget pour ouvrir
   l'appli.
@@ -66,12 +78,16 @@ d'accueil Android → Widgets → Taskinator → glisser le widget voulu.
 
 ## Ce qui n'est pas dans ce v1 (reste web-only pour l'instant)
 
-- Création de compte / invitations / gestion des membres.
+- Invitations / gestion des membres et de leurs rôles.
 - Templates de pièces et d'événements, marketplace, modération.
-- Retroplanning d'événement, vue calendrier mois/semaine avec glisser-
-  déposer (le widget Calendrier est une liste chronologique, pas une grille).
-- Sous-tâches, pause, pièce jointe photo à la complétion, dégradé de thème.
-- Ajout/édition de tâches depuis le mobile (lecture + complétion seulement).
+- Événements et leur rétroplanning (création d'un événement à partir d'un
+  template avec ses tâches décalées dans le temps).
+- Sous-tâches, pause, pièce jointe photo à la complétion, dégradé de thème
+  (le web permet de personnaliser un dégradé de couleurs par utilisateur ;
+  pas encore sur mobile).
+- Suppression d'un conteneur (uniquement création/modification pour l'instant
+  — la suppression cascade sur ses tâches et catégories, jugée trop risquée
+  pour un premier jet sans confirmation renforcée).
 
 Ces écrans restent accessibles via le web (qui fonctionne aussi comme PWA
 installable sur Android — voir la page Réglages de l'appli web).

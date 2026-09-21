@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -44,6 +46,8 @@ fun DashboardScreen(
     app: TaskinatorApplication,
     onOpenContainer: (Household, Container) -> Unit,
     onOpenCalendar: () -> Unit,
+    onNewContainer: (householdId: String) -> Unit,
+    onEditContainer: (containerId: String) -> Unit,
     onSignedOut: () -> Unit,
 ) {
     val viewModel: DashboardViewModel = viewModel(
@@ -104,10 +108,24 @@ fun DashboardScreen(
             }
             viewModel.households.forEach { household ->
                 item {
-                    Text(household.name, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(household.name, style = MaterialTheme.typography.labelLarge)
+                        IconButton(onClick = { onNewContainer(household.id) }) {
+                            Icon(Icons.Filled.Add, contentDescription = "Nouveau conteneur")
+                        }
+                    }
                 }
                 items(household.containers, key = { it.id }) { container ->
-                    ContainerRow(name = container.name, icon = container.icon, onClick = { onOpenContainer(household, container) })
+                    ContainerRow(
+                        name = container.name,
+                        icon = container.icon,
+                        onClick = { onOpenContainer(household, container) },
+                        onEdit = { onEditContainer(container.id) },
+                    )
                 }
             }
         }
@@ -142,7 +160,7 @@ private fun MyTaskRow(task: TaskItem, onComplete: () -> Unit) {
 }
 
 @Composable
-private fun ContainerRow(name: String, icon: String, onClick: () -> Unit) {
+private fun ContainerRow(name: String, icon: String, onClick: () -> Unit, onEdit: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -152,11 +170,14 @@ private fun ContainerRow(name: String, icon: String, onClick: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(start = 14.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(icon, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(end = 12.dp))
-            Text(name, style = MaterialTheme.typography.bodyLarge)
+            Text(icon, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(end = 12.dp, top = 14.dp, bottom = 14.dp))
+            Text(name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Filled.Edit, contentDescription = "Modifier le conteneur")
+            }
         }
     }
 }
