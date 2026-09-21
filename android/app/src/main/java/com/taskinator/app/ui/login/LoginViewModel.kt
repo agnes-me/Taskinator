@@ -41,7 +41,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
             } catch (e: ApiException) {
                 errorMessage = e.message ?: "Connexion impossible."
             } catch (e: Exception) {
-                errorMessage = "Connexion impossible — vérifie ta connexion internet."
+                errorMessage = "Connexion impossible — ${e::class.simpleName}: ${e.message ?: "erreur inconnue"}"
             } finally {
                 isLoading = false
             }
