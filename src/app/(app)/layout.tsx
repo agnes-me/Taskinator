@@ -33,6 +33,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Link href="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
               📊 Tableau de bord
             </Link>
+            <Link href="/calendar" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
+              📅 Calendrier
+            </Link>
           </nav>
 
           <div className="flex flex-col gap-4 overflow-y-auto">

@@ -2,7 +2,7 @@ import type { SupabaseServerClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
 import type { Database } from '@/types/database';
 import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
-import { todayISO, addDaysISO } from '@/lib/utils';
+import { todayISO } from '@/lib/utils';
 
 export interface DashboardContainer {
   id: string;
@@ -75,18 +75,20 @@ export async function getMyUpcomingTasks(supabase: SupabaseServerClient): Promis
   const user = await getAuthUser();
   if (!user) return [];
 
-  const { data: assigned } = await supabase.from('task_assignees').select('task_id').eq('user_id', user.id);
-  const taskIds = (assigned ?? []).map((a) => a.task_id);
-  if (taskIds.length === 0) return [];
-
+  // Ne filtre plus par assignation nommée (table task_assignees) : de nombreux foyers n'assignent
+  // jamais une tâche à quelqu'un en particulier, un filtre par assigné renvoyait alors
+  // systématiquement une liste vide quelle que soit l'échéance. Ne filtre plus non plus sur une
+  // fenêtre fixe de 7 jours, pour qu'une tâche d'événement à échéance dans plusieurs mois reste
+  // "à venir". RLS restreint déjà aux tâches des conteneurs dont l'utilisateur est membre.
   const { data: tasks } = await supabase
     .from('tasks')
     .select('id, title, due_date, priority, container_id, containers(name)')
-    .in('id', taskIds)
+    .is('parent_task_id', null)
+    .not('due_date', 'is', null)
     .neq('status', 'done')
     .neq('status', 'cancelled')
-    .lte('due_date', addDaysISO(todayISO(), 7))
-    .order('due_date', { ascending: true });
+    .order('due_date', { ascending: true })
+    .limit(10);
 
   return (tasks ?? []).map((t) => ({
     id: t.id,

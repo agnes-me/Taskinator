@@ -118,6 +118,25 @@ export async function listTasksWithDueDates(supabase: SupabaseServerClient, cont
   return (data ?? []) as unknown as CalendarTask[];
 }
 
+export interface GlobalCalendarTask extends CalendarTask {
+  container_id: string;
+  container: { id: string; name: string; icon: string; color: string } | null;
+}
+
+/** Comme listTasksWithDueDates, mais tous conteneurs confondus (RLS restreint déjà à ceux dont l'utilisateur est membre) — pour la vue calendrier globale. */
+export async function listAllTasksWithDueDates(supabase: SupabaseServerClient): Promise<GlobalCalendarTask[]> {
+  const { data } = await supabase
+    .from('tasks')
+    .select(
+      'id, title, due_date, start_at, on_calendar, priority, status, room_id, container_id, room:rooms(icon, name), event:events!tasks_source_event_id_fkey(name), container:containers(id, name, icon, color)',
+    )
+    .not('due_date', 'is', null)
+    .is('parent_task_id', null)
+    .neq('status', 'cancelled');
+
+  return (data ?? []) as unknown as GlobalCalendarTask[];
+}
+
 export async function getTaskWithHistory(supabase: SupabaseServerClient, taskId: string) {
   const { data: task } = await supabase.from('tasks').select(TASK_SELECT).eq('id', taskId).maybeSingle();
   const { data: completions } = await supabase

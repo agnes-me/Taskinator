@@ -20,7 +20,7 @@ export default async function DashboardPage() {
 
       {myTasks.length > 0 && (
         <div className="card p-4">
-          <h2 className="mb-3 font-semibold">📌 Mes tâches (7 prochains jours)</h2>
+          <h2 className="mb-3 font-semibold">📌 Mes prochaines tâches</h2>
           <ul className="flex flex-col gap-2">
             {myTasks.map((t) => (
               <li key={t.id}>
