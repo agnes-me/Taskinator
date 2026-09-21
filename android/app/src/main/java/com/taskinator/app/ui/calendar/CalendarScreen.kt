@@ -80,12 +80,12 @@ fun CalendarScreen(app: TaskinatorApplication, onBack: () -> Unit) {
             ) {
                 FilterChip(
                     selected = viewModel.mode == CalendarMode.MONTH,
-                    onClick = { viewModel.setMode(CalendarMode.MONTH) },
+                    onClick = { viewModel.changeMode(CalendarMode.MONTH) },
                     label = { Text("Mois") },
                 )
                 FilterChip(
                     selected = viewModel.mode == CalendarMode.WEEK,
-                    onClick = { viewModel.setMode(CalendarMode.WEEK) },
+                    onClick = { viewModel.changeMode(CalendarMode.WEEK) },
                     label = { Text("Semaine") },
                 )
             }

@@ -45,7 +45,7 @@ class CalendarViewModel(private val app: TaskinatorApplication) : ViewModel() {
         refresh()
     }
 
-    fun setMode(newMode: CalendarMode) {
+    fun changeMode(newMode: CalendarMode) {
         if (newMode == mode) return
         mode = newMode
         refresh()
