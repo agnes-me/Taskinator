@@ -2,6 +2,7 @@ package com.taskinator.app.ui.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
@@ -36,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,8 +54,17 @@ import com.taskinator.app.ui.theme.FreshLow
 import com.taskinator.app.ui.theme.FreshMid
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
+
+private val WEEK_HOURS = 6..22
+private const val LABEL_COL_WIDTH_DP = 44
+private const val DAY_COL_WIDTH_DP = 108
+
+private fun localHour(startAt: String): Int? =
+    runCatching { OffsetDateTime.parse(startAt).atZoneSameInstant(ZoneId.systemDefault()).hour }.getOrNull()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -142,28 +155,13 @@ fun CalendarScreen(app: TaskinatorApplication, onBack: () -> Unit) {
                     }
                     CalendarMode.WEEK -> {
                         val (start, _) = viewModel.visibleRange()
-                        for (offset in 0..6) {
-                            val date = start.plusDays(offset.toLong())
-                            item {
-                                Text(
-                                    formatDayHeader(date),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
-                                )
-                            }
-                            val dayTasks = viewModel.tasksByDate[date].orEmpty()
-                            val dayEvents = viewModel.eventsByDate[date].orEmpty()
-                            if (dayTasks.isEmpty() && dayEvents.isEmpty()) {
-                                item {
-                                    Text(
-                                        "Rien de prévu.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            } else {
-                                agendaItems(tasks = dayTasks, events = dayEvents, onComplete = viewModel::completeTask)
-                            }
+                        item {
+                            WeekGrid(
+                                days = (0..6).map { start.plusDays(it.toLong()) },
+                                tasksByDate = viewModel.tasksByDate,
+                                eventsByDate = viewModel.eventsByDate,
+                                onToggleTask = { viewModel.completeTask(it.id) },
+                            )
                         }
                     }
                 }
@@ -188,6 +186,114 @@ private fun androidx.compose.foundation.lazy.LazyListScope.agendaItems(
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
+    }
+}
+
+@Composable
+private fun WeekGrid(
+    days: List<LocalDate>,
+    tasksByDate: Map<LocalDate, List<TaskItem>>,
+    eventsByDate: Map<LocalDate, List<MergedGoogleEvent>>,
+    onToggleTask: (TaskItem) -> Unit,
+) {
+    val today = LocalDate.now()
+    Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+        Column {
+            Row {
+                Box(modifier = Modifier.width(LABEL_COL_WIDTH_DP.dp))
+                days.forEach { day ->
+                    Box(modifier = Modifier.width(DAY_COL_WIDTH_DP.dp).padding(4.dp), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "${day.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.FRENCH).uppercase()} ${day.dayOfMonth}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (day == today) FontWeight.Bold else FontWeight.Normal,
+                            color = if (day == today) BrandTeal else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+            HorizontalDivider()
+
+            Row {
+                Box(modifier = Modifier.width(LABEL_COL_WIDTH_DP.dp).padding(4.dp)) {
+                    Text("—", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                days.forEach { day ->
+                    val allDayEvents = eventsByDate[day].orEmpty().filter { it.startAt == null }
+                    val dayTasks = tasksByDate[day].orEmpty()
+                    GridCell {
+                        allDayEvents.forEach { GridEventChip(it) }
+                        dayTasks.forEach { GridTaskChip(it, onToggleTask) }
+                    }
+                }
+            }
+            HorizontalDivider()
+
+            WEEK_HOURS.forEach { hour ->
+                Row {
+                    Box(modifier = Modifier.width(LABEL_COL_WIDTH_DP.dp).padding(4.dp)) {
+                        Text("${hour}h", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    days.forEach { day ->
+                        val hourEvents = eventsByDate[day].orEmpty().filter { it.startAt?.let { at -> localHour(at) } == hour }
+                        GridCell {
+                            hourEvents.forEach { GridEventChip(it) }
+                        }
+                    }
+                }
+                HorizontalDivider()
+            }
+        }
+    }
+}
+
+@Composable
+private fun GridCell(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier.width(DAY_COL_WIDTH_DP.dp).padding(2.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+        content = content,
+    )
+}
+
+@Composable
+private fun GridEventChip(event: MergedGoogleEvent) {
+    val color = event.color
+        ?.let { runCatching { androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
+        ?: BrandIndigo
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+            .background(color.copy(alpha = 0.12f))
+            .padding(horizontal = 3.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(color))
+        Spacer(modifier = Modifier.width(3.dp))
+        Text(event.title, style = MaterialTheme.typography.labelSmall, color = color, maxLines = 1)
+    }
+}
+
+@Composable
+private fun GridTaskChip(task: TaskItem, onToggle: (TaskItem) -> Unit) {
+    val done = task.status == "done"
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+            .clickable { onToggle(task) }
+            .padding(horizontal = 3.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(priorityColor(task.priority)))
+        Spacer(modifier = Modifier.width(3.dp))
+        Text(
+            task.title,
+            style = MaterialTheme.typography.labelSmall,
+            textDecoration = if (done) TextDecoration.LineThrough else null,
+            maxLines = 1,
+        )
     }
 }
 

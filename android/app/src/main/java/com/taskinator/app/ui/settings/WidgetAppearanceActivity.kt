@@ -28,14 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.taskinator.app.data.WidgetAppearanceStore
 import com.taskinator.app.ui.theme.TaskinatorTheme
-import com.taskinator.app.widget.TaskinatorWidget
 import com.taskinator.app.widget.WidgetStyle
 import com.taskinator.app.widget.calendar.CalendarWidget
 import com.taskinator.app.widget.tasklist.TaskListWidget
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.launch
 
-/** Réglage de la transparence du fond sombre des trois widgets, avec aperçu en direct. */
+/** Réglage de la transparence du fond sombre des deux widgets, avec aperçu en direct. */
 class WidgetAppearanceActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +47,6 @@ class WidgetAppearanceActivity : ComponentActivity() {
                         onOpacityChanged = { value ->
                             lifecycleScope.launch {
                                 WidgetAppearanceStore.setOpacity(this@WidgetAppearanceActivity, value)
-                                TaskinatorWidget().updateAll(this@WidgetAppearanceActivity)
                                 TaskListWidget().updateAll(this@WidgetAppearanceActivity)
                                 CalendarWidget().updateAll(this@WidgetAppearanceActivity)
                             }
@@ -73,7 +71,7 @@ private fun AppearanceScreen(onOpacityChanged: (Float) -> Unit) {
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
             Text("🎨 Apparence des widgets", style = MaterialTheme.typography.titleLarge)
             Text(
-                "Les trois widgets d'écran d'accueil sont sombres et transparents, pour se fondre dans ton fond d'écran. Règle ici le degré de transparence — l'aperçu ci-dessous se met à jour en direct, et le changement s'applique aux widgets déjà posés en quelques secondes.",
+                "Les deux widgets d'écran d'accueil sont sombres et transparents, pour se fondre dans ton fond d'écran. Règle ici le degré de transparence — l'aperçu ci-dessous se met à jour en direct, et le changement s'applique aux widgets déjà posés en quelques secondes.",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
             )
@@ -86,7 +84,7 @@ private fun AppearanceScreen(onOpacityChanged: (Float) -> Unit) {
                     .background(WidgetStyle.background(opacity)),
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("✅ Mes tâches", color = WidgetStyle.accent)
+                    Text("📋 Mes tâches", color = WidgetStyle.accent)
                     Text(
                         "Sortir les poubelles · demain",
                         color = WidgetStyle.titleText,

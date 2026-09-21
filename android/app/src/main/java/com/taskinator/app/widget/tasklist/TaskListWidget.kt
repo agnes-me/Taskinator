@@ -29,6 +29,7 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.defaultWeight
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -54,8 +55,18 @@ internal val FILTER_CONTAINER_KEY = stringPreferencesKey("tasklist_filter_contai
 internal val FILTER_CONTAINER_NAME_KEY = stringPreferencesKey("tasklist_filter_container_name")
 internal val FILTER_ROOM_KEY = stringPreferencesKey("tasklist_filter_room_id")
 internal val FILTER_ROOM_NAME_KEY = stringPreferencesKey("tasklist_filter_room_name")
+internal val FILTER_SCOPE_KEY = stringPreferencesKey("tasklist_filter_scope")
+internal const val DEFAULT_FILTER_SCOPE = "all"
 internal val taskListWidgetJson = Json { ignoreUnknownKeys = true }
 internal val LIST_TASK_ID_KEY = ActionParameters.Key<String>("tasklist_task_id")
+
+/** Ordre de rotation du bouton de filtre directement sur le widget, sans ouvrir l'appli. */
+private val SCOPE_CYCLE = listOf("today", "week", "all")
+private val SCOPE_LABEL = mapOf("today" to "🔴 Aujourd'hui", "week" to "🟠 Cette semaine", "all" to "⚪ Tout")
+internal fun nextScope(scope: String): String {
+    val idx = SCOPE_CYCLE.indexOf(scope).let { if (it < 0) 0 else it }
+    return SCOPE_CYCLE[(idx + 1) % SCOPE_CYCLE.size]
+}
 
 private val PRIORITY_DOT_COLOR = mapOf(
     "high" to Color(0xFFEF4444),
@@ -82,6 +93,7 @@ private fun TaskListWidgetContent(opacity: Float) {
     val containerName = prefs[FILTER_CONTAINER_NAME_KEY]
     val roomName = prefs[FILTER_ROOM_NAME_KEY]
     val subtitle = listOfNotNull(containerName, roomName).joinToString(" · ").ifBlank { "Tous les conteneurs" }
+    val scope = prefs[FILTER_SCOPE_KEY]?.ifBlank { null } ?: DEFAULT_FILTER_SCOPE
     val context = LocalContext.current
 
     Column(
@@ -92,10 +104,22 @@ private fun TaskListWidgetContent(opacity: Float) {
             .padding(12.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
-        Text(
-            text = "📋 Mes tâches",
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(WidgetStyle.accent)),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = GlanceModifier.fillMaxWidth()) {
+            Text(
+                text = "📋 Mes tâches",
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(WidgetStyle.accent)),
+                modifier = GlanceModifier.defaultWeight(),
+            )
+            Text(
+                text = SCOPE_LABEL[scope] ?: SCOPE_LABEL.getValue(DEFAULT_FILTER_SCOPE),
+                style = TextStyle(fontSize = 11.sp, color = ColorProvider(WidgetStyle.metaText)),
+                modifier = GlanceModifier
+                    .background(WidgetStyle.tapTargetBackground)
+                    .cornerRadius(10.dp)
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                    .clickable(actionRunCallback<CycleTaskListFilterAction>()),
+            )
+        }
         Text(
             text = subtitle,
             style = TextStyle(fontSize = 11.sp, color = ColorProvider(WidgetStyle.metaText)),

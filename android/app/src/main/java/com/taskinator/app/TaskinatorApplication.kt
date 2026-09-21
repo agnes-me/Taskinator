@@ -9,7 +9,6 @@ import com.taskinator.app.data.TokenStore
 import com.taskinator.app.data.google.GoogleAuthManager
 import com.taskinator.app.data.google.GoogleCalendarRepository
 import com.taskinator.app.data.ical.IcalSubscriptionRepository
-import com.taskinator.app.widget.WidgetRefreshScheduler
 import com.taskinator.app.widget.calendar.CalendarWidgetRefresh
 import com.taskinator.app.widget.tasklist.TaskListWidgetRefresh
 
@@ -26,7 +25,6 @@ class AppContainer(private val app: Application) {
 
     /** Demande un rafraîchissement immédiat de tous les widgets (après connexion ou complétion d'une tâche). */
     fun scheduleWidgetRefresh() {
-        WidgetRefreshScheduler.enqueueOneTime(app)
         TaskListWidgetRefresh.enqueueOneTime(app)
         CalendarWidgetRefresh.enqueueOneTime(app)
     }

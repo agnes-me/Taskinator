@@ -81,14 +81,19 @@ class TaskRepository(private val http: SupabaseHttp) {
         tasks
     }
 
-    /** Tâches triées par urgence, filtrées par conteneur et/ou catégorie (les deux optionnels). */
-    suspend fun getFilteredTasks(containerId: String?, roomId: String?): List<TaskItem> = withContext(Dispatchers.IO) {
+    /**
+     * Tâches triées par urgence, filtrées par conteneur et/ou catégorie (les deux optionnels), et
+     * optionnellement par échéance (dueBefore inclus — sert aussi bien à "en retard" qu'à "cette
+     * semaine" puisqu'on ne fixe pas de borne basse, une tâche en retard doit rester visible).
+     */
+    suspend fun getFilteredTasks(containerId: String?, roomId: String?, dueBefore: String? = null): List<TaskItem> = withContext(Dispatchers.IO) {
         val urlBuilder = "${SupabaseConfig.REST_URL}/tasks".toHttpUrl().newBuilder()
             .addQueryParameter("parent_task_id", "is.null")
             .addQueryParameter("status", "not.in.(done,cancelled)")
             .addQueryParameter("select", "id,title,description,status,priority,due_date,container_id,rooms(id,name,icon)")
         if (containerId != null) urlBuilder.addQueryParameter("container_id", "eq.$containerId")
         if (roomId != null) urlBuilder.addQueryParameter("room_id", "eq.$roomId")
+        if (dueBefore != null) urlBuilder.addQueryParameter("due_date", "lte.$dueBefore")
         val request = Request.Builder().url(urlBuilder.build()).get().build()
         val tasks: List<TaskItem> = http.client.executeOrThrow(request).use { resp ->
             json.decodeFromString(resp.body!!.string())
