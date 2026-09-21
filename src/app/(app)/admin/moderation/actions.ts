@@ -11,3 +11,13 @@ export async function moderateTemplate(kind: 'room' | 'event', templateId: strin
   revalidatePath('/admin/moderation');
   return {};
 }
+
+/** Retire un template déjà publié sur la marketplace — la policy RLS (is_super_admin()) fait office de garde-fou réel. */
+export async function deletePublishedTemplate(kind: 'room' | 'event', templateId: string) {
+  const supabase = await createClient();
+  const table = kind === 'room' ? 'room_templates' : 'event_templates';
+  const { error } = await supabase.from(table).delete().eq('id', templateId);
+  if (error) return { error: "Action refusée (réservée à l'administratrice)." };
+  revalidatePath('/admin/moderation');
+  return {};
+}

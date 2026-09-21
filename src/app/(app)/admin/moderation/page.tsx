@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
-import { listPendingModeration } from '@/lib/data/templates';
+import { listPendingModeration, listApprovedMarketplace } from '@/lib/data/templates';
 import { ModerationClient } from './ModerationClient';
 
 export default async function ModerationPage() {
@@ -10,7 +10,7 @@ export default async function ModerationPage() {
 
   const supabase = await createClient();
 
-  const { roomTemplates, eventTemplates } = await listPendingModeration(supabase);
+  const [pending, published] = await Promise.all([listPendingModeration(supabase), listApprovedMarketplace(supabase)]);
 
   return (
     <div>
@@ -19,7 +19,12 @@ export default async function ModerationPage() {
         Aucun envoi d'e-mail automatique n'est configuré (nécessiterait une clé API d'un service mail) — pensez à consulter cette page
         après une publication.
       </p>
-      <ModerationClient roomTemplates={roomTemplates} eventTemplates={eventTemplates} />
+      <ModerationClient
+        pendingRoomTemplates={pending.roomTemplates}
+        pendingEventTemplates={pending.eventTemplates}
+        publishedRoomTemplates={published.roomTemplates}
+        publishedEventTemplates={published.eventTemplates}
+      />
     </div>
   );
 }

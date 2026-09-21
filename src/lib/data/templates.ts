@@ -57,3 +57,12 @@ export async function listPendingModeration(supabase: SupabaseServerClient) {
   ]);
   return { roomTemplates: roomTemplates ?? [], eventTemplates: eventTemplates ?? [] };
 }
+
+/** Templates déjà publiés sur la marketplace (approuvés) — pour que la modération puisse aussi les retirer. */
+export async function listApprovedMarketplace(supabase: SupabaseServerClient) {
+  const [{ data: roomTemplates }, { data: eventTemplates }] = await Promise.all([
+    supabase.from('room_templates').select('id, name, icon, created_by').eq('visibility', 'public').eq('moderation_status', 'approved'),
+    supabase.from('event_templates').select('id, name, icon, created_by').eq('visibility', 'public').eq('moderation_status', 'approved'),
+  ]);
+  return { roomTemplates: roomTemplates ?? [], eventTemplates: eventTemplates ?? [] };
+}
