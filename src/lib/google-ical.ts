@@ -3,6 +3,7 @@ export interface GoogleEvent {
   summary: string;
   date: string; // yyyy-mm-dd, for grouping onto the calendar grid
   startAt: string | null; // full ISO datetime when timed, null when all-day
+  calendarLabel?: string; // nom de l'abonnement iCal d'origine, quand plusieurs sont fusionnés
 }
 
 export interface GoogleEventsResult {

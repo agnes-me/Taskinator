@@ -55,7 +55,7 @@ export function CalendarClient({
   tasks,
   events,
   googleEvents,
-  googleEventsError,
+  googleEventsErrors,
   rooms,
   roomFilter,
   canEdit,
@@ -68,7 +68,7 @@ export function CalendarClient({
   tasks: CalendarTask[];
   events: CalendarEvent[];
   googleEvents: GoogleEvent[];
-  googleEventsError: string | null;
+  googleEventsErrors: { label: string; message: string }[];
   rooms: CalendarRoom[];
   roomFilter: string;
   canEdit: boolean;
@@ -199,9 +199,11 @@ export function CalendarClient({
 
     return (
       <div className="flex flex-col gap-4">
-        {googleEventsError && (
-          <p className="rounded-lg bg-fresh-low/10 px-3 py-2 text-sm text-fresh-low">⚠️ {googleEventsError}</p>
-        )}
+        {googleEventsErrors.map((e) => (
+          <p key={e.label} className="rounded-lg bg-fresh-low/10 px-3 py-2 text-sm text-fresh-low">
+            ⚠️ {e.label} : {e.message}
+          </p>
+        ))}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {viewToggle}
           {roomFilterChips}
@@ -258,7 +260,7 @@ export function CalendarClient({
                     </span>
                   ))}
                   {dayGoogleAllDay.map((g) => (
-                    <span key={g.id} className="truncate rounded bg-sky-500/10 px-1 py-0.5 text-sky-600" title={g.summary}>
+                    <span key={g.id} className="truncate rounded bg-sky-500/10 px-1 py-0.5 text-sky-600" title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
                       🗓️ {g.summary}
                     </span>
                   ))}
@@ -303,7 +305,7 @@ export function CalendarClient({
                       }}
                     >
                       {hourGoogle.map((g) => (
-                        <span key={g.id} className="truncate rounded bg-sky-500/10 px-1 py-0.5 text-sky-600" title={g.summary}>
+                        <span key={g.id} className="truncate rounded bg-sky-500/10 px-1 py-0.5 text-sky-600" title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
                           🗓️ {g.summary}
                         </span>
                       ))}
@@ -348,9 +350,11 @@ export function CalendarClient({
 
   return (
     <div className="flex flex-col gap-4">
-      {googleEventsError && (
-        <p className="rounded-lg bg-fresh-low/10 px-3 py-2 text-sm text-fresh-low">⚠️ {googleEventsError}</p>
-      )}
+      {googleEventsErrors.map((e) => (
+        <p key={e.label} className="rounded-lg bg-fresh-low/10 px-3 py-2 text-sm text-fresh-low">
+          ⚠️ {e.label} : {e.message}
+        </p>
+      ))}
       <div className="flex flex-wrap items-center justify-between gap-2">
         {viewToggle}
         {roomFilterChips}
@@ -408,7 +412,7 @@ export function CalendarClient({
                   </span>
                 ))}
                 {dayGoogle.slice(0, 2).map((g) => (
-                  <span key={g.id} className="truncate rounded bg-sky-500/10 px-1 py-0.5 text-[10px] text-sky-600" title={g.summary}>
+                  <span key={g.id} className="truncate rounded bg-sky-500/10 px-1 py-0.5 text-[10px] text-sky-600" title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
                     🗓️ {g.summary}
                   </span>
                 ))}

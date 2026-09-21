@@ -17,17 +17,23 @@ export default async function CalendarPage({
   const supabase = await createClient();
   const user = await getAuthUser();
 
-  const [{ role }, tasks, { data: events }, { data: rooms }, { data: profile }] = await Promise.all([
+  const [{ role }, tasks, { data: events }, { data: rooms }, { data: subscriptions }] = await Promise.all([
     getContainerContext(containerId),
     listTasksWithDueDates(supabase, containerId),
     supabase.from('events').select('id, name, event_date').eq('container_id', containerId),
     supabase.from('rooms').select('id, name, icon').eq('container_id', containerId).order('sort_order'),
-    supabase.from('profiles').select('google_ical_url').eq('id', user?.id ?? '').maybeSingle(),
+    supabase.from('ical_subscriptions').select('id, label, url').eq('user_id', user?.id ?? '').order('sort_order'),
   ]);
 
-  const { events: googleEvents, error: googleEventsError } = profile?.google_ical_url
-    ? await fetchGoogleEvents(profile.google_ical_url)
-    : { events: [], error: null };
+  const results = await Promise.all(
+    (subscriptions ?? []).map(async (sub) => ({ sub, result: await fetchGoogleEvents(sub.url) })),
+  );
+  const googleEvents = results.flatMap(({ sub, result }) =>
+    result.events.map((e) => ({ ...e, id: `${sub.id}:${e.id}`, calendarLabel: sub.label })),
+  );
+  const googleEventsErrors = results
+    .filter(({ result }) => result.error)
+    .map(({ sub, result }) => ({ label: sub.label, message: result.error as string }));
 
   const canEdit = role === 'admin' || role === 'member';
 
@@ -50,7 +56,7 @@ export default async function CalendarPage({
       tasks={filteredTasks}
       events={events ?? []}
       googleEvents={googleEvents}
-      googleEventsError={googleEventsError}
+      googleEventsErrors={googleEventsErrors}
       rooms={rooms ?? []}
       roomFilter={roomFilter ?? ''}
       canEdit={canEdit}

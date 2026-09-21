@@ -16,7 +16,6 @@ export interface Database {
           display_name: string | null;
           avatar_color: string;
           theme_gradient: string[];
-          google_ical_url: string | null;
           created_at: string;
         };
         Insert: {
@@ -25,10 +24,14 @@ export interface Database {
           display_name?: string | null;
           avatar_color?: string;
           theme_gradient?: string[];
-          google_ical_url?: string | null;
           created_at?: string;
         };
-        Update: Partial<{ display_name: string | null; avatar_color: string; theme_gradient: string[]; google_ical_url: string | null }>;
+        Update: Partial<{ display_name: string | null; avatar_color: string; theme_gradient: string[] }>;
+      };
+      ical_subscriptions: {
+        Row: { id: string; user_id: string; label: string; url: string; sort_order: number; created_at: string };
+        Insert: { id?: string; user_id: string; label: string; url: string; sort_order?: number; created_at?: string };
+        Update: Partial<{ label: string; url: string; sort_order: number }>;
       };
       households: {
         Row: { id: string; name: string; created_at: string };

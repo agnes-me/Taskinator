@@ -28,10 +28,18 @@ export async function updateThemeGradient(colors: string[]) {
   return {};
 }
 
-export async function updateGoogleIcalUrl(url: string) {
-  const cleaned = url.trim();
-  if (cleaned && !/^https:\/\/.+\.ics(\?.*)?$/i.test(cleaned) && !cleaned.includes('calendar.google.com')) {
-    return { error: "Ça ne ressemble pas à une adresse iCal (elle devrait finir par .ics ou venir de calendar.google.com)." };
+const ICS_URL_RE = /^https:\/\/.+\.ics(\?.*)?$/i;
+
+export async function addIcalSubscription(label: string, url: string) {
+  const cleanedLabel = label.trim() || 'Calendrier';
+  const cleanedUrl = url.trim();
+  if (!ICS_URL_RE.test(cleanedUrl)) {
+    return {
+      error:
+        "Cette adresse ne ressemble pas à un fichier iCal (elle doit se terminer par .ics). Sur Google Calendar : " +
+        "Réglages du calendrier concerné → « Intégrer l'agenda » → « Adresse secrète au format iCal » — pas le lien " +
+        "« Obtenir le lien pour le partage », qui ne fonctionne pas ici.",
+    };
   }
 
   const supabase = await createClient();
@@ -40,8 +48,17 @@ export async function updateGoogleIcalUrl(url: string) {
   } = await supabase.auth.getUser();
   if (!user) return { error: 'Non authentifié.' };
 
-  const { error } = await supabase.from('profiles').update({ google_ical_url: cleaned || null }).eq('id', user.id);
-  if (error) return { error: "Impossible d'enregistrer l'adresse." };
+  const { error } = await supabase.from('ical_subscriptions').insert({ user_id: user.id, label: cleanedLabel, url: cleanedUrl });
+  if (error) return { error: "Impossible d'enregistrer ce calendrier." };
+
+  revalidatePath('/', 'layout');
+  return {};
+}
+
+export async function deleteIcalSubscription(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('ical_subscriptions').delete().eq('id', id);
+  if (error) return { error: 'Impossible de supprimer ce calendrier.' };
 
   revalidatePath('/', 'layout');
   return {};
