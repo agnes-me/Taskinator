@@ -30,9 +30,13 @@ class GoogleAuthManager(context: Context) {
             .addOnFailureListener { cont.resumeWithException(it) }
     }
 
-    /** À appeler avec l'Intent reçu dans le callback de résolution du consentement (IntentSenderRequest). */
+    /**
+     * À appeler avec l'Intent reçu dans le callback de résolution du consentement (IntentSenderRequest).
+     * Ne masque pas les exceptions (contrairement à avant) : l'appelant les affiche pour diagnostiquer
+     * un échec de consentement, plutôt que de simplement revenir silencieusement à l'état déconnecté.
+     */
     fun resultFromIntent(data: Intent?): AuthorizationResult? =
-        data?.let { runCatching { client.getAuthorizationResultFromIntent(it) }.getOrNull() }
+        data?.let { client.getAuthorizationResultFromIntent(it) }
 
     /** Jeton d'accès si déjà autorisé, sans afficher aucun écran — pour un rafraîchissement en tâche de fond. */
     suspend fun getAccessTokenSilently(): String? = try {
