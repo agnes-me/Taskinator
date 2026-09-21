@@ -40,7 +40,7 @@ export default async function CalendarPage({
   const [yearStr, monthStr] = (monthParam ?? '').split('-');
   const year = Number(yearStr) || now.getFullYear();
   const month = monthStr ? Number(monthStr) - 1 : now.getMonth();
-  const view = viewParam === 'week' ? 'week' : 'month';
+  const view = viewParam === 'month' ? 'month' : 'week';
   const weekAnchor = weekParam || now.toISOString().slice(0, 10);
 
   const filteredTasks = roomFilter ? tasks.filter((t) => t.room_id === roomFilter) : tasks;

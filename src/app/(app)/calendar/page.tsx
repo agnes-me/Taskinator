@@ -39,7 +39,7 @@ export default async function GlobalCalendarPage({
   const [yearStr, monthStr] = (monthParam ?? '').split('-');
   const year = Number(yearStr) || now.getFullYear();
   const month = monthStr ? Number(monthStr) - 1 : now.getMonth();
-  const view = viewParam === 'week' ? 'week' : 'month';
+  const view = viewParam === 'month' ? 'month' : 'week';
   const weekAnchor = weekParam || now.toISOString().slice(0, 10);
 
   const allEvents = (events ?? []) as unknown as GlobalCalendarEvent[];
