@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -83,24 +85,24 @@ class SupabaseHttp(private val tokenStore: TokenStore) {
         null
     }
 
-    suspend fun signInWithPassword(email: String, password: String): AuthTokenResponse {
+    suspend fun signInWithPassword(email: String, password: String): AuthTokenResponse = withContext(Dispatchers.IO) {
         val body = json.encodeToString(PasswordSignInRequest.serializer(), PasswordSignInRequest(email, password))
         val request = Request.Builder()
             .url("${SupabaseConfig.AUTH_URL}/token?grant_type=password")
             .header("apikey", SupabaseConfig.ANON_KEY)
             .post(body.toRequestBody(jsonMedia))
             .build()
-        return executeAuth(request)
+        executeAuth(request)
     }
 
-    private suspend fun signInWithRefreshToken(refreshToken: String): AuthTokenResponse {
+    private suspend fun signInWithRefreshToken(refreshToken: String): AuthTokenResponse = withContext(Dispatchers.IO) {
         val body = json.encodeToString(RefreshTokenRequest.serializer(), RefreshTokenRequest(refreshToken))
         val request = Request.Builder()
             .url("${SupabaseConfig.AUTH_URL}/token?grant_type=refresh_token")
             .header("apikey", SupabaseConfig.ANON_KEY)
             .post(body.toRequestBody(jsonMedia))
             .build()
-        return executeAuth(request)
+        executeAuth(request)
     }
 
     private fun executeAuth(request: Request): AuthTokenResponse {
