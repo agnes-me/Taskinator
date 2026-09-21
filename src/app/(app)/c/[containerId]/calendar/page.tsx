@@ -25,7 +25,9 @@ export default async function CalendarPage({
     supabase.from('profiles').select('google_ical_url').eq('id', user?.id ?? '').maybeSingle(),
   ]);
 
-  const googleEvents = profile?.google_ical_url ? await fetchGoogleEvents(profile.google_ical_url) : [];
+  const { events: googleEvents, error: googleEventsError } = profile?.google_ical_url
+    ? await fetchGoogleEvents(profile.google_ical_url)
+    : { events: [], error: null };
 
   const canEdit = role === 'admin' || role === 'member';
 
@@ -48,6 +50,7 @@ export default async function CalendarPage({
       tasks={filteredTasks}
       events={events ?? []}
       googleEvents={googleEvents}
+      googleEventsError={googleEventsError}
       rooms={rooms ?? []}
       roomFilter={roomFilter ?? ''}
       canEdit={canEdit}

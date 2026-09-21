@@ -55,6 +55,7 @@ export function CalendarClient({
   tasks,
   events,
   googleEvents,
+  googleEventsError,
   rooms,
   roomFilter,
   canEdit,
@@ -67,6 +68,7 @@ export function CalendarClient({
   tasks: CalendarTask[];
   events: CalendarEvent[];
   googleEvents: GoogleEvent[];
+  googleEventsError: string | null;
   rooms: CalendarRoom[];
   roomFilter: string;
   canEdit: boolean;
@@ -197,6 +199,9 @@ export function CalendarClient({
 
     return (
       <div className="flex flex-col gap-4">
+        {googleEventsError && (
+          <p className="rounded-lg bg-fresh-low/10 px-3 py-2 text-sm text-fresh-low">⚠️ {googleEventsError}</p>
+        )}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {viewToggle}
           {roomFilterChips}
@@ -343,6 +348,9 @@ export function CalendarClient({
 
   return (
     <div className="flex flex-col gap-4">
+      {googleEventsError && (
+        <p className="rounded-lg bg-fresh-low/10 px-3 py-2 text-sm text-fresh-low">⚠️ {googleEventsError}</p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         {viewToggle}
         {roomFilterChips}
