@@ -23,13 +23,18 @@ class GoogleCalendarRepository {
         .build()
 
     /** Événements des 7 prochains jours, tous agendas confondus, triés par date/heure de début. */
-    suspend fun getUpcomingEvents(accessToken: String, daysAhead: Long = 7): List<MergedGoogleEvent> = withContext(Dispatchers.IO) {
+    suspend fun getUpcomingEvents(accessToken: String, daysAhead: Long = 7): List<MergedGoogleEvent> {
+        val now = Instant.now()
+        return getEventsInRange(accessToken, now, now.plus(daysAhead, ChronoUnit.DAYS))
+    }
+
+    /** Événements dans l'intervalle donné, tous agendas confondus, triés par date/heure de début — pour la vue calendrier. */
+    suspend fun getEventsInRange(accessToken: String, timeMinInstant: Instant, timeMaxInstant: Instant): List<MergedGoogleEvent> = withContext(Dispatchers.IO) {
         val calendars = runCatching { fetchCalendarList(accessToken) }.getOrDefault(emptyList())
         if (calendars.isEmpty()) return@withContext emptyList()
 
-        val now = Instant.now()
-        val timeMin = now.toString()
-        val timeMax = now.plus(daysAhead, ChronoUnit.DAYS).toString()
+        val timeMin = timeMinInstant.toString()
+        val timeMax = timeMaxInstant.toString()
 
         val merged = mutableListOf<MergedGoogleEvent>()
         for (calendar in calendars) {
@@ -68,7 +73,7 @@ class GoogleCalendarRepository {
             .addQueryParameter("timeMax", timeMax)
             .addQueryParameter("singleEvents", "true")
             .addQueryParameter("orderBy", "startTime")
-            .addQueryParameter("maxResults", "15")
+            .addQueryParameter("maxResults", "50")
             .build()
         val request = Request.Builder().url(url).header("Authorization", "Bearer $accessToken").get().build()
         client.newCall(request).execute().use { resp ->

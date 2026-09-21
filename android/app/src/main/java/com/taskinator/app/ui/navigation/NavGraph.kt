@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.taskinator.app.TaskinatorApplication
+import com.taskinator.app.ui.calendar.CalendarScreen
 import com.taskinator.app.ui.container.ContainerTasksScreen
 import com.taskinator.app.ui.dashboard.DashboardScreen
 import com.taskinator.app.ui.login.LoginScreen
@@ -20,6 +21,7 @@ import java.net.URLEncoder
 private object Routes {
     const val LOGIN = "login"
     const val DASHBOARD = "dashboard"
+    const val CALENDAR = "calendar"
     const val CONTAINER = "container/{containerId}/{containerName}"
 
     fun container(id: String, name: String): String {
@@ -66,12 +68,16 @@ fun TaskinatorNavGraph(app: TaskinatorApplication) {
             DashboardScreen(
                 app = app,
                 onOpenContainer = { _, container -> navController.navigate(Routes.container(container.id, container.name)) },
+                onOpenCalendar = { navController.navigate(Routes.CALENDAR) },
                 onSignedOut = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.DASHBOARD) { inclusive = true }
                     }
                 },
             )
+        }
+        composable(Routes.CALENDAR) {
+            CalendarScreen(app = app, onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.CONTAINER,

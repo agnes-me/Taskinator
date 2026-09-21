@@ -77,6 +77,23 @@ class TaskRepository(private val http: SupabaseHttp) {
         tasks.sortedWith(taskUrgencyComparator)
     }
 
+    /** Toutes les tâches (tous conteneurs confondus) à échéance dans l'intervalle donné — pour la vue calendrier. */
+    suspend fun getTasksInRange(startDate: String, endDate: String): List<TaskItem> = withContext(Dispatchers.IO) {
+        val url = "${SupabaseConfig.REST_URL}/tasks".toHttpUrl().newBuilder()
+            .addQueryParameter("parent_task_id", "is.null")
+            .addQueryParameter("status", "not.in.(cancelled)")
+            .addQueryParameter("due_date", "gte.$startDate")
+            .addQueryParameter("due_date", "lte.$endDate")
+            .addQueryParameter("order", "due_date.asc")
+            .addQueryParameter("select", "id,title,description,status,priority,due_date,container_id,containers(name),rooms(id,name,icon)")
+            .build()
+        val request = Request.Builder().url(url).get().build()
+        val tasks: List<TaskItem> = http.client.executeOrThrow(request).use { resp ->
+            json.decodeFromString(resp.body!!.string())
+        }
+        tasks
+    }
+
     suspend fun completeTask(taskId: String, userId: String) = withContext(Dispatchers.IO) {
         val body = json.encodeToString(
             NewTaskCompletion.serializer(),

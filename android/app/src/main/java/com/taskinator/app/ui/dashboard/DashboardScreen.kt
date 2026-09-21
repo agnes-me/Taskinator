@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -42,6 +43,7 @@ import com.taskinator.app.ui.settings.WidgetAppearanceActivity
 fun DashboardScreen(
     app: TaskinatorApplication,
     onOpenContainer: (Household, Container) -> Unit,
+    onOpenCalendar: () -> Unit,
     onSignedOut: () -> Unit,
 ) {
     val viewModel: DashboardViewModel = viewModel(
@@ -54,6 +56,9 @@ fun DashboardScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Taskinator") },
                 actions = {
+                    IconButton(onClick = onOpenCalendar) {
+                        Icon(Icons.Filled.DateRange, contentDescription = "Vue calendrier")
+                    }
                     IconButton(onClick = { context.startActivity(Intent(context, GoogleCalendarConnectActivity::class.java)) }) {
                         Icon(Icons.Filled.CalendarMonth, contentDescription = "Connecter Google Calendar")
                     }
