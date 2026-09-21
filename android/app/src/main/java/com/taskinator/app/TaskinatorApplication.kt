@@ -5,6 +5,7 @@ import com.taskinator.app.data.AuthRepository
 import com.taskinator.app.data.ContainerRepository
 import com.taskinator.app.data.SupabaseHttp
 import com.taskinator.app.data.TaskRepository
+import com.taskinator.app.data.TemplateRepository
 import com.taskinator.app.data.TokenStore
 import com.taskinator.app.data.google.GoogleAuthManager
 import com.taskinator.app.data.google.GoogleCalendarRepository
@@ -19,6 +20,7 @@ class AppContainer(private val app: Application) {
     val authRepository = AuthRepository(supabaseHttp, tokenStore)
     val containerRepository = ContainerRepository(supabaseHttp)
     val taskRepository = TaskRepository(supabaseHttp)
+    val templateRepository = TemplateRepository(supabaseHttp)
     val googleAuthManager = GoogleAuthManager(app)
     val googleCalendarRepository = GoogleCalendarRepository()
     val icalSubscriptionRepository = IcalSubscriptionRepository(supabaseHttp)

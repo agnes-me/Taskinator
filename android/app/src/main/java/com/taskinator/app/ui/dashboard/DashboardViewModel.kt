@@ -55,11 +55,4 @@ class DashboardViewModel(private val container: AppContainer) : ViewModel() {
             }
         }
     }
-
-    fun signOut(onSignedOut: () -> Unit) {
-        viewModelScope.launch {
-            authRepository.signOut()
-            onSignedOut()
-        }
-    }
 }

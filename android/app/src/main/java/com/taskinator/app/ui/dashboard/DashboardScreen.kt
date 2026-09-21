@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -46,7 +45,6 @@ fun DashboardScreen(
     onOpenCalendar: () -> Unit,
     onNewContainer: (householdId: String) -> Unit,
     onEditContainer: (containerId: String) -> Unit,
-    onSignedOut: () -> Unit,
 ) {
     val viewModel: DashboardViewModel = viewModel(
         factory = SimpleViewModelFactory { DashboardViewModel(app.container) },
@@ -63,9 +61,6 @@ fun DashboardScreen(
                     }
                     IconButton(onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) }) {
                         Icon(Icons.Filled.Settings, contentDescription = "Réglages")
-                    }
-                    IconButton(onClick = { viewModel.signOut(onSignedOut) }) {
-                        Icon(Icons.Filled.Logout, contentDescription = "Se déconnecter")
                     }
                 },
             )

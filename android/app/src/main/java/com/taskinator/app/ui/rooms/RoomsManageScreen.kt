@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -54,7 +55,7 @@ import com.taskinator.app.ui.SimpleViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoomsManageScreen(container: AppContainer, containerId: String, onBack: () -> Unit) {
+fun RoomsManageScreen(container: AppContainer, containerId: String, onBack: () -> Unit, onOpenTemplates: () -> Unit) {
     val viewModel: RoomsManageViewModel = viewModel(factory = SimpleViewModelFactory { RoomsManageViewModel(container, containerId) })
     var editingRoom by remember { mutableStateOf<Room?>(null) }
     var showCreateDialog by remember { mutableStateOf(false) }
@@ -67,6 +68,11 @@ fun RoomsManageScreen(container: AppContainer, containerId: String, onBack: () -
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onOpenTemplates) {
+                        Icon(Icons.Filled.Storefront, contentDescription = "Marketplace de templates")
                     }
                 },
             )

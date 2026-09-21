@@ -18,6 +18,7 @@ import com.taskinator.app.ui.dashboard.DashboardScreen
 import com.taskinator.app.ui.login.LoginScreen
 import com.taskinator.app.ui.rooms.RoomsManageScreen
 import com.taskinator.app.ui.task.TaskFormScreen
+import com.taskinator.app.ui.templates.TemplatesScreen
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -31,6 +32,7 @@ private object Routes {
     const val CONTAINER = "container-tasks/{containerId}/{containerName}"
     const val TASK_FORM = "task-form/{containerId}?taskId={taskId}"
     const val ROOMS_MANAGE = "rooms-manage/{containerId}"
+    const val TEMPLATES = "templates-marketplace/{containerId}"
     const val CONTAINER_FORM = "container-form?householdId={householdId}&containerId={containerId}"
 
     fun container(id: String, name: String): String {
@@ -42,6 +44,8 @@ private object Routes {
         "task-form/$containerId" + (taskId?.let { "?taskId=$it" } ?: "")
 
     fun roomsManage(containerId: String) = "rooms-manage/$containerId"
+
+    fun templates(containerId: String) = "templates-marketplace/$containerId"
 
     fun containerFormCreate(householdId: String) = "container-form?householdId=$householdId"
 
@@ -89,11 +93,6 @@ fun TaskinatorNavGraph(app: TaskinatorApplication) {
                 onOpenCalendar = { navController.navigate(Routes.CALENDAR) },
                 onNewContainer = { householdId -> navController.navigate(Routes.containerFormCreate(householdId)) },
                 onEditContainer = { containerId -> navController.navigate(Routes.containerFormEdit(containerId)) },
-                onSignedOut = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.DASHBOARD) { inclusive = true }
-                    }
-                },
             )
         }
         composable(Routes.CALENDAR) {
@@ -141,7 +140,19 @@ fun TaskinatorNavGraph(app: TaskinatorApplication) {
             arguments = listOf(navArgument("containerId") { type = NavType.StringType }),
         ) { backStackEntry ->
             val containerId = backStackEntry.arguments?.getString("containerId").orEmpty()
-            RoomsManageScreen(container = app.container, containerId = containerId, onBack = { navController.popBackStack() })
+            RoomsManageScreen(
+                container = app.container,
+                containerId = containerId,
+                onBack = { navController.popBackStack() },
+                onOpenTemplates = { navController.navigate(Routes.templates(containerId)) },
+            )
+        }
+        composable(
+            route = Routes.TEMPLATES,
+            arguments = listOf(navArgument("containerId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val containerId = backStackEntry.arguments?.getString("containerId").orEmpty()
+            TemplatesScreen(container = app.container, containerId = containerId, onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.CONTAINER_FORM,
