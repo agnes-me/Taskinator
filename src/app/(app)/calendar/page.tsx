@@ -16,16 +16,15 @@ export default async function GlobalCalendarPage({
   const [tasks, { data: events }, { data: subscriptions }, { data: memberships }, { data: households }] = await Promise.all([
     listAllTasksWithDueDates(supabase),
     supabase.from('events').select('id, name, event_date, container_id, containers(name, icon, color)'),
-    supabase.from('ical_subscriptions').select('id, label, url').eq('user_id', user?.id ?? '').order('sort_order'),
+    supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
     supabase.from('container_members').select('container_id, role').eq('user_id', user?.id ?? ''),
     supabase.from('households').select('id, name, containers(id, name, icon, color)').order('created_at', { ascending: true }),
   ]);
 
-  const results = await Promise.all(
-    (subscriptions ?? []).map(async (sub) => ({ sub, result: await fetchGoogleEvents(sub.url) })),
-  );
+  const visibleSubs = (subscriptions ?? []).filter((sub) => sub.visible);
+  const results = await Promise.all(visibleSubs.map(async (sub) => ({ sub, result: await fetchGoogleEvents(sub.url) })));
   const googleEvents = results.flatMap(({ sub, result }) =>
-    result.events.map((e) => ({ ...e, id: `${sub.id}:${e.id}`, calendarLabel: sub.label })),
+    result.events.map((e) => ({ ...e, id: `${sub.id}:${e.id}`, calendarLabel: sub.label, calendarColor: sub.color })),
   );
   const googleEventsErrors = results
     .filter(({ result }) => result.error)

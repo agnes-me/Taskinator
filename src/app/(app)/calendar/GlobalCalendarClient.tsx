@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { Fragment, useTransition } from 'react';
 import Link from 'next/link';
 import type { GlobalCalendarTask } from '@/lib/data/tasks';
 import type { GoogleEvent } from '@/lib/google-ical';
@@ -23,6 +23,12 @@ export interface CalendarContainer {
 
 const PRIORITY_DOT: Record<string, string> = { low: 'bg-slate-400', medium: 'bg-amber-500', high: 'bg-rose-500' };
 const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const WEEK_HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 6h .. 22h
+
+function googleEventStyle(color?: string): React.CSSProperties {
+  const hex = color || '#0ea5e9';
+  return { backgroundColor: `${hex}1A`, color: hex };
+}
 
 function toISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -43,11 +49,6 @@ function buildHref(params: { view?: 'month' | 'week'; month?: string; week?: str
   if (params.container) sp.set('container', params.container);
   const qs = sp.toString();
   return `/calendar${qs ? `?${qs}` : ''}`;
-}
-
-function formatDayHeader(d: Date): string {
-  const label = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
-  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 export function GlobalCalendarClient({
@@ -118,6 +119,22 @@ export function GlobalCalendarClient({
         patch.start_at = old.toISOString();
       }
       await rescheduleTask(task.id, task.container_id, patch);
+    });
+  }
+
+  function scheduleTaskAt(task: GlobalCalendarTask, dateISO: string, hour: number) {
+    if (!editableSet.has(task.container_id)) return;
+    startTransition(async () => {
+      const d = new Date(`${dateISO}T00:00:00`);
+      d.setHours(hour, 0, 0, 0);
+      await rescheduleTask(task.id, task.container_id, { due_date: dateISO, start_at: d.toISOString(), on_calendar: true });
+    });
+  }
+
+  function unscheduleTaskTo(task: GlobalCalendarTask, dateISO: string) {
+    if (!editableSet.has(task.container_id)) return;
+    startTransition(async () => {
+      await rescheduleTask(task.id, task.container_id, { due_date: dateISO, start_at: null, on_calendar: false });
     });
   }
 
@@ -203,6 +220,7 @@ export function GlobalCalendarClient({
     const nextWeek = new Date(start);
     nextWeek.setDate(start.getDate() + 7);
     const todayISOStr = toISO(new Date());
+    const weekLabel = `${days[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${days[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
     return (
       <div className="flex flex-col gap-4">
@@ -215,45 +233,97 @@ export function GlobalCalendarClient({
           <Link href={buildHref({ view: 'week', week: toISO(prevWeek), container: containerFilter })} className="btn btn-ghost !px-3 !py-1 text-sm">
             ←
           </Link>
-          <h2 className="text-lg font-semibold">Semaine</h2>
+          <h2 className="text-lg font-semibold capitalize">{weekLabel}</h2>
           <Link href={buildHref({ view: 'week', week: toISO(nextWeek), container: containerFilter })} className="btn btn-ghost !px-3 !py-1 text-sm">
             →
           </Link>
         </div>
 
-        <div className="flex flex-col gap-3">
-          {days.map((d) => {
-            const iso = toISO(d);
-            const dayTasks = tasksByDate.get(iso) ?? [];
-            const dayEvents = eventsByDate.get(iso) ?? [];
-            const dayGoogle = googleByDate.get(iso) ?? [];
-            const isToday = iso === todayISOStr;
-            const isEmpty = dayTasks.length === 0 && dayEvents.length === 0 && dayGoogle.length === 0;
-            return (
-              <div key={iso} className={`card p-3 ${isToday ? '!border-brand-500' : ''}`}>
-                <h3 className={`mb-2 text-sm font-semibold ${isToday ? 'text-brand-600' : ''}`}>{formatDayHeader(d)}</h3>
-                {isEmpty ? (
-                  <p className="text-xs text-[var(--text-muted)]">Rien de prévu.</p>
-                ) : (
-                  <div className="flex flex-col gap-1">
-                    {dayEvents.map((e) => (
-                      <span key={e.id} className="truncate rounded bg-brand-500/10 px-1 py-0.5 text-xs text-brand-600">
-                        🎉 {e.name} {e.containers && `· ${e.containers.icon} ${e.containers.name}`}
-                      </span>
-                    ))}
-                    {dayGoogle.map((g) => (
-                      <span key={g.id} className="truncate rounded bg-sky-500/10 px-1 py-0.5 text-xs text-sky-600">
-                        🗓️ {g.summary} {g.calendarLabel && `· ${g.calendarLabel}`}
-                      </span>
-                    ))}
-                    {dayTasks.map((t) => (
-                      <TaskRow key={t.id} task={t} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <p className="text-xs text-[var(--text-muted)]">
+          Glisse une tâche sur une case pour la caler à une heure (conteneurs où tu es admin/membre).
+        </p>
+
+        <div className="overflow-x-auto">
+          <div className="grid min-w-[720px] grid-cols-[56px_repeat(7,1fr)] gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] text-xs">
+            <div className="bg-[var(--surface)]" />
+            {days.map((d) => {
+              const iso = toISO(d);
+              const isToday = iso === todayISOStr;
+              return (
+                <div key={iso} className={`bg-[var(--surface)] p-1 text-center font-semibold ${isToday ? 'text-brand-600' : ''}`}>
+                  {WEEKDAY_LABELS[(d.getDay() + 6) % 7]} {d.getDate()}
+                </div>
+              );
+            })}
+
+            <div className="bg-[var(--surface)] p-1 text-[var(--text-muted)]">Sans horaire</div>
+            {days.map((d) => {
+              const iso = toISO(d);
+              const unscheduled = (tasksByDate.get(iso) ?? []).filter((t) => !t.start_at);
+              const dayEvents = eventsByDate.get(iso) ?? [];
+              const dayGoogleAllDay = (googleByDate.get(iso) ?? []).filter((g) => !g.startAt);
+              return (
+                <div
+                  key={iso}
+                  className="flex min-h-[44px] flex-col gap-0.5 bg-[var(--surface)] p-1"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const taskId = e.dataTransfer.getData('text/plain');
+                    const task = tasks.find((t) => t.id === taskId);
+                    if (task) unscheduleTaskTo(task, iso);
+                  }}
+                >
+                  {dayEvents.map((e) => (
+                    <span key={e.id} className="truncate rounded bg-brand-500/10 px-1 py-0.5 text-brand-600" title={`${e.name}${e.containers ? ` · ${e.containers.name}` : ''}`}>
+                      🎉 {e.name}
+                    </span>
+                  ))}
+                  {dayGoogleAllDay.map((g) => (
+                    <span key={g.id} className="truncate rounded px-1 py-0.5" style={googleEventStyle(g.calendarColor)} title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
+                      🗓️ {g.summary}
+                    </span>
+                  ))}
+                  {unscheduled.map((t) => (
+                    <TaskRow key={t.id} task={t} />
+                  ))}
+                </div>
+              );
+            })}
+
+            {WEEK_HOURS.map((hour) => (
+              <Fragment key={hour}>
+                <div className="bg-[var(--surface)] p-1 text-[var(--text-muted)]">{hour}h</div>
+                {days.map((d) => {
+                  const iso = toISO(d);
+                  const hourTasks = (tasksByDate.get(iso) ?? []).filter((t) => t.start_at && new Date(t.start_at).getHours() === hour);
+                  const hourGoogle = (googleByDate.get(iso) ?? []).filter((g) => g.startAt && new Date(g.startAt).getHours() === hour);
+                  return (
+                    <div
+                      key={`${iso}-${hour}`}
+                      className="flex min-h-[30px] flex-col gap-0.5 bg-[var(--surface)] p-1"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const taskId = e.dataTransfer.getData('text/plain');
+                        const task = tasks.find((t) => t.id === taskId);
+                        if (task) scheduleTaskAt(task, iso, hour);
+                      }}
+                    >
+                      {hourGoogle.map((g) => (
+                        <span key={g.id} className="truncate rounded px-1 py-0.5" style={googleEventStyle(g.calendarColor)} title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
+                          🗓️ {g.summary}
+                        </span>
+                      ))}
+                      {hourTasks.map((t) => (
+                        <TaskRow key={t.id} task={t} />
+                      ))}
+                    </div>
+                  );
+                })}
+              </Fragment>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -333,7 +403,7 @@ export function GlobalCalendarClient({
                   </span>
                 ))}
                 {dayGoogle.slice(0, 2).map((g) => (
-                  <span key={g.id} className="truncate rounded bg-sky-500/10 px-1 py-0.5 text-[10px] text-sky-600" title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
+                  <span key={g.id} className="truncate rounded px-1 py-0.5 text-[10px]" style={googleEventStyle(g.calendarColor)} title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
                     🗓️ {g.summary}
                   </span>
                 ))}

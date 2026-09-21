@@ -64,6 +64,19 @@ export async function deleteIcalSubscription(id: string) {
   return {};
 }
 
+export async function updateIcalSubscription(id: string, patch: { color?: string; visible?: boolean }) {
+  if (patch.color !== undefined && !HEX_RE.test(patch.color)) {
+    return { error: 'Couleur invalide.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from('ical_subscriptions').update(patch).eq('id', id);
+  if (error) return { error: `Impossible de modifier ce calendrier — ${error.message} (${error.code}).` };
+
+  revalidatePath('/', 'layout');
+  return {};
+}
+
 export async function updateDisplayName(name: string) {
   const supabase = await createClient();
   const {

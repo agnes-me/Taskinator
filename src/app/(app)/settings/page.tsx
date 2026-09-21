@@ -8,7 +8,7 @@ export default async function SettingsPage() {
   const supabase = await createClient();
   const [{ data: profile }, { data: subscriptions }] = await Promise.all([
     supabase.from('profiles').select('theme_gradient, display_name').eq('id', user?.id ?? '').maybeSingle(),
-    supabase.from('ical_subscriptions').select('id, label, url').eq('user_id', user?.id ?? '').order('sort_order'),
+    supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
   ]);
 
   return (
