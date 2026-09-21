@@ -49,7 +49,7 @@ export async function addIcalSubscription(label: string, url: string) {
   if (!user) return { error: 'Non authentifié.' };
 
   const { error } = await supabase.from('ical_subscriptions').insert({ user_id: user.id, label: cleanedLabel, url: cleanedUrl });
-  if (error) return { error: "Impossible d'enregistrer ce calendrier." };
+  if (error) return { error: `Impossible d'enregistrer ce calendrier — ${error.message} (${error.code}).` };
 
   revalidatePath('/', 'layout');
   return {};
@@ -58,7 +58,7 @@ export async function addIcalSubscription(label: string, url: string) {
 export async function deleteIcalSubscription(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('ical_subscriptions').delete().eq('id', id);
-  if (error) return { error: 'Impossible de supprimer ce calendrier.' };
+  if (error) return { error: `Impossible de supprimer ce calendrier — ${error.message} (${error.code}).` };
 
   revalidatePath('/', 'layout');
   return {};
