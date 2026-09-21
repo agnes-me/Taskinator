@@ -65,11 +65,6 @@ data class TaskItem(
 )
 
 @Serializable
-data class TaskAssignee(
-    @SerialName("task_id") val taskId: String,
-)
-
-@Serializable
 data class NewTaskCompletion(
     @SerialName("task_id") val taskId: String,
     @SerialName("completed_by") val completedBy: String,

@@ -1,7 +1,6 @@
 package com.taskinator.app.data
 
 import com.taskinator.app.data.models.NewTaskCompletion
-import com.taskinator.app.data.models.TaskAssignee
 import com.taskinator.app.data.models.TaskItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,8 +12,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 // encodeDefaults=true : indispensable pour TaskPatch — un champ nullable laissé à null (ex.
 // vider la catégorie ou l'échéance d'une tâche) doit être envoyé comme `null` explicite dans le
@@ -44,25 +41,22 @@ private data class TaskPatch(
 
 class TaskRepository(private val http: SupabaseHttp) {
 
-    /** Mes tâches assignées, non terminées, à échéance dans les 7 prochains jours — reflète getMyUpcomingTasks côté web. */
+    /**
+     * Mes prochaines tâches (tous mes conteneurs, non terminées, à échéance connue), triées par
+     * échéance. Ne filtre plus par assignation nommée (table task_assignees) ni par fenêtre de 7
+     * jours : de nombreux foyers n'assignent jamais une tâche à quelqu'un en particulier — un
+     * filtre par assigné renvoyait alors systématiquement une liste vide — et une tâche
+     * d'événement à échéance dans plusieurs mois est tout autant "à venir" qu'une tâche due
+     * demain. userId n'est plus utilisé dans la requête (RLS restreint déjà aux conteneurs dont
+     * l'utilisateur est membre) mais reste au signature pour ne pas retoucher tous les appelants.
+     */
     suspend fun getMyUpcomingTasks(userId: String): List<TaskItem> = withContext(Dispatchers.IO) {
-        val assigneeUrl = "${SupabaseConfig.REST_URL}/task_assignees".toHttpUrl().newBuilder()
-            .addQueryParameter("user_id", "eq.$userId")
-            .addQueryParameter("select", "task_id")
-            .build()
-        val assigneeRequest = Request.Builder().url(assigneeUrl).get().build()
-        val taskIds: List<TaskAssignee> = http.client.executeOrThrow(assigneeRequest).use { resp ->
-            json.decodeFromString(resp.body!!.string())
-        }
-        if (taskIds.isEmpty()) return@withContext emptyList()
-
-        val idsFilter = "(" + taskIds.joinToString(",") { it.taskId } + ")"
-        val maxDue = LocalDate.now().plusDays(7).format(DateTimeFormatter.ISO_LOCAL_DATE)
         val tasksUrl = "${SupabaseConfig.REST_URL}/tasks".toHttpUrl().newBuilder()
-            .addQueryParameter("id", "in.$idsFilter")
+            .addQueryParameter("parent_task_id", "is.null")
             .addQueryParameter("status", "not.in.(done,cancelled)")
-            .addQueryParameter("due_date", "lte.$maxDue")
+            .addQueryParameter("due_date", "not.is.null")
             .addQueryParameter("order", "due_date.asc")
+            .addQueryParameter("limit", "10")
             .addQueryParameter("select", "id,title,description,status,priority,due_date,container_id,containers(name)")
             .build()
         val tasksRequest = Request.Builder().url(tasksUrl).get().build()
