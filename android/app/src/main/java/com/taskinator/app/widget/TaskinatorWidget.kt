@@ -4,7 +4,6 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
@@ -39,6 +38,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.taskinator.app.data.WidgetAppearanceStore
 import com.taskinator.app.MainActivity
 import com.taskinator.app.data.models.TaskItem
 import kotlinx.serialization.Serializable
@@ -53,14 +53,15 @@ internal val TASK_ID_KEY = ActionParameters.Key<String>("task_id")
 
 class TaskinatorWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val opacity = WidgetAppearanceStore.currentOpacity(context)
         provideContent {
-            WidgetContent()
+            WidgetContent(opacity)
         }
     }
 }
 
 @Composable
-private fun WidgetContent() {
+private fun WidgetContent(opacity: Float) {
     val prefs = currentState<Preferences>()
     val storedJson = prefs[TASKS_STATE_KEY]
     val tasks = storedJson
@@ -71,19 +72,19 @@ private fun WidgetContent() {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(Color(0xFFFFFFFF))
+            .background(WidgetStyle.background(opacity))
             .cornerRadius(20.dp)
             .padding(12.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
         Text(
             text = "✅ Mes tâches",
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(Color(0xFF0D9488))),
+            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(WidgetStyle.accent)),
         )
         Spacer(modifier = GlanceModifier.size(8.dp))
 
         if (tasks.isEmpty()) {
-            Text(text = "Rien de prévu — bravo !", style = TextStyle(fontSize = 13.sp, color = ColorProvider(Color(0xFF64748B))))
+            Text(text = "Rien de prévu — bravo !", style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetStyle.emptyText)))
         } else {
             LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
                 items(tasks, itemId = { it.id.hashCode().toLong() }) { task ->
@@ -103,14 +104,14 @@ private fun WidgetTaskRow(task: TaskItem) {
         Box(
             modifier = GlanceModifier
                 .size(20.dp)
-                .background(Color(0xFFF1F5F9))
+                .background(WidgetStyle.tapTargetBackground)
                 .cornerRadius(6.dp)
                 .clickable(actionRunCallback<CompleteTaskAction>(actionParametersOf(TASK_ID_KEY to task.id))),
         ) {}
         Spacer(modifier = GlanceModifier.width(8.dp))
         Text(
             text = task.title,
-            style = TextStyle(fontSize = 13.sp, color = ColorProvider(Color(0xFF0F172A))),
+            style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetStyle.titleText)),
             maxLines = 1,
         )
     }

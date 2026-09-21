@@ -40,7 +40,9 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.taskinator.app.MainActivity
+import com.taskinator.app.data.WidgetAppearanceStore
 import com.taskinator.app.data.models.TaskItem
+import com.taskinator.app.widget.WidgetStyle
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -63,14 +65,15 @@ private val PRIORITY_DOT_COLOR = mapOf(
 
 class TaskListWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val opacity = WidgetAppearanceStore.currentOpacity(context)
         provideContent {
-            TaskListWidgetContent()
+            TaskListWidgetContent(opacity)
         }
     }
 }
 
 @Composable
-private fun TaskListWidgetContent() {
+private fun TaskListWidgetContent(opacity: Float) {
     val prefs = currentState<Preferences>()
     val storedJson = prefs[LIST_TASKS_JSON_KEY]
     val tasks = storedJson
@@ -84,23 +87,23 @@ private fun TaskListWidgetContent() {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(Color(0xFFFFFFFF))
+            .background(WidgetStyle.background(opacity))
             .cornerRadius(20.dp)
             .padding(12.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
         Text(
             text = "📋 Mes tâches",
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(Color(0xFF0D9488))),
+            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(WidgetStyle.accent)),
         )
         Text(
             text = subtitle,
-            style = TextStyle(fontSize = 11.sp, color = ColorProvider(Color(0xFF64748B))),
+            style = TextStyle(fontSize = 11.sp, color = ColorProvider(WidgetStyle.metaText)),
         )
         Spacer(modifier = GlanceModifier.size(6.dp))
 
         if (tasks.isEmpty()) {
-            Text(text = "Rien à faire ici.", style = TextStyle(fontSize = 13.sp, color = ColorProvider(Color(0xFF64748B))))
+            Text(text = "Rien à faire ici.", style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetStyle.emptyText)))
         } else {
             LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
                 items(tasks, itemId = { it.id.hashCode().toLong() }) { task ->
@@ -120,7 +123,7 @@ private fun TaskListWidgetRow(task: TaskItem) {
         Box(
             modifier = GlanceModifier
                 .size(18.dp)
-                .background(Color(0xFFF1F5F9))
+                .background(WidgetStyle.tapTargetBackground)
                 .cornerRadius(5.dp)
                 .clickable(actionRunCallback<TaskListCompleteTaskAction>(actionParametersOf(LIST_TASK_ID_KEY to task.id))),
         ) {}
@@ -133,10 +136,10 @@ private fun TaskListWidgetRow(task: TaskItem) {
         ) {}
         Spacer(modifier = GlanceModifier.width(6.dp))
         Column {
-            Text(text = task.title, style = TextStyle(fontSize = 13.sp, color = ColorProvider(Color(0xFF0F172A))), maxLines = 1)
+            Text(text = task.title, style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetStyle.titleText)), maxLines = 1)
             val meta = listOfNotNull(task.rooms?.name, task.dueDate).joinToString(" · ")
             if (meta.isNotBlank()) {
-                Text(text = meta, style = TextStyle(fontSize = 10.sp, color = ColorProvider(Color(0xFF94A3B8))), maxLines = 1)
+                Text(text = meta, style = TextStyle(fontSize = 10.sp, color = ColorProvider(WidgetStyle.metaText)), maxLines = 1)
             }
         }
     }

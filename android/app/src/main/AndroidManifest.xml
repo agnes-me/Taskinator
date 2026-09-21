@@ -72,6 +72,11 @@
             android:exported="false"
             android:theme="@style/Theme.Taskinator" />
 
+        <activity
+            android:name=".ui.settings.WidgetAppearanceActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Taskinator" />
+
     </application>
 
 </manifest>

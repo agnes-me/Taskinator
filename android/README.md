@@ -57,6 +57,10 @@ d'accueil Android → Widgets → Taskinator → glisser le widget voulu.
   fusionnées avec les événements de tous tes agendas Google Calendar (si
   connecté), triées chronologiquement. Lecture seule côté Google ; case à
   cocher pour les tâches Taskinator.
+- Les trois widgets ont un fond sombre translucide (pour se fondre dans le
+  fond d'écran) ; le degré de transparence se règle dans l'appli, bouton 🎨
+  en haut du tableau de bord — le changement s'applique en quelques
+  secondes aux widgets déjà posés.
 - Tous les widgets se rafraîchissent automatiquement (~30 min) et
   immédiatement après une connexion ou une tâche cochée dans l'appli.
 

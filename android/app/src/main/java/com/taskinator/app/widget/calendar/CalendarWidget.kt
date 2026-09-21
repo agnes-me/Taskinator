@@ -4,7 +4,6 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
@@ -39,8 +38,10 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.taskinator.app.MainActivity
+import com.taskinator.app.data.WidgetAppearanceStore
 import com.taskinator.app.data.google.MergedGoogleEvent
 import com.taskinator.app.data.models.TaskItem
+import com.taskinator.app.widget.WidgetStyle
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -59,14 +60,15 @@ private data class AgendaRow(val date: String, val time: String?, val title: Str
 
 class CalendarWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val opacity = WidgetAppearanceStore.currentOpacity(context)
         provideContent {
-            CalendarWidgetContent()
+            CalendarWidgetContent(opacity)
         }
     }
 }
 
 @Composable
-private fun CalendarWidgetContent() {
+private fun CalendarWidgetContent(opacity: Float) {
     val prefs = currentState<Preferences>()
     val storedJson = prefs[CALENDAR_WIDGET_DATA_KEY]
     val data = storedJson
@@ -82,24 +84,24 @@ private fun CalendarWidgetContent() {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(Color(0xFFFFFFFF))
+            .background(WidgetStyle.background(opacity))
             .cornerRadius(20.dp)
             .padding(12.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
         Text(
             text = "🗓️ Calendrier",
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(Color(0xFF0D9488))),
+            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(WidgetStyle.accent)),
         )
         Text(
             text = if (data.googleConnected) "Taskinator + Google Calendar" else "Taskinator — connecte Google dans l'appli pour fusionner",
-            style = TextStyle(fontSize = 10.sp, color = ColorProvider(Color(0xFF64748B))),
+            style = TextStyle(fontSize = 10.sp, color = ColorProvider(WidgetStyle.metaText)),
             maxLines = 1,
         )
         Spacer(modifier = GlanceModifier.size(6.dp))
 
         if (rows.isEmpty()) {
-            Text(text = "Rien de prévu.", style = TextStyle(fontSize = 13.sp, color = ColorProvider(Color(0xFF64748B))))
+            Text(text = "Rien de prévu.", style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetStyle.emptyText)))
         } else {
             LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
                 items(rows, itemId = { (it.taskId ?: it.title).hashCode().toLong() }) { row ->
@@ -124,8 +126,8 @@ private fun AgendaRowView(row: AgendaRow) {
         Text(text = if (isTask) "✅" else "🗓️", style = TextStyle(fontSize = 12.sp))
         Spacer(modifier = GlanceModifier.width(6.dp))
         Column {
-            Text(text = row.title, style = TextStyle(fontSize = 13.sp, color = ColorProvider(Color(0xFF0F172A))), maxLines = 1)
-            Text(text = row.date, style = TextStyle(fontSize = 10.sp, color = ColorProvider(Color(0xFF94A3B8))), maxLines = 1)
+            Text(text = row.title, style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetStyle.titleText)), maxLines = 1)
+            Text(text = row.date, style = TextStyle(fontSize = 10.sp, color = ColorProvider(WidgetStyle.metaText)), maxLines = 1)
         }
     }
 }
