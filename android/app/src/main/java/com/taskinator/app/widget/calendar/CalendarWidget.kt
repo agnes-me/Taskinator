@@ -25,6 +25,7 @@ import androidx.glance.LocalContext
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -56,7 +57,7 @@ internal val CALENDAR_WIDGET_DATA_KEY = stringPreferencesKey("calendar_widget_da
 internal val calendarWidgetJson = Json { ignoreUnknownKeys = true }
 internal val CALENDAR_TASK_ID_KEY = ActionParameters.Key<String>("calendar_task_id")
 
-private data class AgendaRow(val date: String, val time: String?, val title: String, val source: String?, val taskId: String?)
+private data class AgendaRow(val date: String, val time: String?, val title: String, val source: String?, val taskId: String?, val color: String? = null)
 
 class CalendarWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -77,7 +78,7 @@ private fun CalendarWidgetContent(opacity: Float) {
 
     val rows = buildList {
         data.tasks.forEach { t -> t.dueDate?.let { add(AgendaRow(it, null, t.title, "task", t.id)) } }
-        data.googleEvents.forEach { e -> add(AgendaRow(e.startDate, e.startAt, e.title, "google", null)) }
+        data.googleEvents.forEach { e -> add(AgendaRow(e.startDate, e.startAt, e.title, "google", null, e.color)) }
     }.sortedWith(compareBy({ it.date }, { it.time ?: "" }))
     val context = LocalContext.current
 
@@ -123,7 +124,15 @@ private fun AgendaRowView(row: AgendaRow) {
     }
 
     Row(modifier = rowModifier, verticalAlignment = Alignment.CenterVertically) {
-        Text(text = if (isTask) "✅" else "🗓️", style = TextStyle(fontSize = 12.sp))
+        if (isTask) {
+            Text(text = "✅", style = TextStyle(fontSize = 12.sp))
+        } else {
+            Box(
+                modifier = GlanceModifier.size(10.dp)
+                    .background(WidgetStyle.calendarColor(row.color))
+                    .cornerRadius(5.dp),
+            ) {}
+        }
         Spacer(modifier = GlanceModifier.width(6.dp))
         Column {
             Text(text = row.title, style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetStyle.titleText)), maxLines = 1)

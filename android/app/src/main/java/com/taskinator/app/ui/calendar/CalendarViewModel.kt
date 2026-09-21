@@ -25,8 +25,9 @@ class CalendarViewModel(private val app: TaskinatorApplication) : ViewModel() {
     private val googleCalendarRepository = app.container.googleCalendarRepository
     private val googleAuthManager = app.container.googleAuthManager
     private val googleStore = GoogleCalendarStore(app)
+    private val icalSubscriptionRepository = app.container.icalSubscriptionRepository
 
-    var mode by mutableStateOf(CalendarMode.MONTH)
+    var mode by mutableStateOf(CalendarMode.WEEK)
         private set
     var anchorDate by mutableStateOf(LocalDate.now())
         private set
@@ -100,21 +101,26 @@ class CalendarViewModel(private val app: TaskinatorApplication) : ViewModel() {
                     .mapNotNull { task -> task.dueDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() }?.let { it to task } }
                     .groupBy({ it.first }, { it.second })
 
-                eventsByDate = if (googleStore.isConnected()) {
+                val oauthEvents = if (googleStore.isConnected()) {
                     val token = runCatching { googleAuthManager.getAccessTokenSilently() }.getOrNull()
                     if (token != null) {
                         val zone = ZoneId.systemDefault()
                         val timeMin = rangeStart.atStartOfDay(zone).toInstant()
                         val timeMax = rangeEnd.plusDays(1).atStartOfDay(zone).toInstant().minusSeconds(1)
-                        val events = runCatching { googleCalendarRepository.getEventsInRange(token, timeMin, timeMax) }.getOrDefault(emptyList())
-                        events.mapNotNull { event -> runCatching { LocalDate.parse(event.startDate) }.getOrNull()?.let { it to event } }
-                            .groupBy({ it.first }, { it.second })
+                        runCatching { googleCalendarRepository.getEventsInRange(token, timeMin, timeMax) }.getOrDefault(emptyList())
                     } else {
-                        emptyMap()
+                        emptyList()
                     }
                 } else {
-                    emptyMap()
+                    emptyList()
                 }
+                // Abonnements iCal (Google/Outlook/Apple…) — même table que l'appli web, lus en HTTP
+                // direct sans OAuth, indépendants de la connexion Google Calendar ci-dessus.
+                val icalEvents = runCatching { icalSubscriptionRepository.getMergedEvents(rangeStart, rangeEnd) }.getOrDefault(emptyList())
+
+                eventsByDate = (oauthEvents + icalEvents)
+                    .mapNotNull { event -> runCatching { LocalDate.parse(event.startDate) }.getOrNull()?.let { it to event } }
+                    .groupBy({ it.first }, { it.second })
             } catch (e: Exception) {
                 errorMessage = "Impossible de charger le calendrier — ${e::class.simpleName}: ${e.message ?: "erreur inconnue"}"
             } finally {

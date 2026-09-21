@@ -13,4 +13,9 @@ object WidgetStyle {
     val metaText = Color(0xFFCBD5E1)
     val emptyText = Color(0xFF94A3B8)
     val tapTargetBackground = Color(0x33FFFFFF)
+
+    /** Couleur d'un agenda (hex stocké dans ical_subscriptions.color) ; repli sur l'accent si absente/invalide. */
+    fun calendarColor(hex: String?): Color = hex
+        ?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
+        ?: accent
 }

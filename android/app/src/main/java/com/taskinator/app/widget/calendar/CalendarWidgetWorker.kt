@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.taskinator.app.TaskinatorApplication
 import com.taskinator.app.data.google.GoogleCalendarStore
+import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
 internal suspend fun refreshCalendarWidget(context: Context, app: TaskinatorApplication) {
@@ -26,7 +27,7 @@ internal suspend fun refreshCalendarWidget(context: Context, app: TaskinatorAppl
 
     val googleStore = GoogleCalendarStore(context)
     val googleConnected = googleStore.isConnected()
-    val googleEvents = if (googleConnected) {
+    val oauthEvents = if (googleConnected) {
         val token = runCatching { app.container.googleAuthManager.getAccessTokenSilently() }.getOrNull()
         if (token != null) {
             runCatching { app.container.googleCalendarRepository.getUpcomingEvents(token) }.getOrDefault(emptyList())
@@ -36,6 +37,12 @@ internal suspend fun refreshCalendarWidget(context: Context, app: TaskinatorAppl
     } else {
         emptyList()
     }
+    // Abonnements iCal (même table que l'appli web) : indépendants de la connexion Google ci-dessus.
+    val icalEvents = runCatching {
+        val today = LocalDate.now()
+        app.container.icalSubscriptionRepository.getMergedEvents(today, today.plusDays(30))
+    }.getOrDefault(emptyList())
+    val googleEvents = oauthEvents + icalEvents
 
     val data = CalendarWidgetData(tasks = tasks, googleEvents = googleEvents, googleConnected = googleConnected)
     val json = calendarWidgetJson.encodeToString(CalendarWidgetData.serializer(), data)

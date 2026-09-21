@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -321,12 +323,16 @@ private fun TaskAgendaRow(task: TaskItem, onToggle: () -> Unit) {
 
 @Composable
 private fun GoogleEventAgendaRow(event: MergedGoogleEvent) {
+    val color = event.color
+        ?.let { runCatching { androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
+        ?: BrandIndigo
     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("🗓️", modifier = Modifier.padding(end = 10.dp))
+            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(color))
+            Spacer(modifier = Modifier.width(10.dp))
             Column {
                 Text(event.title, style = MaterialTheme.typography.bodyLarge)
                 val subtitle = listOfNotNull(event.startAt, event.calendarName).joinToString(" · ")

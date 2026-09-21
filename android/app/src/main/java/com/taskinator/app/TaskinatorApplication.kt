@@ -8,6 +8,7 @@ import com.taskinator.app.data.TaskRepository
 import com.taskinator.app.data.TokenStore
 import com.taskinator.app.data.google.GoogleAuthManager
 import com.taskinator.app.data.google.GoogleCalendarRepository
+import com.taskinator.app.data.ical.IcalSubscriptionRepository
 import com.taskinator.app.widget.WidgetRefreshScheduler
 import com.taskinator.app.widget.calendar.CalendarWidgetRefresh
 import com.taskinator.app.widget.tasklist.TaskListWidgetRefresh
@@ -21,6 +22,7 @@ class AppContainer(private val app: Application) {
     val taskRepository = TaskRepository(supabaseHttp)
     val googleAuthManager = GoogleAuthManager(app)
     val googleCalendarRepository = GoogleCalendarRepository()
+    val icalSubscriptionRepository = IcalSubscriptionRepository(supabaseHttp)
 
     /** Demande un rafraîchissement immédiat de tous les widgets (après connexion ou complétion d'une tâche). */
     fun scheduleWidgetRefresh() {

@@ -32,4 +32,5 @@ data class MergedGoogleEvent(
     val calendarName: String?,
     val startDate: String,
     val startAt: String?,
+    val color: String? = null,
 )
