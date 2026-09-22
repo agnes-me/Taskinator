@@ -47,16 +47,18 @@ export default async function ContainerSettingsPage({
         .order('created_at', { ascending: false })
     : { data: [] };
 
-  const system = roomTemplates.filter((t) => t.is_system);
+  // La "marketplace" regroupe la bibliothèque officielle pré-remplie (is_system) et les templates
+  // communautaires publiés + approuvés : ce sont les deux mêmes du point de vue de la
+  // consommation (parcourir/appliquer), la distinction is_system ne sert qu'à la modération.
   const containerTpl = roomTemplates.filter((t) => !t.is_system && t.visibility === 'container');
   const personal = roomTemplates.filter((t) => !t.is_system && t.visibility === 'personal' && t.created_by === user?.id);
-  const marketplace = roomTemplates.filter((t) => !t.is_system && t.visibility === 'public' && t.moderation_status === 'approved');
+  const marketplace = roomTemplates.filter((t) => t.is_system || (t.visibility === 'public' && t.moderation_status === 'approved'));
 
   return (
     <SettingsClient
       containerId={containerId}
       initialTab={tab === 'events' ? 'events' : tab === 'members' ? 'members' : tab === 'google' ? 'google' : 'rooms'}
-      roomTemplates={{ system, container: containerTpl, personal, marketplace }}
+      roomTemplates={{ container: containerTpl, personal, marketplace }}
       eventTemplates={eventTemplates}
       rooms={rooms ?? []}
       canManage={canManage}

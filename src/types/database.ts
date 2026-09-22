@@ -254,6 +254,7 @@ export interface Database {
         Row: {
           id: string;
           template_id: string;
+          parent_item_id: string | null;
           title: string;
           description: string | null;
           recurrence_type: RecurrenceType;
@@ -266,6 +267,7 @@ export interface Database {
         Insert: {
           id?: string;
           template_id: string;
+          parent_item_id?: string | null;
           title: string;
           description?: string | null;
           recurrence_type?: RecurrenceType;

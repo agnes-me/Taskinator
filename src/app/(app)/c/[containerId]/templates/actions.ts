@@ -17,6 +17,8 @@ export interface TemplateItemInput {
   recurrence_interval: number;
   priority: Priority;
   freshness_days: number | null;
+  id?: string;
+  parent_item_id?: string | null;
 }
 
 export async function createRoomTemplate(
@@ -53,6 +55,67 @@ export async function createRoomTemplate(
   return {};
 }
 
+/**
+ * Convertit une tâche existante (+ ses sous-tâches directes) en template réutilisable —
+ * "Rentrée scolaire" et ses 8 sous-tâches deviennent un template à 2 niveaux applicable à
+ * n'importe quelle pièce (apply_room_template recrée la même tâche + sous-tâches).
+ */
+export async function saveTaskAsRoomTemplate(
+  containerId: string,
+  taskId: string,
+  data: { name: string; icon: string; visibility: TemplateVisibility },
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié.' };
+  if (!data.name.trim()) return { error: 'Le nom est requis.' };
+
+  const { data: task } = await supabase
+    .from('tasks')
+    .select('title, description, priority, recurrence_type, recurrence_interval, recurrence_weekdays, freshness_days')
+    .eq('id', taskId)
+    .maybeSingle();
+  if (!task) return { error: 'Tâche introuvable.' };
+
+  const { data: subtasks } = await supabase
+    .from('tasks')
+    .select('title, description, priority, recurrence_type, recurrence_interval, recurrence_weekdays, freshness_days')
+    .eq('parent_task_id', taskId)
+    .order('sort_order');
+
+  // visibility = 'public' doit d'abord passer par 'container' : la policy d'insertion de
+  // room_templates n'autorise pas de créer directement en 'public' (il faut ensuite la
+  // soumettre à modération, comme publishRoomTemplate plus bas).
+  const templateId = randomUUID();
+  const { error } = await supabase.from('room_templates').insert({
+    id: templateId,
+    name: data.name.trim(),
+    icon: data.icon,
+    visibility: data.visibility === 'public' ? 'container' : data.visibility,
+    owner_container_id: data.visibility !== 'personal' ? containerId : null,
+    created_by: user.id,
+  });
+  if (error) return { error: 'Impossible de créer le template.' };
+
+  const rootItemId = randomUUID();
+  const items = [
+    { id: rootItemId, template_id: templateId, parent_item_id: null, sort_order: 0, ...task },
+    ...(subtasks ?? []).map((s, i) => ({ id: randomUUID(), template_id: templateId, parent_item_id: rootItemId, sort_order: i, ...s })),
+  ];
+  const { error: itemsError } = await supabase.from('room_template_items').insert(items);
+  if (itemsError) return { error: "Le template a été créé mais l'ajout des tâches a échoué." };
+
+  if (data.visibility === 'public') {
+    await supabase.from('room_templates').update({ visibility: 'public', moderation_status: 'pending' }).eq('id', templateId);
+  }
+
+  revalidatePath(`/c/${containerId}/templates`);
+  revalidatePath('/', 'layout');
+  return {};
+}
+
 export async function createRoomFromTemplate(containerId: string, templateId: string, roomName: string, roomIcon: string) {
   const supabase = await createClient();
   if (!roomName.trim()) return { error: 'Le nom de la catégorie est requis.' };
@@ -77,7 +140,7 @@ export async function getRoomTemplateItems(templateId: string): Promise<{ error:
   const supabase = await createClient();
   const { data: items, error } = await supabase
     .from('room_template_items')
-    .select('title, recurrence_type, recurrence_interval, priority, freshness_days')
+    .select('id, parent_item_id, title, recurrence_type, recurrence_interval, priority, freshness_days')
     .eq('template_id', templateId)
     .order('sort_order');
   if (error) return { error: 'Impossible de charger le template.' };

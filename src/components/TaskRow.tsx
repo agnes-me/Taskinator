@@ -9,6 +9,7 @@ import { completeTask, reopenTask, deleteTask, pauseTask, resumeTask, createTask
 import { TaskForm, type ContainerMember } from './TaskForm';
 import { ChecklistSection } from './ChecklistSection';
 import type { ChecklistTemplate } from '@/lib/data/checklist';
+import { SaveTaskAsTemplateButton } from './SaveTaskAsTemplateButton';
 
 const PRIORITY_COLOR: Record<string, string> = { low: 'bg-slate-400/20 text-slate-500', medium: 'bg-amber-400/20 text-amber-600', high: 'bg-rose-400/20 text-rose-600' };
 const PRIORITY_DOT: Record<string, string> = { low: 'bg-slate-400', medium: 'bg-amber-500', high: 'bg-rose-500' };
@@ -338,6 +339,7 @@ export function TaskRow({
               {subtaskError && <p className="text-xs text-fresh-low">{subtaskError}</p>}
             </div>
           )}
+          {canEdit && <SaveTaskAsTemplateButton taskId={task.id} containerId={containerId} defaultName={task.title} />}
         </div>
       )}
     </div>

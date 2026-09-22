@@ -27,7 +27,7 @@ export function SettingsClient({
 }: {
   containerId: string;
   initialTab: Tab;
-  roomTemplates: { system: TemplateSummary[]; container: TemplateSummary[]; personal: TemplateSummary[]; marketplace: TemplateSummary[] };
+  roomTemplates: { container: TemplateSummary[]; personal: TemplateSummary[]; marketplace: TemplateSummary[] };
   eventTemplates: TemplateSummary[];
   rooms: { id: string; name: string }[];
   canManage: boolean;
@@ -71,7 +71,6 @@ export function SettingsClient({
       {tab === 'rooms' && (
         <TemplatesClient
           containerId={containerId}
-          system={roomTemplates.system}
           container={roomTemplates.container}
           personal={roomTemplates.personal}
           marketplace={roomTemplates.marketplace}

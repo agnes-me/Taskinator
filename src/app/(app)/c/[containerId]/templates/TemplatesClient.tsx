@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import type { TemplateSummary } from '@/lib/data/templates';
 import type { Priority, RecurrenceType } from '@/types/database';
+import { recurrenceLabel, PRIORITY_LABELS } from '@/lib/recurrence';
 import {
   createRoomTemplate,
   createRoomFromTemplate,
@@ -21,6 +22,47 @@ const MODERATION_LABEL: Record<string, string> = {
   approved: '✅ Publié',
   rejected: '❌ Refusé',
 };
+
+function TemplatePreview({ items, onClose }: { items: TemplateItemInput[]; onClose: () => void }) {
+  const roots = items.filter((it) => !it.parent_item_id);
+  const childrenOf = (id: string | undefined) => items.filter((it) => it.parent_item_id === id);
+
+  function ItemLine({ item, depth }: { item: TemplateItemInput; depth: number }) {
+    const children = item.id ? childrenOf(item.id) : [];
+    return (
+      <>
+        <div className="flex items-center gap-2 text-sm" style={{ marginLeft: depth * 16 }}>
+          <span className="flex-1">{item.title}</span>
+          <span className="chip bg-[var(--surface-muted)] text-xs">{recurrenceLabel(item.recurrence_type, item.recurrence_interval, null)}</span>
+          <span className="chip bg-[var(--surface-muted)] text-xs">{PRIORITY_LABELS[item.priority]}</span>
+        </div>
+        {children.map((c) => (
+          <ItemLine key={c.id} item={c} depth={depth + 1} />
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <div className="card flex flex-col gap-2 p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">Contenu du template</span>
+        <button className="btn btn-ghost !px-2 !py-1 text-xs" onClick={onClose}>
+          Fermer
+        </button>
+      </div>
+      {roots.length === 0 ? (
+        <p className="text-xs text-[var(--text-muted)]">Ce template est vide.</p>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          {roots.map((item) => (
+            <ItemLine key={item.id} item={item} depth={0} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function TemplateCard({
   tpl,
@@ -41,6 +83,7 @@ function TemplateCard({
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [editItems, setEditItems] = useState<TemplateItemInput[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const isOwner = tpl.created_by === currentUserId;
@@ -55,13 +98,16 @@ function TemplateCard({
     });
   }
 
-  function openEdit() {
+  // Tout le monde peut voir le contenu complet d'un template avant de l'appliquer (RLS l'autorise
+  // déjà, room_template_visible) ; seule la propriétaire du template peut ensuite le modifier.
+  function openView() {
     startTransition(async () => {
       const res = await getRoomTemplateItems(tpl.id);
       if ('error' in res) setLoadError(res.error);
       else {
         setEditItems(res.items);
-        setEditing(true);
+        if (isOwner) setEditing(true);
+        else setPreviewing(true);
       }
     });
   }
@@ -78,6 +124,10 @@ function TemplateCard({
         onCancel={() => setEditing(false)}
       />
     );
+  }
+
+  if (previewing && editItems) {
+    return <TemplatePreview items={editItems} onClose={() => setPreviewing(false)} />;
   }
 
   return (
@@ -135,11 +185,9 @@ function TemplateCard({
       {msg && <p className="text-xs text-[var(--text-muted)]">{msg}</p>}
 
       <div className="flex flex-wrap gap-2 text-xs">
-        {isOwner && (
-          <button className="text-[var(--text-muted)] hover:underline" onClick={openEdit}>
-            Voir / Modifier
-          </button>
-        )}
+        <button className="text-[var(--text-muted)] hover:underline" onClick={openView}>
+          {isOwner ? 'Voir / Modifier' : 'Voir le contenu'}
+        </button>
         {canManage && (
           <button
             className="text-[var(--text-muted)] hover:underline"
@@ -313,7 +361,6 @@ function RoomTemplateForm({
 
 export function TemplatesClient({
   containerId,
-  system,
   container,
   personal,
   marketplace,
@@ -322,7 +369,6 @@ export function TemplatesClient({
   currentUserId,
 }: {
   containerId: string;
-  system: TemplateSummary[];
   container: TemplateSummary[];
   personal: TemplateSummary[];
   marketplace: TemplateSummary[];
@@ -332,11 +378,14 @@ export function TemplatesClient({
 }) {
   const [showForm, setShowForm] = useState(false);
 
+  // La marketplace regroupe la bibliothèque officielle et les templates communautaires publiés
+  // (même chose du point de vue de la consultation) : visible à toute membre du conteneur, pas
+  // seulement à qui peut gérer les catégories — "Voir le contenu" permet de tout inspecter avant
+  // application.
   const sections: { title: string; items: TemplateSummary[] }[] = [
     { title: 'Mes templates', items: personal },
     { title: 'Partagés dans ce conteneur', items: container },
-    { title: 'Bibliothèque système (par catégorie)', items: system },
-    { title: 'Marketplace communautaire', items: marketplace },
+    { title: '🛍️ Marketplace', items: marketplace },
   ];
 
   return (
