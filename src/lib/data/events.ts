@@ -1,5 +1,6 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { TaskRow } from '@/lib/data/tasks';
+import { sortByDueDate } from '@/lib/utils';
 
 export interface EventSummary {
   id: string;
@@ -20,7 +21,7 @@ export async function listEvents(supabase: SupabaseServerClient, containerId: st
   if (!events || events.length === 0) return [];
 
   return events.map((e) => {
-    const related = tasks.filter((t) => t.event?.id === e.id);
+    const related = sortByDueDate(tasks.filter((t) => t.event?.id === e.id));
     return { ...e, taskCount: related.length, doneCount: related.filter((t) => t.status === 'done').length, tasks: related };
   });
 }

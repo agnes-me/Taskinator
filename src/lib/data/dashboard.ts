@@ -1,7 +1,7 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Priority, RecurrenceType, TaskStatus } from '@/types/database';
 import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
-import { todayISO } from '@/lib/utils';
+import { todayISO, sortByDueDate } from '@/lib/utils';
 
 export interface DashboardContainer {
   id: string;
@@ -163,6 +163,7 @@ export async function getMyAllTasks(supabase: SupabaseServerClient, containerIds
       roots.push(task);
     }
   }
+  for (const task of byId.values()) task.subtasks = sortByDueDate(task.subtasks);
 
   let filteredRoots = roots;
   if (filters.roomId) filteredRoots = filteredRoots.filter((t) => t.room_id === filters.roomId);

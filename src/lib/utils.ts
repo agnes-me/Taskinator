@@ -21,3 +21,15 @@ export function addDaysISO(dateISO: string, days: number): string {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+// Tri chronologique (échéance la plus proche en premier, sans échéance en dernier) : utilisé pour
+// les sous-tâches et les listes de type "checklist" (rétroplanning d'événement) où l'ordre
+// temporel est la lecture naturelle, contrairement aux listes de tâches classées par urgence.
+export function sortByDueDate<T extends { due_date: string | null }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    if (a.due_date && b.due_date) return a.due_date < b.due_date ? -1 : a.due_date > b.due_date ? 1 : 0;
+    if (a.due_date) return -1;
+    if (b.due_date) return 1;
+    return 0;
+  });
+}

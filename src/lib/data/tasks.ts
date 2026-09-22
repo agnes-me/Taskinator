@@ -1,6 +1,7 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Database, Priority, RecurrenceType, TaskStatus } from '@/types/database';
 import { computeFreshness, type FreshnessResult } from '@/lib/cleanliness';
+import { sortByDueDate } from '@/lib/utils';
 
 export interface TaskRow {
   id: string;
@@ -87,6 +88,10 @@ export async function listTasks(
       roots.push(task);
     }
   }
+  // Les sous-tâches se lisent comme une checklist chronologique : triées par échéance plutôt
+  // que par sort_order (ordre de création), qui n'a pas de sens pour l'utilisateur ici.
+  for (const task of byId.values()) task.subtasks = sortByDueDate(task.subtasks);
+
   // Le filtre par pièce ne s'applique qu'aux tâches racines : une sous-tâche n'a pas forcément
   // le room_id de sa pièce (elle hérite de sa tâche parente), donc on ne doit jamais l'exclure
   // de la requête SQL au risque de casser le lien parent/enfant.
