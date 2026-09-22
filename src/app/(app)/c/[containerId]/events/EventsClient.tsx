@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import type { TemplateSummary } from '@/lib/data/templates';
 import type { EventSummary } from '@/lib/data/events';
+import type { ChecklistTemplate } from '@/lib/data/checklist';
 import { formatDate, todayISO } from '@/lib/utils';
 import { TaskRow } from '@/components/TaskRow';
 import { TaskForm, type ContainerMember } from '@/components/TaskForm';
@@ -66,6 +67,7 @@ function EventCard({
   currentUserId,
   isGuest,
   canEdit,
+  checklistTemplates,
 }: {
   event: EventSummary;
   containerId: string;
@@ -74,6 +76,7 @@ function EventCard({
   currentUserId: string;
   isGuest: boolean;
   canEdit: boolean;
+  checklistTemplates: ChecklistTemplate[];
 }) {
   const [expanded, setExpanded] = useState(false);
   const [addingTask, setAddingTask] = useState(false);
@@ -104,6 +107,7 @@ function EventCard({
                 currentUserId={currentUserId}
                 isGuest={isGuest}
                 canEdit={canEdit}
+                checklistTemplates={checklistTemplates}
               />
             ))
           )}
@@ -140,6 +144,7 @@ export function EventsClient({
   canManage,
   isGuest,
   currentUserId,
+  checklistTemplates,
 }: {
   containerId: string;
   templates: TemplateSummary[];
@@ -149,6 +154,7 @@ export function EventsClient({
   canManage: boolean;
   isGuest: boolean;
   currentUserId: string;
+  checklistTemplates: ChecklistTemplate[];
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -170,6 +176,7 @@ export function EventsClient({
                 currentUserId={currentUserId}
                 isGuest={isGuest}
                 canEdit={canManage}
+                checklistTemplates={checklistTemplates}
               />
             ))}
           </div>

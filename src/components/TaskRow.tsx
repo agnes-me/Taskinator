@@ -7,6 +7,8 @@ import { recurrenceLabel, PRIORITY_LABELS } from '@/lib/recurrence';
 import { formatDate, todayISO } from '@/lib/utils';
 import { completeTask, reopenTask, deleteTask, pauseTask, resumeTask, createTask } from '@/app/(app)/c/[containerId]/tasks/actions';
 import { TaskForm, type ContainerMember } from './TaskForm';
+import { ChecklistSection } from './ChecklistSection';
+import type { ChecklistTemplate } from '@/lib/data/checklist';
 
 const PRIORITY_COLOR: Record<string, string> = { low: 'bg-slate-400/20 text-slate-500', medium: 'bg-amber-400/20 text-amber-600', high: 'bg-rose-400/20 text-rose-600' };
 const PRIORITY_DOT: Record<string, string> = { low: 'bg-slate-400', medium: 'bg-amber-500', high: 'bg-rose-500' };
@@ -19,6 +21,7 @@ export function TaskRow({
   currentUserId,
   isGuest,
   canEdit,
+  checklistTemplates = [],
   depth = 0,
 }: {
   task: TaskRowType;
@@ -28,6 +31,7 @@ export function TaskRow({
   currentUserId: string;
   isGuest: boolean;
   canEdit: boolean;
+  checklistTemplates?: ChecklistTemplate[];
   depth?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -237,6 +241,8 @@ export function TaskRow({
               )}
             </div>
           </div>
+
+          <ChecklistSection taskId={task.id} containerId={containerId} items={task.checklist} canEdit={canEdit} templates={checklistTemplates} />
         </div>
       )}
 
@@ -285,6 +291,7 @@ export function TaskRow({
               currentUserId={currentUserId}
               isGuest={isGuest}
               canEdit={canEdit}
+              checklistTemplates={checklistTemplates}
               depth={1}
             />
           ))}

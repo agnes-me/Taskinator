@@ -3,6 +3,7 @@ import type { Database, Priority, RecurrenceType, TaskStatus } from '@/types/dat
 import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
 import { sortByDueDate } from '@/lib/utils';
 import { defaultFreshnessDaysFromRecurrence } from '@/lib/recurrence';
+import type { ChecklistItem } from '@/lib/data/checklist';
 
 export interface TaskRow {
   id: string;
@@ -32,6 +33,7 @@ export interface TaskRow {
   assignees: { user_id: string; email: string; display_name: string | null }[];
   subtasks: TaskRow[];
   freshness: FreshnessResult | null;
+  checklist: ChecklistItem[];
 }
 
 const TASK_SELECT = `
@@ -55,13 +57,16 @@ export async function listTasks(
   if (!rows) return [];
 
   const ids = rows.map((r) => r.id);
-  const [{ data: assignees }, { data: profiles }] = await Promise.all([
+  const [{ data: assignees }, { data: profiles }, { data: checklistItems }] = await Promise.all([
     ids.length ? supabase.from('task_assignees').select('task_id, user_id').in('task_id', ids) : Promise.resolve({ data: [] }),
     supabase.from('profiles').select('id, email, display_name'),
+    ids.length
+      ? supabase.from('checklist_items').select('id, task_id, group_name, label, checked, sort_order').in('task_id', ids).order('sort_order')
+      : Promise.resolve({ data: [] }),
   ]);
 
   const byId = new Map<string, TaskRow>();
-  for (const r of rows as unknown as (Omit<TaskRow, 'assignees' | 'subtasks' | 'freshness'> & { room: TaskRow['room'] })[]) {
+  for (const r of rows as unknown as (Omit<TaskRow, 'assignees' | 'subtasks' | 'freshness' | 'checklist'> & { room: TaskRow['room'] })[]) {
     const rowAssignees = (assignees ?? [])
       .filter((a) => a.task_id === r.id)
       .map((a) => {
@@ -85,7 +90,8 @@ export async function listTasks(
             seasonalEndMonth: r.seasonal_end_month,
           })
         : null;
-    byId.set(r.id, { ...r, assignees: rowAssignees, subtasks: [], freshness });
+    const checklist = (checklistItems ?? []).filter((c) => c.task_id === r.id);
+    byId.set(r.id, { ...r, assignees: rowAssignees, subtasks: [], freshness, checklist });
   }
 
   const roots: TaskRow[] = [];

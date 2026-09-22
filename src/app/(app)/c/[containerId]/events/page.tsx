@@ -5,6 +5,7 @@ import { getContainerMembers } from '@/lib/data/members';
 import { listEventTemplates } from '@/lib/data/templates';
 import { listEvents } from '@/lib/data/events';
 import { listTasks } from '@/lib/data/tasks';
+import { getChecklistTemplates } from '@/lib/data/checklist';
 import { EventsClient } from './EventsClient';
 
 export default async function EventsPage({ params }: { params: Promise<{ containerId: string }> }) {
@@ -12,12 +13,13 @@ export default async function EventsPage({ params }: { params: Promise<{ contain
   const supabase = await createClient();
   const user = await getAuthUser();
 
-  const [{ role }, members, { data: rooms }, allTasks, templates] = await Promise.all([
+  const [{ role }, members, { data: rooms }, allTasks, templates, checklistTemplates] = await Promise.all([
     getContainerContext(containerId),
     getContainerMembers(supabase, containerId),
     supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
     listTasks(supabase, containerId),
     listEventTemplates(supabase, containerId),
+    getChecklistTemplates(supabase, containerId),
   ]);
 
   const events = await listEvents(supabase, containerId, allTasks);
@@ -35,6 +37,7 @@ export default async function EventsPage({ params }: { params: Promise<{ contain
       canManage={canManage}
       isGuest={isGuest}
       currentUserId={user?.id ?? ''}
+      checklistTemplates={checklistTemplates}
     />
   );
 }

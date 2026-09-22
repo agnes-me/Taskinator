@@ -5,6 +5,7 @@ import type { TaskRow as TaskRowType } from '@/lib/data/tasks';
 import { TaskRow } from './TaskRow';
 import { TaskForm, type ContainerMember } from './TaskForm';
 import { STATUS_LABELS } from '@/lib/recurrence';
+import type { ChecklistTemplate } from '@/lib/data/checklist';
 
 const PRIORITY_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
@@ -26,6 +27,7 @@ export function TaskListSection({
   isGuest,
   canEdit,
   fixedRoomId,
+  checklistTemplates = [],
 }: {
   containerId: string;
   tasks: TaskRowType[];
@@ -35,6 +37,7 @@ export function TaskListSection({
   isGuest: boolean;
   canEdit: boolean;
   fixedRoomId?: string;
+  checklistTemplates?: ChecklistTemplate[];
 }) {
   const [showForm, setShowForm] = useState(false);
   const groups: { key: string; label: string }[] = [
@@ -88,6 +91,7 @@ export function TaskListSection({
                     currentUserId={currentUserId}
                     isGuest={isGuest}
                     canEdit={canEdit}
+                    checklistTemplates={checklistTemplates}
                   />
                 ))}
               </div>

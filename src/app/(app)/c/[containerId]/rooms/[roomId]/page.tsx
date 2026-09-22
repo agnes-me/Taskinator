@@ -5,6 +5,7 @@ import { getAuthUser } from '@/lib/supabase/user';
 import { getContainerContext } from '@/lib/data/nav';
 import { getContainerMembers } from '@/lib/data/members';
 import { listTasks } from '@/lib/data/tasks';
+import { getChecklistTemplates } from '@/lib/data/checklist';
 import { TaskListSection } from '@/components/TaskListSection';
 import { RoomPauseControl } from './RoomPauseControl';
 
@@ -13,11 +14,12 @@ export default async function RoomPage({ params }: { params: Promise<{ container
   const supabase = await createClient();
   const user = await getAuthUser();
 
-  const [{ role }, { data: room }, members, tasks] = await Promise.all([
+  const [{ role }, { data: room }, members, tasks, checklistTemplates] = await Promise.all([
     getContainerContext(containerId),
     supabase.from('rooms').select('id, name, icon, freshness_days, paused_until, pause_reason').eq('id', roomId).maybeSingle(),
     getContainerMembers(supabase, containerId),
     listTasks(supabase, containerId, { roomId }),
+    getChecklistTemplates(supabase, containerId),
   ]);
 
   if (!room) notFound();
@@ -54,6 +56,7 @@ export default async function RoomPage({ params }: { params: Promise<{ container
         isGuest={isGuest}
         canEdit={canEdit}
         fixedRoomId={room.id}
+        checklistTemplates={checklistTemplates}
       />
     </div>
   );

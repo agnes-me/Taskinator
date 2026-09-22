@@ -4,6 +4,7 @@ import { getAuthUser } from '@/lib/supabase/user';
 import { getContainerContext } from '@/lib/data/nav';
 import { getContainerMembers } from '@/lib/data/members';
 import { listTasks } from '@/lib/data/tasks';
+import { getChecklistTemplates } from '@/lib/data/checklist';
 import { TaskListSection } from '@/components/TaskListSection';
 
 export default async function TasksPage({
@@ -19,7 +20,7 @@ export default async function TasksPage({
   const supabase = await createClient();
   const user = await getAuthUser();
 
-  const [{ role }, members, { data: rooms }, tasks] = await Promise.all([
+  const [{ role }, members, { data: rooms }, tasks, checklistTemplates] = await Promise.all([
     getContainerContext(containerId),
     getContainerMembers(supabase, containerId),
     supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
@@ -27,6 +28,7 @@ export default async function TasksPage({
       roomId: room && !isEventFilter ? room : undefined,
       status: (status as 'todo' | 'in_progress' | 'done' | 'cancelled') || undefined,
     }),
+    getChecklistTemplates(supabase, containerId),
   ]);
 
   const filteredTasks = isEventFilter ? tasks.filter((t) => t.event) : tasks;
@@ -52,6 +54,7 @@ export default async function TasksPage({
         currentUserId={user?.id ?? ''}
         isGuest={isGuest}
         canEdit={canEdit}
+        checklistTemplates={checklistTemplates}
       />
     </div>
   );
