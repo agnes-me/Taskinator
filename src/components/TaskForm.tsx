@@ -127,6 +127,17 @@ export function TaskForm({
             </label>
           )}
         </div>
+        {recurrenceType !== 'none' && (
+          <label className="mt-2 block text-sm">
+            Dernière exécution (pour corriger la fraîcheur)
+            <input
+              name="lastCompletedAt"
+              type="date"
+              defaultValue={task?.last_completed_at?.slice(0, 10) ?? ''}
+              className="input mt-1"
+            />
+          </label>
+        )}
       </div>
 
       {recurrenceType !== 'none' && (

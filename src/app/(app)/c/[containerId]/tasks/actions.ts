@@ -7,6 +7,7 @@ import { syncTaskUpsert, syncTaskDone, syncTaskDeleted } from '@/lib/google-task
 
 function parseTaskFields(formData: FormData) {
   const weekdays = formData.getAll('weekday').join(',');
+  const lastCompletedAtDate = String(formData.get('lastCompletedAt') ?? '').trim();
   return {
     title: String(formData.get('title') ?? '').trim(),
     description: String(formData.get('description') ?? '').trim() || null,
@@ -22,6 +23,9 @@ function parseTaskFields(formData: FormData) {
     freshness_days: formData.get('freshnessDays') ? Number(formData.get('freshnessDays')) : null,
     seasonal_start_month: formData.get('seasonalStart') ? Number(formData.get('seasonalStart')) : null,
     seasonal_end_month: formData.get('seasonalEnd') ? Number(formData.get('seasonalEnd')) : null,
+    // Permet de corriger directement l'ancre de fraîcheur d'une tâche récurrente (sans passer
+    // par une complétion, qui créerait une entrée dans l'historique task_completions).
+    last_completed_at: lastCompletedAtDate ? new Date(`${lastCompletedAtDate}T12:00:00`).toISOString() : null,
   };
 }
 
