@@ -119,11 +119,12 @@ export function TaskRow({
             <span
               className="w-10 shrink-0"
               title={
-                task.freshness.frozen
+                (task.freshness.frozen
                   ? 'En pause'
                   : task.freshness.outOfSeason
                     ? 'Hors saison'
-                    : `Fraîcheur ${task.freshness.percent}%`
+                    : `Fraîcheur ${task.freshness.percent}%`) +
+                (task.recurrence_type === 'none' && task.subtasks.length > 0 ? ' (moyenne des sous-tâches)' : '')
               }
             >
               <FreshnessBar freshness={task.freshness} compact />

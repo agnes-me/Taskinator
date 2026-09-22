@@ -1,6 +1,6 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Database, Priority, RecurrenceType, TaskStatus } from '@/types/database';
-import { computeFreshness, type FreshnessResult } from '@/lib/cleanliness';
+import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
 import { sortByDueDate } from '@/lib/utils';
 
 export interface TaskRow {
@@ -67,8 +67,11 @@ export async function listTasks(
         const p = profiles?.find((pr) => pr.id === a.user_id);
         return { user_id: a.user_id, email: p?.email ?? '—', display_name: p?.display_name ?? null };
       });
+    // Calculée pour toute tâche récurrente, y compris une sous-tâche (auparavant réservée aux
+    // racines) : une sous-tâche récurrente a son propre cycle de fraîcheur, et sert aussi
+    // d'entrée à la fraîcheur agrégée de sa tâche parente ci-dessous.
     const freshness =
-      r.recurrence_type !== 'none' && !r.parent_task_id
+      r.recurrence_type !== 'none'
         ? computeFreshness({
             lastCompletedAt: r.last_completed_at,
             freshnessDays: r.freshness_days ?? r.room?.freshness_days ?? 7,
@@ -91,6 +94,17 @@ export async function listTasks(
   // Les sous-tâches se lisent comme une checklist chronologique : triées par échéance plutôt
   // que par sort_order (ordre de création), qui n'a pas de sens pour l'utilisateur ici.
   for (const task of byId.values()) task.subtasks = sortByDueDate(task.subtasks);
+
+  // Une tâche ponctuelle (non récurrente) qui a des sous-tâches récurrentes affiche la moyenne de
+  // leur fraîcheur plutôt qu'aucune barre : c'est le cas typique d'une tâche "conteneur" (ex.
+  // "Ménage complet") dont chaque sous-tâche a son propre cycle. Une tâche elle-même récurrente
+  // garde son propre suivi (ne pas mélanger les deux sources de vérité).
+  for (const task of byId.values()) {
+    if (task.recurrence_type === 'none' && task.subtasks.length > 0) {
+      const subFreshness = task.subtasks.map((s) => s.freshness).filter((f): f is FreshnessResult => f !== null);
+      if (subFreshness.length > 0) task.freshness = aggregateFreshness(subFreshness);
+    }
+  }
 
   // Le filtre par pièce ne s'applique qu'aux tâches racines : une sous-tâche n'a pas forcément
   // le room_id de sa pièce (elle hérite de sa tâche parente), donc on ne doit jamais l'exclure

@@ -128,9 +128,13 @@ export async function getMyAllTasks(supabase: SupabaseServerClient, containerIds
   };
 
   const byId = new Map<string, MyTask>();
+  const recurrenceById = new Map<string, RecurrenceType>();
   for (const r of rows as unknown as Row[]) {
+    recurrenceById.set(r.id, r.recurrence_type);
+    // Calculée pour toute tâche récurrente, y compris une sous-tâche (sert aussi d'entrée à la
+    // fraîcheur agrégée de sa tâche parente ci-dessous).
     const freshness =
-      r.recurrence_type !== 'none' && !r.parent_task_id
+      r.recurrence_type !== 'none'
         ? computeFreshness({
             lastCompletedAt: r.last_completed_at,
             freshnessDays: r.freshness_days ?? r.rooms?.freshness_days ?? 7,
@@ -164,6 +168,15 @@ export async function getMyAllTasks(supabase: SupabaseServerClient, containerIds
     }
   }
   for (const task of byId.values()) task.subtasks = sortByDueDate(task.subtasks);
+
+  // Une tâche ponctuelle avec des sous-tâches récurrentes affiche la moyenne de leur fraîcheur
+  // (voir listTasks() pour le même comportement et sa justification).
+  for (const task of byId.values()) {
+    if (recurrenceById.get(task.id) === 'none' && task.subtasks.length > 0) {
+      const subFreshness = task.subtasks.map((s) => s.freshness).filter((f): f is FreshnessResult => f !== null);
+      if (subFreshness.length > 0) task.freshness = aggregateFreshness(subFreshness);
+    }
+  }
 
   let filteredRoots = roots;
   if (filters.roomId) filteredRoots = filteredRoots.filter((t) => t.room_id === filters.roomId);
