@@ -80,9 +80,9 @@ function ChecklistItemRow({
         >
           {item.checked ? '✅' : '⬜️'}
         </button>
-        <span className={`flex-1 ${item.checked ? 'line-through opacity-60' : ''}`}>{item.label}</span>
+        <span className={item.checked ? 'line-through opacity-60' : ''}>{item.label}</span>
         {canEdit && (
-          <>
+          <span className="flex items-center gap-2 shrink-0">
             <button
               className="text-xs text-[var(--text-muted)] hover:underline"
               onClick={() => setAddingSub(true)}
@@ -97,7 +97,7 @@ function ChecklistItemRow({
             >
               ✕
             </button>
-          </>
+          </span>
         )}
       </div>
       {children.map((child) => (
