@@ -50,3 +50,18 @@ export async function resumeContainer(containerId: string) {
   await supabase.from('containers').update({ paused_until: null, pause_reason: null }).eq('id', containerId);
   revalidatePath(`/c/${containerId}`);
 }
+
+export async function updateContainer(containerId: string, formData: FormData) {
+  const name = String(formData.get('name') ?? '').trim();
+  const icon = String(formData.get('icon') ?? '🏠');
+  const color = String(formData.get('color') ?? '#14b8a6');
+  if (!name) return { error: 'Le nom est requis.' };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from('containers').update({ name, icon, color }).eq('id', containerId);
+  if (error) return { error: 'Impossible de modifier le conteneur (droits insuffisants ?).' };
+  // Le nom/icône/couleur du conteneur sont affichés dans le layout partagé par toutes ses pages :
+  // revalider tout le layout authentifié évite les mêmes soucis de cache que pour les tâches.
+  revalidatePath('/', 'layout');
+  return {};
+}

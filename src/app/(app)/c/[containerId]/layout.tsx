@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getContainerContext } from '@/lib/data/nav';
+import { ContainerHeaderEdit } from './ContainerHeaderEdit';
 
 export default async function ContainerLayout({
   children,
@@ -13,6 +14,7 @@ export default async function ContainerLayout({
   const { container, role } = await getContainerContext(containerId);
 
   if (!container || !role) notFound();
+  const canEdit = role === 'admin' || role === 'member';
 
   const tabs = [
     { href: `/c/${containerId}`, label: '🧹 Catégories' },
@@ -24,20 +26,30 @@ export default async function ContainerLayout({
   return (
     <div style={{ ['--container-color' as string]: container.color }}>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-xl"
-            style={{ background: container.color + '33' }}
-          >
-            {container.icon}
-          </span>
-          <div>
-            <h1 className="text-xl font-bold">{container.name}</h1>
-            {container.paused_until && new Date(container.paused_until) > new Date() && (
-              <p className="text-xs font-medium text-fresh-mid">⏸ En pause jusqu'au {new Date(container.paused_until).toLocaleDateString('fr-FR')}</p>
-            )}
+        {canEdit ? (
+          <ContainerHeaderEdit
+            containerId={containerId}
+            name={container.name}
+            icon={container.icon}
+            color={container.color}
+            pausedUntil={container.paused_until}
+          />
+        ) : (
+          <div className="flex items-center gap-3">
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-xl"
+              style={{ background: container.color + '33' }}
+            >
+              {container.icon}
+            </span>
+            <div>
+              <h1 className="text-xl font-bold">{container.name}</h1>
+              {container.paused_until && new Date(container.paused_until) > new Date() && (
+                <p className="text-xs font-medium text-fresh-mid">⏸ En pause jusqu'au {new Date(container.paused_until).toLocaleDateString('fr-FR')}</p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
         <Link href={`/c/${containerId}/settings`} className="text-sm text-[var(--text-muted)] hover:underline">
           ⚙️ Paramètres
         </Link>
