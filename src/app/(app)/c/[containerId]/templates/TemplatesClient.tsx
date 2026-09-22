@@ -23,7 +23,21 @@ const MODERATION_LABEL: Record<string, string> = {
   rejected: '❌ Refusé',
 };
 
-function TemplatePreview({ items, onClose }: { items: TemplateItemInput[]; onClose: () => void }) {
+function TemplatePreview({
+  items,
+  containerId,
+  templateId,
+  canManage,
+  onClose,
+}: {
+  items: TemplateItemInput[];
+  containerId: string;
+  templateId: string;
+  canManage: boolean;
+  onClose: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [msg, setMsg] = useState<string | null>(null);
   const roots = items.filter((it) => !it.parent_item_id);
   const childrenOf = (id: string | undefined) => items.filter((it) => it.parent_item_id === id);
 
@@ -60,6 +74,21 @@ function TemplatePreview({ items, onClose }: { items: TemplateItemInput[]; onClo
           ))}
         </div>
       )}
+      {canManage && (
+        <button
+          disabled={pending}
+          className="btn btn-ghost self-start !px-2 !py-1 text-xs"
+          onClick={() =>
+            startTransition(async () => {
+              const res = await duplicateRoomTemplate(containerId, templateId);
+              setMsg(res?.error ?? 'Dupliqué ! Retrouve la copie dans « Mes templates ».');
+            })
+          }
+        >
+          Dupliquer ce template
+        </button>
+      )}
+      {msg && <p className="text-xs text-[var(--text-muted)]">{msg}</p>}
     </div>
   );
 }
@@ -127,7 +156,15 @@ function TemplateCard({
   }
 
   if (previewing && editItems) {
-    return <TemplatePreview items={editItems} onClose={() => setPreviewing(false)} />;
+    return (
+      <TemplatePreview
+        items={editItems}
+        containerId={containerId}
+        templateId={tpl.id}
+        canManage={canManage}
+        onClose={() => setPreviewing(false)}
+      />
+    );
   }
 
   return (
