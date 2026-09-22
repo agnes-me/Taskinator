@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
 import { listAllTasksWithDueDates } from '@/lib/data/tasks';
 import { fetchGoogleEvents } from '@/lib/google-ical';
+import { fetchOAuthCalendarEvents } from '@/lib/google-oauth-calendar-fetch';
 import { GlobalCalendarClient, type GlobalCalendarEvent } from './GlobalCalendarClient';
 
 export default async function GlobalCalendarPage({
@@ -13,34 +14,41 @@ export default async function GlobalCalendarPage({
   const supabase = await createClient();
   const user = await getAuthUser();
 
-  const [tasks, { data: events }, { data: subscriptions }, { data: memberships }, { data: households }] = await Promise.all([
-    listAllTasksWithDueDates(supabase),
-    supabase.from('events').select('id, name, event_date, container_id, containers(name, icon, color)'),
-    supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
-    supabase.from('container_members').select('container_id, role').eq('user_id', user?.id ?? ''),
-    supabase.from('households').select('id, name, containers(id, name, icon, color)').order('created_at', { ascending: true }),
-  ]);
-
-  const visibleSubs = (subscriptions ?? []).filter((sub) => sub.visible);
-  const results = await Promise.all(visibleSubs.map(async (sub) => ({ sub, result: await fetchGoogleEvents(sub.url) })));
-  const googleEvents = results.flatMap(({ sub, result }) =>
-    result.events.map((e) => ({ ...e, id: `${sub.id}:${e.id}`, calendarLabel: sub.label, calendarColor: sub.color })),
-  );
-  const googleEventsErrors = results
-    .filter(({ result }) => result.error)
-    .map(({ sub, result }) => ({ label: sub.label, message: result.error as string }));
-
-  const editableContainerIds = new Set(
-    (memberships ?? []).filter((m) => m.role === 'admin' || m.role === 'member').map((m) => m.container_id),
-  );
-  const containers = (households ?? []).flatMap((h) => h.containers ?? []);
-
   const now = new Date();
   const [yearStr, monthStr] = (monthParam ?? '').split('-');
   const year = Number(yearStr) || now.getFullYear();
   const month = monthStr ? Number(monthStr) - 1 : now.getMonth();
   const view = viewParam === 'month' ? 'month' : 'week';
   const weekAnchor = weekParam || now.toISOString().slice(0, 10);
+
+  const baseDate = view === 'month' ? new Date(year, month, 1) : new Date(`${weekAnchor}T00:00:00`);
+  const rangeStart = new Date(baseDate);
+  rangeStart.setDate(rangeStart.getDate() - 7);
+  const rangeEnd = new Date(baseDate);
+  rangeEnd.setDate(rangeEnd.getDate() + (view === 'month' ? 45 : 14));
+
+  const [tasks, { data: events }, { data: subscriptions }, { data: memberships }, { data: households }, oauth] = await Promise.all([
+    listAllTasksWithDueDates(supabase),
+    supabase.from('events').select('id, name, event_date, container_id, containers(name, icon, color)'),
+    supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
+    supabase.from('container_members').select('container_id, role').eq('user_id', user?.id ?? ''),
+    supabase.from('households').select('id, name, containers(id, name, icon, color)').order('created_at', { ascending: true }),
+    fetchOAuthCalendarEvents(supabase, user?.id ?? '', rangeStart, rangeEnd),
+  ]);
+
+  const visibleSubs = (subscriptions ?? []).filter((sub) => sub.visible);
+  const results = await Promise.all(visibleSubs.map(async (sub) => ({ sub, result: await fetchGoogleEvents(sub.url) })));
+  const icalEvents = results.flatMap(({ sub, result }) =>
+    result.events.map((e) => ({ ...e, id: `${sub.id}:${e.id}`, calendarLabel: sub.label, calendarColor: sub.color })),
+  );
+  const icalErrors = results.filter(({ result }) => result.error).map(({ sub, result }) => ({ label: sub.label, message: result.error as string }));
+  const googleEvents = [...icalEvents, ...oauth.events];
+  const googleEventsErrors = [...icalErrors, ...oauth.errors];
+
+  const editableContainerIds = new Set(
+    (memberships ?? []).filter((m) => m.role === 'admin' || m.role === 'member').map((m) => m.container_id),
+  );
+  const containers = (households ?? []).flatMap((h) => h.containers ?? []);
 
   const allEvents = (events ?? []) as unknown as GlobalCalendarEvent[];
   const filteredTasks = containerFilter ? tasks.filter((t) => t.container_id === containerFilter) : tasks;

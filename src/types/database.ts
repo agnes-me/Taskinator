@@ -42,6 +42,78 @@ export interface Database {
         };
         Update: Partial<{ label: string; url: string; color: string; visible: boolean; sort_order: number }>;
       };
+      google_oauth_accounts: {
+        Row: {
+          user_id: string;
+          access_token: string;
+          refresh_token: string;
+          expires_at: string;
+          scope: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          access_token: string;
+          refresh_token: string;
+          expires_at: string;
+          scope: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{ access_token: string; refresh_token: string; expires_at: string; scope: string; updated_at: string }>;
+      };
+      google_calendars: {
+        Row: {
+          id: string;
+          user_id: string;
+          google_calendar_id: string;
+          label: string;
+          color: string;
+          visible: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          google_calendar_id: string;
+          label: string;
+          color?: string;
+          visible?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<{ label: string; color: string; visible: boolean }>;
+      };
+      container_google_sync: {
+        Row: {
+          container_id: string;
+          synced_by: string;
+          google_calendar_id: string;
+          enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          container_id: string;
+          synced_by: string;
+          google_calendar_id: string;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{ synced_by: string; google_calendar_id: string; enabled: boolean; updated_at: string }>;
+      };
+      task_google_events: {
+        Row: { task_id: string; container_id: string; google_event_id: string; created_at: string; updated_at: string };
+        Insert: {
+          task_id: string;
+          container_id: string;
+          google_event_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{ google_event_id: string; updated_at: string }>;
+      };
       households: {
         Row: { id: string; name: string; created_at: string };
         Insert: { id?: string; name: string; created_at?: string };

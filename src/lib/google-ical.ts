@@ -3,8 +3,13 @@ export interface GoogleEvent {
   summary: string;
   date: string; // yyyy-mm-dd, for grouping onto the calendar grid
   startAt: string | null; // full ISO datetime when timed, null when all-day
-  calendarLabel?: string; // nom de l'abonnement iCal d'origine, quand plusieurs sont fusionnés
-  calendarColor?: string; // couleur choisie pour cet abonnement, pour le distinguer visuellement
+  calendarLabel?: string; // nom de l'abonnement iCal (ou de l'agenda Google) d'origine, quand plusieurs sont fusionnés
+  calendarColor?: string; // couleur choisie pour ce calendrier, pour le distinguer visuellement
+  // Un événement iCal (flux .ics public) est toujours en lecture seule ; un événement Google OAuth
+  // (google_calendars) porte editable=true avec de quoi l'éditer/supprimer via l'API Calendar.
+  editable?: boolean;
+  googleCalendarId?: string;
+  googleEventId?: string;
 }
 
 export interface GoogleEventsResult {

@@ -4,6 +4,7 @@ import { Fragment, useTransition } from 'react';
 import Link from 'next/link';
 import type { GlobalCalendarTask } from '@/lib/data/tasks';
 import type { GoogleEvent } from '@/lib/google-ical';
+import { GoogleEventChip } from '@/components/GoogleEventChip';
 import { completeTask, reopenTask, rescheduleTask } from '@/app/(app)/c/[containerId]/tasks/actions';
 
 export interface GlobalCalendarEvent {
@@ -24,11 +25,6 @@ export interface CalendarContainer {
 const PRIORITY_DOT: Record<string, string> = { low: 'bg-slate-400', medium: 'bg-amber-500', high: 'bg-rose-500' };
 const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const WEEK_HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 6h .. 22h
-
-function googleEventStyle(color?: string): React.CSSProperties {
-  const hex = color || '#0ea5e9';
-  return { backgroundColor: `${hex}1A`, color: hex };
-}
 
 function toISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -280,9 +276,7 @@ export function GlobalCalendarClient({
                     </span>
                   ))}
                   {dayGoogleAllDay.map((g) => (
-                    <span key={g.id} className="truncate rounded px-1 py-0.5" style={googleEventStyle(g.calendarColor)} title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
-                      🗓️ {g.summary}
-                    </span>
+                    <GoogleEventChip key={g.id} event={g} />
                   ))}
                   {unscheduled.map((t) => (
                     <TaskRow key={t.id} task={t} />
@@ -311,9 +305,7 @@ export function GlobalCalendarClient({
                       }}
                     >
                       {hourGoogle.map((g) => (
-                        <span key={g.id} className="truncate rounded px-1 py-0.5" style={googleEventStyle(g.calendarColor)} title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
-                          🗓️ {g.summary}
-                        </span>
+                        <GoogleEventChip key={g.id} event={g} />
                       ))}
                       {hourTasks.map((t) => (
                         <TaskRow key={t.id} task={t} />
@@ -403,9 +395,7 @@ export function GlobalCalendarClient({
                   </span>
                 ))}
                 {dayGoogle.slice(0, 2).map((g) => (
-                  <span key={g.id} className="truncate rounded px-1 py-0.5 text-[10px]" style={googleEventStyle(g.calendarColor)} title={g.calendarLabel ? `${g.summary} — ${g.calendarLabel}` : g.summary}>
-                    🗓️ {g.summary}
-                  </span>
+                  <GoogleEventChip key={g.id} event={g} className="truncate rounded px-1 py-0.5 text-[10px]" />
                 ))}
                 {dayTasks.slice(0, 3).map((t) => (
                   <TaskRow key={t.id} task={t} />

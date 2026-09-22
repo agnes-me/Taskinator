@@ -16,12 +16,14 @@ export default async function ContainerSettingsPage({
   const supabase = await createClient();
   const user = await getAuthUser();
 
-  const [{ role }, roomTemplates, eventTemplates, { data: rooms }, { data: memberRows }] = await Promise.all([
+  const [{ role }, roomTemplates, eventTemplates, { data: rooms }, { data: memberRows }, { data: googleAccount }, { data: googleSync }] = await Promise.all([
     getContainerContext(containerId),
     listRoomTemplates(supabase, containerId),
     listEventTemplates(supabase, containerId),
     supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
     supabase.from('container_members').select('id, user_id, role').eq('container_id', containerId),
+    supabase.from('google_oauth_accounts').select('user_id').eq('user_id', user?.id ?? '').maybeSingle(),
+    supabase.from('container_google_sync').select('google_calendar_id, enabled').eq('container_id', containerId).maybeSingle(),
   ]);
 
   const canManage = role === 'admin' || role === 'member';
@@ -53,7 +55,7 @@ export default async function ContainerSettingsPage({
   return (
     <SettingsClient
       containerId={containerId}
-      initialTab={tab === 'events' ? 'events' : tab === 'members' ? 'members' : 'rooms'}
+      initialTab={tab === 'events' ? 'events' : tab === 'members' ? 'members' : tab === 'google' ? 'google' : 'rooms'}
       roomTemplates={{ system, container: containerTpl, personal, marketplace }}
       eventTemplates={eventTemplates}
       rooms={rooms ?? []}
@@ -62,6 +64,8 @@ export default async function ContainerSettingsPage({
       members={members}
       invitations={invitations ?? []}
       isAdmin={isAdmin}
+      googleConnected={Boolean(googleAccount)}
+      googleSync={googleSync ?? null}
     />
   );
 }

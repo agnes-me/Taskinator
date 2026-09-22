@@ -5,8 +5,9 @@ import type { TemplateSummary } from '@/lib/data/templates';
 import { TemplatesClient } from '../templates/TemplatesClient';
 import { EventTemplatesClient } from '../events/EventTemplatesClient';
 import { MembersClient } from '../members/MembersClient';
+import { GoogleSyncForm, type ContainerGoogleSync } from './GoogleSyncForm';
 
-type Tab = 'rooms' | 'events' | 'members';
+type Tab = 'rooms' | 'events' | 'members' | 'google';
 type Member = { id: string; user_id: string; role: 'admin' | 'member' | 'guest'; email: string; display_name: string | null };
 type Invitation = { id: string; token: string; role: string; email: string | null; expires_at: string };
 
@@ -21,6 +22,8 @@ export function SettingsClient({
   members,
   invitations,
   isAdmin,
+  googleConnected,
+  googleSync,
 }: {
   containerId: string;
   initialTab: Tab;
@@ -32,6 +35,8 @@ export function SettingsClient({
   members: Member[];
   invitations: Invitation[];
   isAdmin: boolean;
+  googleConnected: boolean;
+  googleSync: ContainerGoogleSync | null;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
 
@@ -39,6 +44,7 @@ export function SettingsClient({
     { key: 'rooms', label: '🏠 Templates de catégories' },
     { key: 'events', label: '🎉 Templates d\'événements' },
     { key: 'members', label: '👥 Membres' },
+    { key: 'google', label: '🔄 Google Calendar' },
   ];
 
   return (
@@ -80,6 +86,7 @@ export function SettingsClient({
       {tab === 'members' && (
         <MembersClient containerId={containerId} members={members} invitations={invitations} currentUserId={currentUserId} isAdmin={isAdmin} />
       )}
+      {tab === 'google' && <GoogleSyncForm containerId={containerId} googleConnected={googleConnected} sync={googleSync} />}
     </div>
   );
 }

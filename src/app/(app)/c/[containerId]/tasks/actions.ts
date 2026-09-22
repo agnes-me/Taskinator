@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { Priority, RecurrenceType } from '@/types/database';
+import { syncTaskUpsert, syncTaskDone, syncTaskDeleted } from '@/lib/google-task-sync';
 
 function parseTaskFields(formData: FormData) {
   const weekdays = formData.getAll('weekday').join(',');
@@ -57,6 +58,7 @@ export async function createTask(containerId: string, formData: FormData) {
     await supabase.from('task_assignees').insert(assigneeIds.map((user_id) => ({ task_id: task.id, user_id })));
   }
 
+  await syncTaskUpsert(supabase, containerId, task.id);
   revalidateTaskPaths(containerId);
   return {};
 }
@@ -75,12 +77,14 @@ export async function updateTask(taskId: string, containerId: string, formData: 
     await supabase.from('task_assignees').insert(assigneeIds.map((user_id) => ({ task_id: taskId, user_id })));
   }
 
+  await syncTaskUpsert(supabase, containerId, taskId);
   revalidateTaskPaths(containerId);
   return {};
 }
 
 export async function deleteTask(taskId: string, containerId: string) {
   const supabase = await createClient();
+  await syncTaskDeleted(supabase, containerId, taskId);
   await supabase.from('tasks').delete().eq('id', taskId);
   revalidateTaskPaths(containerId);
 }
@@ -105,6 +109,7 @@ export async function completeTask(taskId: string, containerId: string, formData
   const { error } = await supabase.from('task_completions').insert({ task_id: taskId, completed_by: user.id, comment, photo_url: photoUrl });
   if (error) return { error: "Impossible d'enregistrer la complétion (droits insuffisants ?)." };
 
+  await syncTaskDone(supabase, containerId, taskId);
   revalidateTaskPaths(containerId);
   return {};
 }
@@ -135,6 +140,7 @@ export async function rescheduleTask(
   const supabase = await createClient();
   const { error } = await supabase.from('tasks').update(patch).eq('id', taskId);
   if (error) return { error: 'Impossible de déplacer la tâche.' };
+  await syncTaskUpsert(supabase, containerId, taskId);
   revalidateTaskPaths(containerId);
   return {};
 }
