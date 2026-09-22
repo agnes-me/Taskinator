@@ -1,0 +1,25 @@
+-- Permet de calculer des statistiques "tâches en retard" par personne dans le temps :
+-- tasks.due_date avance à chaque complétion d'une tâche récurrente, donc comparer
+-- due_date *actuel* à une complétion passée n'est fiable que pour les tâches non
+-- récurrentes. On capture donc was_late au moment précis de la complétion, avant
+-- que le trigger ne fasse avancer due_date.
+alter table task_completions add column was_late boolean;
+
+create or replace function public.after_task_completion() returns trigger language plpgsql as $$
+declare
+  v_task tasks%rowtype;
+  v_next date;
+begin
+  select * into v_task from tasks where id = NEW.task_id;
+  update task_completions
+    set was_late = (v_task.due_date is not null and NEW.completed_at::date > v_task.due_date)
+    where id = NEW.id;
+  if v_task.recurrence_type is null or v_task.recurrence_type = 'none' then
+    update tasks set status = 'done', last_completed_at = NEW.completed_at where id = NEW.task_id;
+  else
+    v_next := compute_next_due_date(v_task.recurrence_type, v_task.recurrence_interval, v_task.recurrence_weekdays, coalesce(NEW.completed_at::date, current_date));
+    update tasks set status = 'todo', last_completed_at = NEW.completed_at, due_date = v_next where id = NEW.task_id;
+  end if;
+  return NEW;
+end;
+$$;

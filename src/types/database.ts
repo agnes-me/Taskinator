@@ -464,6 +464,7 @@ export interface Database {
           completed_at: string;
           comment: string | null;
           photo_url: string | null;
+          was_late: boolean | null;
           created_at: string;
         };
         Insert: {
@@ -473,6 +474,7 @@ export interface Database {
           completed_at?: string;
           comment?: string | null;
           photo_url?: string | null;
+          was_late?: boolean | null;
           created_at?: string;
         };
         Update: Record<string, never>;

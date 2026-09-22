@@ -21,6 +21,7 @@ export default async function ContainerLayout({
     { href: `/c/${containerId}/tasks`, label: '✅ Tâches' },
     { href: `/c/${containerId}/calendar`, label: '📅 Calendrier' },
     { href: `/c/${containerId}/events`, label: '🎉 Événements' },
+    { href: `/c/${containerId}/stats`, label: '📊 Stats' },
   ];
 
   return (

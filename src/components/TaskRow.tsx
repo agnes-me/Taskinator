@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import type { TaskRow as TaskRowType } from '@/lib/data/tasks';
 import { FreshnessBar } from '@/components/FreshnessBar';
 import { recurrenceLabel, PRIORITY_LABELS } from '@/lib/recurrence';
-import { formatDate } from '@/lib/utils';
+import { formatDate, todayISO } from '@/lib/utils';
 import { completeTask, reopenTask, deleteTask, pauseTask, resumeTask, createTask } from '@/app/(app)/c/[containerId]/tasks/actions';
 import { TaskForm, type ContainerMember } from './TaskForm';
 
@@ -249,6 +249,10 @@ export function TaskRow({
             })
           }
         >
+          <label className="text-xs font-medium">
+            Faite le (si oubliée, indiquer une date antérieure)
+            <input name="completedAt" type="date" defaultValue={todayISO()} max={todayISO()} className="input mt-1 w-full" />
+          </label>
           <label className="text-xs font-medium">
             Commentaire (optionnel)
             <input name="comment" className="input mt-1 w-full" placeholder="Tout est fait !" />

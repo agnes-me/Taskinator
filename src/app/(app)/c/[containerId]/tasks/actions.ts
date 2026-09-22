@@ -95,6 +95,7 @@ export async function deleteTask(taskId: string, containerId: string) {
 export async function completeTask(taskId: string, containerId: string, formData: FormData) {
   const comment = String(formData.get('comment') ?? '').trim() || null;
   const photo = formData.get('photo') as File | null;
+  const completedAtDate = String(formData.get('completedAt') ?? '').trim();
 
   const supabase = await createClient();
   const {
@@ -109,7 +110,14 @@ export async function completeTask(taskId: string, containerId: string, formData
     if (!uploadError) photoUrl = path;
   }
 
-  const { error } = await supabase.from('task_completions').insert({ task_id: taskId, completed_by: user.id, comment, photo_url: photoUrl });
+  // Permet de "rattraper" une tâche faite plus tôt mais oubliée : si une date est fournie,
+  // on l'utilise comme date de complétion (à midi, pour ne pas glisser d'un jour selon le
+  // fuseau) au lieu de l'horodatage courant par défaut.
+  const completedAt = completedAtDate ? new Date(`${completedAtDate}T12:00:00`).toISOString() : undefined;
+
+  const { error } = await supabase
+    .from('task_completions')
+    .insert({ task_id: taskId, completed_by: user.id, comment, photo_url: photoUrl, ...(completedAt ? { completed_at: completedAt } : {}) });
   if (error) return { error: "Impossible d'enregistrer la complétion (droits insuffisants ?)." };
 
   await syncTaskDone(supabase, containerId, taskId);
