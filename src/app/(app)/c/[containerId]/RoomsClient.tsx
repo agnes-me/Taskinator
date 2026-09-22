@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { FreshnessBar } from '@/components/FreshnessBar';
 import type { RoomWithFreshness } from '@/lib/data/rooms';
+import type { EventsCountSummary } from '@/lib/data/events';
 import { createRoom, deleteRoom, pauseContainer, resumeContainer } from './actions';
 
 const ICONS = [
@@ -13,6 +14,21 @@ const ICONS = [
   '✈️', '🧳', '🗺️', '🎉', '🎂', '🎁', '📅', '📦', '🔧', '🎨',
   '📚', '🎵', '⚽', '🍽️', '📱', '⭐',
 ];
+
+function EventsCard({ containerId, eventsSummary }: { containerId: string; eventsSummary: EventsCountSummary }) {
+  return (
+    <Link href={`/c/${containerId}/events`} className="card flex flex-col gap-3 p-4">
+      <div className="flex items-center gap-2 font-semibold">
+        <span className="text-xl">🎉</span> Événements
+      </div>
+      <p className="text-xs text-[var(--text-muted)]">
+        {eventsSummary.total === 0
+          ? 'Aucun événement pour l’instant'
+          : `${eventsSummary.upcoming} événement${eventsSummary.upcoming > 1 ? 's' : ''} à venir sur ${eventsSummary.total}`}
+      </p>
+    </Link>
+  );
+}
 
 function RoomCard({
   room,
@@ -109,11 +125,13 @@ export function RoomsClient({
   rooms,
   canEdit,
   containerPausedUntil,
+  eventsSummary,
 }: {
   containerId: string;
   rooms: RoomWithFreshness[];
   canEdit: boolean;
   containerPausedUntil: string | null;
+  eventsSummary: EventsCountSummary;
 }) {
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -195,16 +213,17 @@ export function RoomsClient({
         </form>
       )}
 
-      {rooms.length === 0 ? (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <EventsCard containerId={containerId} eventsSummary={eventsSummary} />
+        {rooms.map((room) => (
+          <RoomCard key={room.id} room={room} containerId={containerId} canEdit={canEdit} />
+        ))}
+      </div>
+
+      {rooms.length === 0 && (
         <p className="card p-6 text-center text-sm text-[var(--text-muted)]">
           Aucune catégorie pour l'instant. Créez-en une, ou appliquez un template depuis « ⚙️ Paramètres ».
         </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rooms.map((room) => (
-            <RoomCard key={room.id} room={room} containerId={containerId} canEdit={canEdit} />
-          ))}
-        </div>
       )}
     </div>
   );
