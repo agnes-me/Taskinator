@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { getDashboardHouseholds, getMyUpcomingTasks, getDashboardRoomOptions } from '@/lib/data/dashboard';
+import { getDashboardHouseholds, getMyAllTasks, getDashboardRoomOptions } from '@/lib/data/dashboard';
 import { FreshnessBar } from '@/components/FreshnessBar';
 import { NewContainerForm } from './NewContainerForm';
 import { DashboardFilters } from './DashboardFilters';
@@ -16,7 +16,7 @@ export default async function DashboardPage({
   const households = await getDashboardHouseholds(supabase);
   const containerIds = households.flatMap((h) => h.containers.map((c) => c.id));
   const [myTasks, roomOptions] = await Promise.all([
-    getMyUpcomingTasks(supabase, { containerId: container, roomId: room, priority, dueBefore }),
+    getMyAllTasks(supabase, containerIds, { containerId: container, roomId: room, priority, dueBefore }),
     getDashboardRoomOptions(supabase, containerIds),
   ]);
   const containerOptions = households.flatMap((h) => h.containers.map((c) => ({ id: c.id, name: c.name })));
@@ -31,12 +31,10 @@ export default async function DashboardPage({
       </div>
 
       <div className="card flex flex-col gap-3 p-4">
-        <h2 className="font-semibold">📌 Mes prochaines tâches</h2>
+        <h2 className="font-semibold">📌 Toutes mes tâches</h2>
         <DashboardFilters containers={containerOptions} rooms={roomOptions} />
         {myTasks.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">
-            {hasFilters ? 'Aucune tâche ne correspond à ces filtres.' : 'Rien à faire prochainement 🎉'}
-          </p>
+          <p className="text-sm text-[var(--text-muted)]">{hasFilters ? 'Aucune tâche ne correspond à ces filtres.' : 'Aucune tâche 🎉'}</p>
         ) : (
           <ul className="flex flex-col gap-1">
             {myTasks.map((t) => (

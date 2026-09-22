@@ -1,6 +1,5 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
-import { getAuthUser } from '@/lib/supabase/user';
-import type { Database } from '@/types/database';
+import type { Priority, RecurrenceType, TaskStatus } from '@/types/database';
 import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
 import { todayISO } from '@/lib/utils';
 
@@ -66,11 +65,14 @@ export interface MyTask {
   id: string;
   title: string;
   due_date: string | null;
+  status: TaskStatus;
+  priority: Priority;
   container_id: string;
   container_name: string;
   room_id: string | null;
   room_name: string | null;
-  priority: string;
+  freshness: FreshnessResult | null;
+  subtasks: MyTask[];
 }
 
 export interface MyTaskFilters {
@@ -80,42 +82,94 @@ export interface MyTaskFilters {
   dueBefore?: string;
 }
 
-export async function getMyUpcomingTasks(supabase: SupabaseServerClient, filters: MyTaskFilters = {}): Promise<MyTask[]> {
-  const user = await getAuthUser();
-  if (!user) return [];
+const MY_TASK_SELECT = `
+  id, title, due_date, status, priority, container_id, room_id, parent_task_id,
+  recurrence_type, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month,
+  containers(name), rooms(name, freshness_days)
+`;
 
-  // Ne filtre plus par assignation nommée (table task_assignees) : de nombreux foyers n'assignent
-  // jamais une tâche à quelqu'un en particulier, un filtre par assigné renvoyait alors
-  // systématiquement une liste vide quelle que soit l'échéance. Ne filtre plus non plus sur une
-  // fenêtre fixe de 7 jours, pour qu'une tâche d'événement à échéance dans plusieurs mois reste
-  // "à venir". RLS restreint déjà aux tâches des conteneurs dont l'utilisateur est membre.
+// Toutes les tâches (récurrentes ou non, datées ou non, y compris les sous-tâches) des
+// conteneurs de l'utilisateur, en arbre parent/enfant, avec la fraîcheur par tâche récurrente.
+// Comme pour listTasks() (rooms/[roomId]), le filtre par pièce/difficulté/échéance ne doit
+// s'appliquer qu'aux tâches racines : une sous-tâche n'a pas forcément le room_id ou la
+// difficulté de sa tâche parente, et l'exclure de la requête SQL casserait le lien parent/enfant.
+export async function getMyAllTasks(supabase: SupabaseServerClient, containerIds: string[], filters: MyTaskFilters = {}): Promise<MyTask[]> {
+  if (containerIds.length === 0) return [];
+
   let query = supabase
     .from('tasks')
-    .select('id, title, due_date, priority, container_id, room_id, containers(name), rooms(name)')
-    .is('parent_task_id', null)
-    .not('due_date', 'is', null)
-    .neq('status', 'done')
+    .select(MY_TASK_SELECT)
+    .in('container_id', containerIds)
     .neq('status', 'cancelled')
-    .order('due_date', { ascending: true })
-    .limit(100);
+    .order('due_date', { ascending: true, nullsFirst: false });
 
   if (filters.containerId) query = query.eq('container_id', filters.containerId);
-  if (filters.roomId) query = query.eq('room_id', filters.roomId);
-  if (filters.priority) query = query.eq('priority', filters.priority);
-  if (filters.dueBefore) query = query.lte('due_date', filters.dueBefore);
 
-  const { data: tasks } = await query;
+  const { data: rows } = await query;
+  if (!rows) return [];
 
-  return (tasks ?? []).map((t) => ({
-    id: t.id,
-    title: t.title,
-    due_date: t.due_date,
-    priority: t.priority,
-    container_id: t.container_id,
-    container_name: (t.containers as unknown as { name: string } | null)?.name ?? '',
-    room_id: t.room_id,
-    room_name: (t.rooms as unknown as { name: string } | null)?.name ?? null,
-  }));
+  type Row = {
+    id: string;
+    title: string;
+    due_date: string | null;
+    status: TaskStatus;
+    priority: Priority;
+    container_id: string;
+    room_id: string | null;
+    parent_task_id: string | null;
+    recurrence_type: RecurrenceType;
+    last_completed_at: string | null;
+    freshness_days: number | null;
+    paused_until: string | null;
+    seasonal_start_month: number | null;
+    seasonal_end_month: number | null;
+    containers: { name: string } | null;
+    rooms: { name: string; freshness_days: number } | null;
+  };
+
+  const byId = new Map<string, MyTask>();
+  for (const r of rows as unknown as Row[]) {
+    const freshness =
+      r.recurrence_type !== 'none' && !r.parent_task_id
+        ? computeFreshness({
+            lastCompletedAt: r.last_completed_at,
+            freshnessDays: r.freshness_days ?? r.rooms?.freshness_days ?? 7,
+            pausedUntil: r.paused_until,
+            seasonalStartMonth: r.seasonal_start_month,
+            seasonalEndMonth: r.seasonal_end_month,
+          })
+        : null;
+    byId.set(r.id, {
+      id: r.id,
+      title: r.title,
+      due_date: r.due_date,
+      status: r.status,
+      priority: r.priority,
+      container_id: r.container_id,
+      container_name: r.containers?.name ?? '',
+      room_id: r.room_id,
+      room_name: r.rooms?.name ?? null,
+      freshness,
+      subtasks: [],
+    });
+  }
+
+  const roots: MyTask[] = [];
+  for (const r of rows as unknown as Row[]) {
+    const task = byId.get(r.id)!;
+    if (r.parent_task_id && byId.has(r.parent_task_id)) {
+      byId.get(r.parent_task_id)!.subtasks.push(task);
+    } else {
+      roots.push(task);
+    }
+  }
+
+  let filteredRoots = roots;
+  if (filters.roomId) filteredRoots = filteredRoots.filter((t) => t.room_id === filters.roomId);
+  if (filters.priority) filteredRoots = filteredRoots.filter((t) => t.priority === filters.priority);
+  if (filters.dueBefore) filteredRoots = filteredRoots.filter((t) => t.due_date && t.due_date <= filters.dueBefore!);
+
+  return filteredRoots;
 }
 
 export interface RoomOption {
