@@ -144,6 +144,47 @@ export async function listAllTasksWithDueDates(supabase: SupabaseServerClient): 
   return (data ?? []) as unknown as GlobalCalendarTask[];
 }
 
+export interface UnscheduledTask {
+  id: string;
+  title: string;
+  priority: Priority;
+  status: TaskStatus;
+  room_id: string | null;
+  room: { icon: string; name: string } | null;
+}
+
+// Tâches récurrentes sans due_date : invisibles du calendrier (qui n'indexe que par date), donc
+// listées à part pour être proposées en glisser-déposer sur un jour (planification manuelle).
+export async function listUnscheduledRecurringTasks(supabase: SupabaseServerClient, containerId: string): Promise<UnscheduledTask[]> {
+  const { data } = await supabase
+    .from('tasks')
+    .select('id, title, priority, status, room_id, room:rooms(icon, name)')
+    .eq('container_id', containerId)
+    .is('due_date', null)
+    .is('parent_task_id', null)
+    .neq('recurrence_type', 'none')
+    .neq('status', 'cancelled');
+
+  return (data ?? []) as unknown as UnscheduledTask[];
+}
+
+export interface GlobalUnscheduledTask extends UnscheduledTask {
+  container_id: string;
+  container: { id: string; name: string; icon: string; color: string } | null;
+}
+
+export async function listAllUnscheduledRecurringTasks(supabase: SupabaseServerClient): Promise<GlobalUnscheduledTask[]> {
+  const { data } = await supabase
+    .from('tasks')
+    .select('id, title, priority, status, room_id, container_id, room:rooms(icon, name), container:containers(id, name, icon, color)')
+    .is('due_date', null)
+    .is('parent_task_id', null)
+    .neq('recurrence_type', 'none')
+    .neq('status', 'cancelled');
+
+  return (data ?? []) as unknown as GlobalUnscheduledTask[];
+}
+
 export async function getTaskWithHistory(supabase: SupabaseServerClient, taskId: string) {
   const { data: task } = await supabase.from('tasks').select(TASK_SELECT).eq('id', taskId).maybeSingle();
   const { data: completions } = await supabase

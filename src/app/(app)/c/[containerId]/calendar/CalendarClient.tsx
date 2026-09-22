@@ -2,7 +2,7 @@
 
 import { Fragment, useTransition } from 'react';
 import Link from 'next/link';
-import type { CalendarTask } from '@/lib/data/tasks';
+import type { CalendarTask, UnscheduledTask } from '@/lib/data/tasks';
 import type { GoogleEvent } from '@/lib/google-ical';
 import { GoogleEventChip } from '@/components/GoogleEventChip';
 import { AddGoogleEventButton, type GoogleCalendarOption } from '@/components/AddGoogleEventButton';
@@ -55,6 +55,7 @@ export function CalendarClient({
   month,
   weekAnchor,
   tasks,
+  unscheduledTasks,
   events,
   googleEvents,
   googleEventsErrors,
@@ -69,6 +70,7 @@ export function CalendarClient({
   month: number;
   weekAnchor: string;
   tasks: CalendarTask[];
+  unscheduledTasks: UnscheduledTask[];
   events: CalendarEvent[];
   googleEvents: GoogleEvent[];
   googleEventsErrors: { label: string; message: string }[];
@@ -145,6 +147,29 @@ export function CalendarClient({
     e.dataTransfer.effectAllowed = 'move';
   }
 
+  const unscheduledTray = unscheduledTasks.length > 0 && (
+    <div className="card flex flex-col gap-2 p-3">
+      <span className="text-xs font-semibold text-[var(--text-muted)]">
+        📋 Tâches récurrentes sans date — glisse-les sur un jour pour les planifier
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {unscheduledTasks.map((t) => (
+          <div
+            key={t.id}
+            draggable={canEdit}
+            onDragStart={(e) => onTaskDragStart(e, t.id)}
+            className={`chip flex items-center gap-1 bg-[var(--surface-muted)] ${canEdit ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            title={t.title}
+          >
+            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${PRIORITY_DOT[t.priority]}`} />
+            {t.room && <span>{t.room.icon}</span>}
+            <span>{t.title}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const roomFilterChips = (
     <div className="flex flex-wrap gap-2 text-sm">
       <Link
@@ -208,6 +233,7 @@ export function CalendarClient({
             ⚠️ {e.label} : {e.message}
           </p>
         ))}
+        {unscheduledTray}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {viewToggle}
           {roomFilterChips}
@@ -356,6 +382,7 @@ export function CalendarClient({
           ⚠️ {e.label} : {e.message}
         </p>
       ))}
+      {unscheduledTray}
       <div className="flex flex-wrap items-center justify-between gap-2">
         {viewToggle}
         {roomFilterChips}
@@ -402,7 +429,13 @@ export function CalendarClient({
                 e.preventDefault();
                 const taskId = e.dataTransfer.getData('text/plain');
                 const task = tasks.find((t) => t.id === taskId);
-                if (task) moveTaskToDay(task, iso);
+                if (task) {
+                  moveTaskToDay(task, iso);
+                } else if (unscheduledTasks.some((t) => t.id === taskId)) {
+                  startTransition(async () => {
+                    await rescheduleTask(taskId, containerId, { due_date: iso });
+                  });
+                }
               }}
               className={`card flex min-h-[92px] flex-col gap-1 p-1.5 text-xs ${inMonth ? '' : 'opacity-40'} ${isToday ? '!border-brand-500' : ''}`}
             >

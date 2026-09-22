@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
-import { listAllTasksWithDueDates } from '@/lib/data/tasks';
+import { listAllTasksWithDueDates, listAllUnscheduledRecurringTasks } from '@/lib/data/tasks';
 import { fetchGoogleEvents } from '@/lib/google-ical';
 import { fetchOAuthCalendarEvents } from '@/lib/google-oauth-calendar-fetch';
 import { GlobalCalendarClient, type GlobalCalendarEvent } from './GlobalCalendarClient';
@@ -27,9 +27,10 @@ export default async function GlobalCalendarPage({
   const rangeEnd = new Date(baseDate);
   rangeEnd.setDate(rangeEnd.getDate() + (view === 'month' ? 45 : 14));
 
-  const [tasks, { data: events }, { data: subscriptions }, { data: memberships }, { data: households }, oauth, { data: myGoogleCalendars }] =
+  const [tasks, unscheduledTasks, { data: events }, { data: subscriptions }, { data: memberships }, { data: households }, oauth, { data: myGoogleCalendars }] =
     await Promise.all([
       listAllTasksWithDueDates(supabase),
+      listAllUnscheduledRecurringTasks(supabase),
       supabase.from('events').select('id, name, event_date, container_id, containers(name, icon, color)'),
       supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
       supabase.from('container_members').select('container_id, role').eq('user_id', user?.id ?? ''),
@@ -54,6 +55,7 @@ export default async function GlobalCalendarPage({
 
   const allEvents = (events ?? []) as unknown as GlobalCalendarEvent[];
   const filteredTasks = containerFilter ? tasks.filter((t) => t.container_id === containerFilter) : tasks;
+  const filteredUnscheduledTasks = containerFilter ? unscheduledTasks.filter((t) => t.container_id === containerFilter) : unscheduledTasks;
   const filteredEvents = containerFilter ? allEvents.filter((e) => e.container_id === containerFilter) : allEvents;
 
   return (
@@ -63,6 +65,7 @@ export default async function GlobalCalendarPage({
       month={month}
       weekAnchor={weekAnchor}
       tasks={filteredTasks}
+      unscheduledTasks={filteredUnscheduledTasks}
       events={filteredEvents}
       googleEvents={googleEvents}
       googleEventsErrors={googleEventsErrors}

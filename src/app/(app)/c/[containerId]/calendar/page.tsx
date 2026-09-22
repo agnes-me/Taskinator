@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
 import { getContainerContext } from '@/lib/data/nav';
-import { listTasksWithDueDates } from '@/lib/data/tasks';
+import { listTasksWithDueDates, listUnscheduledRecurringTasks } from '@/lib/data/tasks';
 import { fetchGoogleEvents } from '@/lib/google-ical';
 import { fetchOAuthCalendarEvents } from '@/lib/google-oauth-calendar-fetch';
 import { CalendarClient } from './CalendarClient';
@@ -33,15 +33,17 @@ export default async function CalendarPage({
   const rangeEnd = new Date(baseDate);
   rangeEnd.setDate(rangeEnd.getDate() + (view === 'month' ? 45 : 14));
 
-  const [{ role }, tasks, { data: events }, { data: rooms }, { data: subscriptions }, oauth, { data: myGoogleCalendars }] = await Promise.all([
-    getContainerContext(containerId),
-    listTasksWithDueDates(supabase, containerId),
-    supabase.from('events').select('id, name, event_date').eq('container_id', containerId),
-    supabase.from('rooms').select('id, name, icon').eq('container_id', containerId).order('sort_order'),
-    supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
-    fetchOAuthCalendarEvents(supabase, user?.id ?? '', rangeStart, rangeEnd),
-    supabase.from('google_calendars').select('google_calendar_id, label, color').eq('user_id', user?.id ?? ''),
-  ]);
+  const [{ role }, tasks, unscheduledTasks, { data: events }, { data: rooms }, { data: subscriptions }, oauth, { data: myGoogleCalendars }] =
+    await Promise.all([
+      getContainerContext(containerId),
+      listTasksWithDueDates(supabase, containerId),
+      listUnscheduledRecurringTasks(supabase, containerId),
+      supabase.from('events').select('id, name, event_date').eq('container_id', containerId),
+      supabase.from('rooms').select('id, name, icon').eq('container_id', containerId).order('sort_order'),
+      supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
+      fetchOAuthCalendarEvents(supabase, user?.id ?? '', rangeStart, rangeEnd),
+      supabase.from('google_calendars').select('google_calendar_id, label, color').eq('user_id', user?.id ?? ''),
+    ]);
 
   const visibleSubs = (subscriptions ?? []).filter((sub) => sub.visible);
   const results = await Promise.all(visibleSubs.map(async (sub) => ({ sub, result: await fetchGoogleEvents(sub.url) })));
@@ -55,6 +57,7 @@ export default async function CalendarPage({
   const canEdit = role === 'admin' || role === 'member';
 
   const filteredTasks = roomFilter ? tasks.filter((t) => t.room_id === roomFilter) : tasks;
+  const filteredUnscheduledTasks = roomFilter ? unscheduledTasks.filter((t) => t.room_id === roomFilter) : unscheduledTasks;
 
   return (
     <CalendarClient
@@ -64,6 +67,7 @@ export default async function CalendarPage({
       month={month}
       weekAnchor={weekAnchor}
       tasks={filteredTasks}
+      unscheduledTasks={filteredUnscheduledTasks}
       events={events ?? []}
       googleEvents={googleEvents}
       googleEventsErrors={googleEventsErrors}

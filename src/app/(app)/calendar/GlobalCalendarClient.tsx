@@ -2,7 +2,7 @@
 
 import { Fragment, useTransition } from 'react';
 import Link from 'next/link';
-import type { GlobalCalendarTask } from '@/lib/data/tasks';
+import type { GlobalCalendarTask, GlobalUnscheduledTask } from '@/lib/data/tasks';
 import type { GoogleEvent } from '@/lib/google-ical';
 import { GoogleEventChip } from '@/components/GoogleEventChip';
 import { AddGoogleEventButton, type GoogleCalendarOption } from '@/components/AddGoogleEventButton';
@@ -54,6 +54,7 @@ export function GlobalCalendarClient({
   month,
   weekAnchor,
   tasks,
+  unscheduledTasks,
   events,
   googleEvents,
   googleEventsErrors,
@@ -67,6 +68,7 @@ export function GlobalCalendarClient({
   month: number;
   weekAnchor: string;
   tasks: GlobalCalendarTask[];
+  unscheduledTasks: GlobalUnscheduledTask[];
   events: GlobalCalendarEvent[];
   googleEvents: GoogleEvent[];
   googleEventsErrors: { label: string; message: string }[];
@@ -141,6 +143,45 @@ export function GlobalCalendarClient({
     e.dataTransfer.setData('text/plain', taskId);
     e.dataTransfer.effectAllowed = 'move';
   }
+
+  function scheduleUnscheduledTask(task: GlobalUnscheduledTask, dateISO: string) {
+    if (!editableSet.has(task.container_id)) return;
+    startTransition(async () => {
+      await rescheduleTask(task.id, task.container_id, { due_date: dateISO });
+    });
+  }
+
+  function scheduleUnscheduledTaskAt(task: GlobalUnscheduledTask, dateISO: string, hour: number) {
+    if (!editableSet.has(task.container_id)) return;
+    startTransition(async () => {
+      const d = new Date(`${dateISO}T00:00:00`);
+      d.setHours(hour, 0, 0, 0);
+      await rescheduleTask(task.id, task.container_id, { due_date: dateISO, start_at: d.toISOString(), on_calendar: true });
+    });
+  }
+
+  const unscheduledTray = unscheduledTasks.length > 0 && (
+    <div className="card flex flex-col gap-2 p-3">
+      <span className="text-xs font-semibold text-[var(--text-muted)]">
+        📋 Tâches récurrentes sans date — glisse-les sur un jour pour les planifier
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {unscheduledTasks.map((t) => (
+          <div
+            key={t.id}
+            draggable={editableSet.has(t.container_id)}
+            onDragStart={(e) => onTaskDragStart(e, t.id)}
+            className={`chip flex items-center gap-1 bg-[var(--surface-muted)] ${editableSet.has(t.container_id) ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            title={`${t.title}${t.container ? ` · ${t.container.name}` : ''}`}
+          >
+            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${PRIORITY_DOT[t.priority]}`} />
+            {t.container && <span>{t.container.icon}</span>}
+            <span>{t.title}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const containerFilterChips = (
     <div className="flex flex-wrap gap-2 text-sm">
@@ -224,6 +265,7 @@ export function GlobalCalendarClient({
     return (
       <div className="flex flex-col gap-4">
         {errorBanners}
+        {unscheduledTray}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {viewToggle}
           {containerFilterChips}
@@ -271,7 +313,12 @@ export function GlobalCalendarClient({
                     e.preventDefault();
                     const taskId = e.dataTransfer.getData('text/plain');
                     const task = tasks.find((t) => t.id === taskId);
-                    if (task) unscheduleTaskTo(task, iso);
+                    if (task) {
+                      unscheduleTaskTo(task, iso);
+                    } else {
+                      const ut = unscheduledTasks.find((t) => t.id === taskId);
+                      if (ut) scheduleUnscheduledTask(ut, iso);
+                    }
                   }}
                 >
                   {dayEvents.map((e) => (
@@ -305,7 +352,12 @@ export function GlobalCalendarClient({
                         e.preventDefault();
                         const taskId = e.dataTransfer.getData('text/plain');
                         const task = tasks.find((t) => t.id === taskId);
-                        if (task) scheduleTaskAt(task, iso, hour);
+                        if (task) {
+                          scheduleTaskAt(task, iso, hour);
+                        } else {
+                          const ut = unscheduledTasks.find((t) => t.id === taskId);
+                          if (ut) scheduleUnscheduledTaskAt(ut, iso, hour);
+                        }
                       }}
                     >
                       {hourGoogle.map((g) => (
@@ -342,6 +394,7 @@ export function GlobalCalendarClient({
   return (
     <div className="flex flex-col gap-4">
       {errorBanners}
+      {unscheduledTray}
       <div className="flex flex-wrap items-center justify-between gap-2">
         {viewToggle}
         {containerFilterChips}
@@ -388,7 +441,12 @@ export function GlobalCalendarClient({
                 e.preventDefault();
                 const taskId = e.dataTransfer.getData('text/plain');
                 const task = tasks.find((t) => t.id === taskId);
-                if (task) moveTaskToDay(task, iso);
+                if (task) {
+                  moveTaskToDay(task, iso);
+                } else {
+                  const ut = unscheduledTasks.find((t) => t.id === taskId);
+                  if (ut) scheduleUnscheduledTask(ut, iso);
+                }
               }}
               className={`card flex min-h-[92px] flex-col gap-1 p-1.5 text-xs ${inMonth ? '' : 'opacity-40'} ${isToday ? '!border-brand-500' : ''}`}
             >
