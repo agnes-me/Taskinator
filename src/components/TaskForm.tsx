@@ -79,7 +79,7 @@ export function TaskForm({
           </label>
         )}
         <label className="text-sm">
-          Priorité
+          Difficulté
           <select name="priority" defaultValue={task?.priority ?? 'medium'} className="input mt-1">
             <option value="low">Basse</option>
             <option value="medium">Moyenne</option>

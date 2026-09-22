@@ -47,7 +47,6 @@ export async function listTasks(
   filters: { roomId?: string; status?: TaskStatus } = {},
 ): Promise<TaskRow[]> {
   let query = supabase.from('tasks').select(TASK_SELECT).eq('container_id', containerId).order('sort_order', { ascending: true });
-  if (filters.roomId) query = query.eq('room_id', filters.roomId);
   if (filters.status) query = query.eq('status', filters.status);
 
   const { data: rows } = await query;
@@ -88,7 +87,10 @@ export async function listTasks(
       roots.push(task);
     }
   }
-  return roots;
+  // Le filtre par pièce ne s'applique qu'aux tâches racines : une sous-tâche n'a pas forcément
+  // le room_id de sa pièce (elle hérite de sa tâche parente), donc on ne doit jamais l'exclure
+  // de la requête SQL au risque de casser le lien parent/enfant.
+  return filters.roomId ? roots.filter((t) => t.room_id === filters.roomId) : roots;
 }
 
 export interface CalendarTask {

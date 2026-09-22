@@ -247,7 +247,7 @@ function RoomTemplateForm({
         <div className="hidden flex-wrap gap-2 text-xs text-[var(--text-muted)] sm:flex">
           <span className="flex-1">Titre</span>
           <span className="w-[148px]">Récurrence</span>
-          <span className="w-[110px]">Priorité</span>
+          <span className="w-[110px]">Difficulté</span>
           <span className="w-4" />
         </div>
         {items.map((item, i) => (
@@ -271,7 +271,7 @@ function RoomTemplateForm({
               <option value="custom_days">Tous les X jours</option>
             </select>
             <select
-              aria-label="Priorité"
+              aria-label="Difficulté"
               value={item.priority}
               onChange={(e) => updateItem(i, { priority: e.target.value as Priority })}
               className="input w-[110px] !py-1 text-sm"

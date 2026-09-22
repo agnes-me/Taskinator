@@ -72,7 +72,7 @@ function EventTemplateForm({
         <div className="hidden flex-wrap gap-2 text-xs text-[var(--text-muted)] sm:flex">
           <span className="flex-1">Titre de l'étape</span>
           <span className="w-24">Jour (J-30, J+1…)</span>
-          <span className="w-[110px]">Priorité</span>
+          <span className="w-[110px]">Difficulté</span>
           <span className="w-4" />
         </div>
         {items.map((item, i) => (
@@ -93,7 +93,7 @@ function EventTemplateForm({
               />
             </label>
             <select
-              aria-label="Priorité"
+              aria-label="Difficulté"
               value={item.priority}
               onChange={(e) => updateItem(i, { priority: e.target.value as Priority })}
               className="input w-[110px] !py-1 text-sm"
