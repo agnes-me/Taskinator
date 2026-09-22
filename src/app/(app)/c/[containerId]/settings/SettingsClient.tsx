@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import type { TemplateSummary } from '@/lib/data/templates';
+import type { ChecklistTemplate } from '@/lib/data/checklist';
 import { TemplatesClient } from '../templates/TemplatesClient';
+import { ChecklistTemplatesClient } from '../templates/ChecklistTemplatesClient';
 import { EventTemplatesClient } from '../events/EventTemplatesClient';
 import { MembersClient } from '../members/MembersClient';
 import { GoogleSyncForm, type ContainerGoogleSync } from './GoogleSyncForm';
 
-type Tab = 'rooms' | 'events' | 'members' | 'google';
+type Tab = 'rooms' | 'events' | 'checklists' | 'members' | 'google';
 type Member = { id: string; user_id: string; role: 'admin' | 'member' | 'guest'; email: string; display_name: string | null };
 type Invitation = { id: string; token: string; role: string; email: string | null; expires_at: string };
 
@@ -16,6 +18,7 @@ export function SettingsClient({
   initialTab,
   roomTemplates,
   eventTemplates,
+  checklistTemplates,
   rooms,
   canManage,
   currentUserId,
@@ -29,6 +32,7 @@ export function SettingsClient({
   initialTab: Tab;
   roomTemplates: { container: TemplateSummary[]; personal: TemplateSummary[]; marketplace: TemplateSummary[] };
   eventTemplates: TemplateSummary[];
+  checklistTemplates: ChecklistTemplate[];
   rooms: { id: string; name: string }[];
   canManage: boolean;
   currentUserId: string;
@@ -43,6 +47,7 @@ export function SettingsClient({
   const tabs: { key: Tab; label: string }[] = [
     { key: 'rooms', label: '🏠 Templates de catégories' },
     { key: 'events', label: '🎉 Templates d\'événements' },
+    { key: 'checklists', label: '🛒 Templates de listes' },
     { key: 'members', label: '👥 Membres' },
     { key: 'google', label: '🔄 Google Calendar' },
   ];
@@ -82,6 +87,7 @@ export function SettingsClient({
       {tab === 'events' && (
         <EventTemplatesClient containerId={containerId} templates={eventTemplates} canManage={canManage} currentUserId={currentUserId} />
       )}
+      {tab === 'checklists' && <ChecklistTemplatesClient containerId={containerId} templates={checklistTemplates} canManage={canManage} />}
       {tab === 'members' && (
         <MembersClient containerId={containerId} members={members} invitations={invitations} currentUserId={currentUserId} isAdmin={isAdmin} />
       )}

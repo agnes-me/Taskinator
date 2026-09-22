@@ -60,7 +60,7 @@ export async function listTasks(
     ids.length ? supabase.from('task_assignees').select('task_id, user_id').in('task_id', ids) : Promise.resolve({ data: [] }),
     supabase.from('profiles').select('id, email, display_name'),
     ids.length
-      ? supabase.from('checklist_items').select('id, task_id, group_name, label, checked, sort_order').in('task_id', ids).order('sort_order')
+      ? supabase.from('checklist_items').select('id, task_id, parent_item_id, label, checked, sort_order').in('task_id', ids).order('sort_order')
       : Promise.resolve({ data: [] }),
   ]);
 

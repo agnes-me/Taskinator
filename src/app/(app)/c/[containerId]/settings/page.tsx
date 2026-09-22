@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/supabase/user';
 import { getContainerContext } from '@/lib/data/nav';
 import { listRoomTemplates, listEventTemplates } from '@/lib/data/templates';
+import { getChecklistTemplates } from '@/lib/data/checklist';
 import { SettingsClient } from './SettingsClient';
 
 export default async function ContainerSettingsPage({
@@ -16,15 +17,17 @@ export default async function ContainerSettingsPage({
   const supabase = await createClient();
   const user = await getAuthUser();
 
-  const [{ role }, roomTemplates, eventTemplates, { data: rooms }, { data: memberRows }, { data: googleAccount }, { data: googleSync }] = await Promise.all([
-    getContainerContext(containerId),
-    listRoomTemplates(supabase, containerId),
-    listEventTemplates(supabase, containerId),
-    supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
-    supabase.from('container_members').select('id, user_id, role').eq('container_id', containerId),
-    supabase.from('google_oauth_accounts').select('user_id').eq('user_id', user?.id ?? '').maybeSingle(),
-    supabase.from('container_google_sync').select('google_calendar_id, enabled').eq('container_id', containerId).maybeSingle(),
-  ]);
+  const [{ role }, roomTemplates, eventTemplates, checklistTemplates, { data: rooms }, { data: memberRows }, { data: googleAccount }, { data: googleSync }] =
+    await Promise.all([
+      getContainerContext(containerId),
+      listRoomTemplates(supabase, containerId),
+      listEventTemplates(supabase, containerId),
+      getChecklistTemplates(supabase, containerId),
+      supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
+      supabase.from('container_members').select('id, user_id, role').eq('container_id', containerId),
+      supabase.from('google_oauth_accounts').select('user_id').eq('user_id', user?.id ?? '').maybeSingle(),
+      supabase.from('container_google_sync').select('google_calendar_id, enabled').eq('container_id', containerId).maybeSingle(),
+    ]);
 
   const canManage = role === 'admin' || role === 'member';
 
@@ -57,9 +60,12 @@ export default async function ContainerSettingsPage({
   return (
     <SettingsClient
       containerId={containerId}
-      initialTab={tab === 'events' ? 'events' : tab === 'members' ? 'members' : tab === 'google' ? 'google' : 'rooms'}
+      initialTab={
+        tab === 'events' ? 'events' : tab === 'checklists' ? 'checklists' : tab === 'members' ? 'members' : tab === 'google' ? 'google' : 'rooms'
+      }
       roomTemplates={{ container: containerTpl, personal, marketplace }}
       eventTemplates={eventTemplates}
+      checklistTemplates={checklistTemplates}
       rooms={rooms ?? []}
       canManage={canManage}
       currentUserId={user?.id ?? ''}
