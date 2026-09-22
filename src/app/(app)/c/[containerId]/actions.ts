@@ -21,6 +21,18 @@ export async function createRoom(containerId: string, formData: FormData) {
   return {};
 }
 
+export async function updateRoom(containerId: string, roomId: string, formData: FormData) {
+  const name = String(formData.get('name') ?? '').trim();
+  const icon = String(formData.get('icon') ?? '🧹');
+  if (!name) return { error: 'Le nom de la catégorie est requis.' };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from('rooms').update({ name, icon }).eq('id', roomId);
+  if (error) return { error: 'Impossible de modifier la catégorie (droits insuffisants ?).' };
+  revalidatePath(`/c/${containerId}`);
+  return {};
+}
+
 export async function deleteRoom(containerId: string, roomId: string) {
   const supabase = await createClient();
   await supabase.from('rooms').delete().eq('id', roomId);

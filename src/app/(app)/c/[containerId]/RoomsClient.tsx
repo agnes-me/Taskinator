@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { FreshnessBar } from '@/components/FreshnessBar';
 import type { RoomWithFreshness } from '@/lib/data/rooms';
 import type { EventsCountSummary } from '@/lib/data/events';
-import { createRoom, deleteRoom, pauseContainer, resumeContainer } from './actions';
+import { createRoom, updateRoom, deleteRoom, pauseContainer, resumeContainer } from './actions';
 
 const ICONS = [
   '🍳', '🛁', '🛏️', '🛋️', '🚪', '🖥️', '🧺', '🚗', '🌿', '🏊', '🧹',
@@ -40,6 +40,8 @@ function RoomCard({
   canEdit: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [pending, startTransition] = useTransition();
@@ -48,10 +50,42 @@ function RoomCard({
   return (
     <div className="card flex flex-col gap-3 p-4">
       <div className="flex items-center justify-between">
-        <Link href={`/c/${containerId}/rooms/${room.id}`} className="flex items-center gap-2 font-semibold hover:underline">
-          <span className="text-xl">{room.icon}</span> {room.name}
-        </Link>
-        {canEdit && (
+        {editing ? (
+          <form
+            className="flex flex-1 flex-wrap items-end gap-2"
+            action={(fd) =>
+              startTransition(async () => {
+                const res = await updateRoom(containerId, room.id, fd);
+                if (res?.error) setEditError(res.error);
+                else {
+                  setEditing(false);
+                  setEditError(null);
+                }
+              })
+            }
+          >
+            <select name="icon" defaultValue={room.icon} className="input !py-1 text-sm">
+              {ICONS.map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
+            </select>
+            <input name="name" required defaultValue={room.name} className="input !py-1 flex-1 text-sm" autoFocus />
+            <button type="submit" disabled={pending} className="btn btn-primary !px-2 !py-1 text-xs">
+              OK
+            </button>
+            <button type="button" className="btn btn-ghost !px-2 !py-1 text-xs" onClick={() => setEditing(false)}>
+              ✕
+            </button>
+            {editError && <p className="w-full text-xs text-fresh-low">{editError}</p>}
+          </form>
+        ) : (
+          <Link href={`/c/${containerId}/rooms/${room.id}`} className="flex items-center gap-2 font-semibold hover:underline">
+            <span className="text-xl">{room.icon}</span> {room.name}
+          </Link>
+        )}
+        {canEdit && !editing && (
           <div className="relative">
             <button
               className="rounded-lg px-2 py-1 text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
@@ -62,6 +96,15 @@ function RoomCard({
             </button>
             {menuOpen && (
               <div className="card absolute right-0 top-full z-10 mt-1 w-40 p-1 shadow-lg">
+                <button
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)]"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setEditing(true);
+                  }}
+                >
+                  Modifier…
+                </button>
                 <button
                   className="w-full rounded-lg px-3 py-2 text-left text-sm text-fresh-low hover:bg-[var(--surface-muted)]"
                   onClick={() => {
