@@ -46,6 +46,10 @@ export function TaskRow({
   const canComplete = canEdit || (isGuest && isAssignee);
   const isPaused = task.paused_until && new Date(task.paused_until) > new Date();
   const doneSubtasks = task.subtasks.filter((s) => s.status === 'done').length;
+  // Une tâche ponctuelle sans sous-tâche a une fraîcheur binaire (faite/à faire) uniquement pour
+  // compter dans l'agrégat de sa pièce — inutile de l'afficher en plus de la case à cocher, déjà
+  // parlante pour ce cas-là.
+  const showFreshness = task.freshness !== null && (task.recurrence_type !== 'none' || task.subtasks.length > 0);
 
   function quickComplete() {
     startTransition(async () => {
@@ -119,7 +123,7 @@ export function TaskRow({
             </span>
           )}
           {task.due_date && <span className="hidden sm:inline">{formatDate(task.due_date)}</span>}
-          {task.freshness && (
+          {showFreshness && task.freshness && (
             <span
               className="w-10 shrink-0"
               title={
@@ -179,7 +183,7 @@ export function TaskRow({
                 {task.event && <span>· 🎉 {task.event.name}</span>}
                 {task.assignees.length > 0 && <span>· 👤 {task.assignees.map((a) => a.display_name || a.email).join(', ')}</span>}
               </div>
-              {task.freshness && (
+              {showFreshness && task.freshness && (
                 <div className="mt-2 max-w-xs">
                   <FreshnessBar freshness={task.freshness} compact />
                 </div>

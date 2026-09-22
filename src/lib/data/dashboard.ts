@@ -1,8 +1,7 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Priority, RecurrenceType, TaskStatus } from '@/types/database';
-import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
+import { taskFreshness, aggregateFreshness, type FreshnessResult, type FreshnessTaskLike } from '@/lib/cleanliness';
 import { todayISO, sortByDueDate } from '@/lib/utils';
-import { defaultFreshnessDaysFromRecurrence } from '@/lib/recurrence';
 
 export interface DashboardContainer {
   id: string;
@@ -29,34 +28,33 @@ export async function getDashboardHouseholds(supabase: SupabaseServerClient): Pr
 
   const containerIds = households.flatMap((h) => (h.containers ?? []).map((c) => c.id));
   const today = todayISO();
-  // Toutes les tâches (récurrentes ou non, y compris celles générées par un événement) servent
-  // à compiler le nombre à faire/en retard ; seul le sous-ensemble récurrent sert à la fraîcheur.
-  const { data: tasks } = containerIds.length
-    ? await supabase
-        .from('tasks')
-        .select(
-          'container_id, recurrence_type, recurrence_interval, recurrence_weekdays, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status, due_date',
-        )
-        .in('container_id', containerIds)
-        .is('parent_task_id', null)
-        .neq('status', 'cancelled')
+  const TASK_FIELDS =
+    'id, container_id, parent_task_id, recurrence_type, recurrence_interval, recurrence_weekdays, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status, due_date';
+  type TaskRow = FreshnessTaskLike & { id: string; container_id: string; parent_task_id: string | null; due_date: string | null };
+
+  // Toutes les tâches racines (récurrentes ET ponctuelles) servent à compiler le nombre à faire/en
+  // retard ET la fraîcheur — un conteneur qui n'a que des tâches ponctuelles non cochées ne doit
+  // pas afficher 100% pour autant (voir taskFreshness).
+  const { data: rootTasksData } = containerIds.length
+    ? await supabase.from('tasks').select(TASK_FIELDS).in('container_id', containerIds).is('parent_task_id', null).neq('status', 'cancelled')
     : { data: [] };
+  const rootTasks = (rootTasksData ?? []) as unknown as TaskRow[];
+
+  const rootIds = rootTasks.map((t) => t.id);
+  const { data: subtaskRows } = rootIds.length
+    ? await supabase.from('tasks').select(TASK_FIELDS).in('parent_task_id', rootIds).neq('status', 'cancelled')
+    : { data: [] };
+  const subtasks = (subtaskRows ?? []) as unknown as TaskRow[];
 
   return households.map((h) => ({
     id: h.id,
     name: h.name,
     containers: (h.containers ?? []).map((c) => {
-      const containerTasks = (tasks ?? []).filter((t) => t.container_id === c.id);
-      const recurringTasks = containerTasks.filter((t) => t.recurrence_type !== 'none');
-      const results = recurringTasks.map((t) =>
-        computeFreshness({
-          lastCompletedAt: t.last_completed_at,
-          freshnessDays: t.freshness_days ?? defaultFreshnessDaysFromRecurrence(t.recurrence_type, t.recurrence_interval, t.recurrence_weekdays) ?? 7,
-          pausedUntil: t.paused_until,
-          seasonalStartMonth: t.seasonal_start_month,
-          seasonalEndMonth: t.seasonal_end_month,
-        }),
-      );
+      const containerTasks = rootTasks.filter((t) => t.container_id === c.id);
+      const results = containerTasks.map((t) => {
+        const ownSubtasks = subtasks.filter((s) => s.parent_task_id === t.id);
+        return taskFreshness(t, 7, ownSubtasks);
+      });
       const openTasks = containerTasks.filter((t) => t.status === 'todo' || t.status === 'in_progress');
       const overdueCount = openTasks.filter((t) => t.due_date && t.due_date < today).length;
       return { ...c, freshness: aggregateFreshness(results), openCount: openTasks.length, overdueCount };
@@ -70,6 +68,7 @@ export interface MyTask {
   due_date: string | null;
   status: TaskStatus;
   priority: Priority;
+  recurrence_type: RecurrenceType;
   container_id: string;
   container_name: string;
   room_id: string | null;
@@ -134,36 +133,23 @@ export async function getMyAllTasks(supabase: SupabaseServerClient, containerIds
   };
 
   const byId = new Map<string, MyTask>();
-  const recurrenceById = new Map<string, RecurrenceType>();
+  const rawById = new Map<string, FreshnessTaskLike>();
+  const fallbackDaysById = new Map<string, number>();
   for (const r of rows as unknown as Row[]) {
-    recurrenceById.set(r.id, r.recurrence_type);
-    // Calculée pour toute tâche récurrente, y compris une sous-tâche (sert aussi d'entrée à la
-    // fraîcheur agrégée de sa tâche parente ci-dessous).
-    const freshness =
-      r.recurrence_type !== 'none'
-        ? computeFreshness({
-            lastCompletedAt: r.last_completed_at,
-            freshnessDays:
-              r.freshness_days ??
-              defaultFreshnessDaysFromRecurrence(r.recurrence_type, r.recurrence_interval, r.recurrence_weekdays) ??
-              r.rooms?.freshness_days ??
-              7,
-            pausedUntil: r.paused_until,
-            seasonalStartMonth: r.seasonal_start_month,
-            seasonalEndMonth: r.seasonal_end_month,
-          })
-        : null;
+    rawById.set(r.id, r);
+    fallbackDaysById.set(r.id, r.rooms?.freshness_days ?? 7);
     byId.set(r.id, {
       id: r.id,
       title: r.title,
       due_date: r.due_date,
       status: r.status,
       priority: r.priority,
+      recurrence_type: r.recurrence_type,
       container_id: r.container_id,
       container_name: r.containers?.name ?? '',
       room_id: r.room_id,
       room_name: r.rooms?.name ?? null,
-      freshness,
+      freshness: null,
       subtasks: [],
     });
   }
@@ -179,13 +165,13 @@ export async function getMyAllTasks(supabase: SupabaseServerClient, containerIds
   }
   for (const task of byId.values()) task.subtasks = sortByDueDate(task.subtasks);
 
-  // Une tâche ponctuelle avec des sous-tâches récurrentes affiche la moyenne de leur fraîcheur
-  // (voir listTasks() pour le même comportement et sa justification).
+  // Calculée après la construction de l'arbre : une tâche ponctuelle avec des sous-tâches
+  // récurrentes a besoin de connaître ces sous-tâches pour dériver sa propre fraîcheur agrégée
+  // (voir taskFreshness — gère aussi le cas d'une tâche ponctuelle sans sous-tâche, en binaire).
   for (const task of byId.values()) {
-    if (recurrenceById.get(task.id) === 'none' && task.subtasks.length > 0) {
-      const subFreshness = task.subtasks.map((s) => s.freshness).filter((f): f is FreshnessResult => f !== null);
-      if (subFreshness.length > 0) task.freshness = aggregateFreshness(subFreshness);
-    }
+    const raw = rawById.get(task.id)!;
+    const subtaskRaw = task.subtasks.map((s) => rawById.get(s.id)!);
+    task.freshness = taskFreshness(raw, fallbackDaysById.get(task.id) ?? 7, subtaskRaw);
   }
 
   let filteredRoots = roots;

@@ -1,8 +1,7 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Database, Priority, RecurrenceType, TaskStatus } from '@/types/database';
-import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
+import { taskFreshness, type FreshnessResult } from '@/lib/cleanliness';
 import { sortByDueDate } from '@/lib/utils';
-import { defaultFreshnessDaysFromRecurrence } from '@/lib/recurrence';
 import type { ChecklistItem } from '@/lib/data/checklist';
 
 export interface TaskRow {
@@ -73,25 +72,8 @@ export async function listTasks(
         const p = profiles?.find((pr) => pr.id === a.user_id);
         return { user_id: a.user_id, email: p?.email ?? '—', display_name: p?.display_name ?? null };
       });
-    // Calculée pour toute tâche récurrente, y compris une sous-tâche (auparavant réservée aux
-    // racines) : une sous-tâche récurrente a son propre cycle de fraîcheur, et sert aussi
-    // d'entrée à la fraîcheur agrégée de sa tâche parente ci-dessous.
-    const freshness =
-      r.recurrence_type !== 'none'
-        ? computeFreshness({
-            lastCompletedAt: r.last_completed_at,
-            freshnessDays:
-              r.freshness_days ??
-              defaultFreshnessDaysFromRecurrence(r.recurrence_type, r.recurrence_interval, r.recurrence_weekdays) ??
-              r.room?.freshness_days ??
-              7,
-            pausedUntil: r.paused_until,
-            seasonalStartMonth: r.seasonal_start_month,
-            seasonalEndMonth: r.seasonal_end_month,
-          })
-        : null;
     const checklist = (checklistItems ?? []).filter((c) => c.task_id === r.id);
-    byId.set(r.id, { ...r, assignees: rowAssignees, subtasks: [], freshness, checklist });
+    byId.set(r.id, { ...r, assignees: rowAssignees, subtasks: [], freshness: null, checklist });
   }
 
   const roots: TaskRow[] = [];
@@ -106,15 +88,12 @@ export async function listTasks(
   // que par sort_order (ordre de création), qui n'a pas de sens pour l'utilisateur ici.
   for (const task of byId.values()) task.subtasks = sortByDueDate(task.subtasks);
 
-  // Une tâche ponctuelle (non récurrente) qui a des sous-tâches récurrentes affiche la moyenne de
-  // leur fraîcheur plutôt qu'aucune barre : c'est le cas typique d'une tâche "conteneur" (ex.
-  // "Ménage complet") dont chaque sous-tâche a son propre cycle. Une tâche elle-même récurrente
-  // garde son propre suivi (ne pas mélanger les deux sources de vérité).
+  // Calculée après la construction de l'arbre : une tâche ponctuelle avec des sous-tâches
+  // récurrentes (type "Ménage complet") a besoin de connaître ces sous-tâches pour dériver sa
+  // propre fraîcheur agrégée (voir taskFreshness — gère aussi le cas d'une tâche ponctuelle sans
+  // sous-tâche, en binaire faite/à faire plutôt que de l'ignorer).
   for (const task of byId.values()) {
-    if (task.recurrence_type === 'none' && task.subtasks.length > 0) {
-      const subFreshness = task.subtasks.map((s) => s.freshness).filter((f): f is FreshnessResult => f !== null);
-      if (subFreshness.length > 0) task.freshness = aggregateFreshness(subFreshness);
-    }
+    task.freshness = taskFreshness(task, task.room?.freshness_days ?? 7, task.subtasks);
   }
 
   // Le filtre par pièce ne s'applique qu'aux tâches racines : une sous-tâche n'a pas forcément

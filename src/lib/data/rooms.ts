@@ -1,7 +1,6 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
-import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
-import { defaultFreshnessDaysFromRecurrence } from '@/lib/recurrence';
+import { taskFreshness, aggregateFreshness, type FreshnessResult, type FreshnessTaskLike } from '@/lib/cleanliness';
 
 export interface RoomWithFreshness {
   id: string;
@@ -24,31 +23,36 @@ export async function getRoomsWithFreshness(supabase: SupabaseServerClient, cont
 
   if (!rooms || rooms.length === 0) return [];
 
-  const { data: tasks } = await supabase
+  const TASK_FIELDS =
+    'id, room_id, parent_task_id, recurrence_type, recurrence_interval, recurrence_weekdays, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status';
+
+  type TaskRow = FreshnessTaskLike & { id: string; room_id: string | null; parent_task_id: string | null };
+
+  // Toutes les tâches racines (récurrentes ET ponctuelles, pas seulement récurrentes) : une pièce
+  // qui n'a que des tâches ponctuelles non cochées ne doit pas afficher 100% de fraîcheur pour
+  // autant (voir taskFreshness, qui leur donne une fraîcheur binaire faite/à faire).
+  const { data: rootTasks } = await supabase
     .from('tasks')
-    .select(
-      'room_id, recurrence_type, recurrence_interval, recurrence_weekdays, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status',
-    )
+    .select(TASK_FIELDS)
     .eq('container_id', containerId)
     .is('parent_task_id', null)
     .neq('status', 'cancelled')
-    .neq('recurrence_type', 'none')
     .not('room_id', 'is', null);
+  const roots = (rootTasks ?? []) as unknown as TaskRow[];
+
+  const rootIds = roots.map((t) => t.id);
+  const { data: subtaskRows } = rootIds.length
+    ? await supabase.from('tasks').select(TASK_FIELDS).in('parent_task_id', rootIds).neq('status', 'cancelled')
+    : { data: [] };
+  const subtasks = (subtaskRows ?? []) as unknown as TaskRow[];
 
   return rooms.map((room) => {
-    const roomTasks = (tasks ?? []).filter((t) => t.room_id === room.id);
-    const results = roomTasks.map((t) =>
-      computeFreshness({
-        lastCompletedAt: t.last_completed_at,
-        freshnessDays:
-          t.freshness_days ??
-          defaultFreshnessDaysFromRecurrence(t.recurrence_type, t.recurrence_interval, t.recurrence_weekdays) ??
-          room.freshness_days,
-        pausedUntil: t.paused_until ?? room.paused_until,
-        seasonalStartMonth: t.seasonal_start_month,
-        seasonalEndMonth: t.seasonal_end_month,
-      }),
-    );
-    return { ...room, taskCount: roomTasks.length, freshness: aggregateFreshness(results) };
+    const roomTasks = roots.filter((t) => t.room_id === room.id);
+    const results = roomTasks.map((t) => {
+      const ownSubtasks = subtasks.filter((s) => s.parent_task_id === t.id);
+      return taskFreshness({ ...t, paused_until: t.paused_until ?? room.paused_until }, room.freshness_days, ownSubtasks);
+    });
+    const recurringCount = roomTasks.filter((t) => t.recurrence_type !== 'none').length;
+    return { ...room, taskCount: recurringCount, freshness: aggregateFreshness(results) };
   });
 }

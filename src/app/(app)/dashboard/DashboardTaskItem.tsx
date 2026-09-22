@@ -14,6 +14,7 @@ export function DashboardTaskItem({ task, depth = 0 }: { task: MyTask; depth?: n
   const [expanded, setExpanded] = useState(false);
   const [pending, startTransition] = useTransition();
   const doneSubtasks = task.subtasks.filter((s) => s.status === 'done').length;
+  const showFreshness = task.freshness !== null && (task.recurrence_type !== 'none' || task.subtasks.length > 0);
 
   function quickToggle() {
     if (task.status === 'done') {
@@ -46,7 +47,7 @@ export function DashboardTaskItem({ task, depth = 0 }: { task: MyTask; depth?: n
           </span>
         </Link>
 
-        {task.freshness && (
+        {showFreshness && task.freshness && (
           <span className="w-10 shrink-0" title={`Fraîcheur ${task.freshness.percent}%`}>
             <FreshnessBar freshness={task.freshness} compact />
           </span>
