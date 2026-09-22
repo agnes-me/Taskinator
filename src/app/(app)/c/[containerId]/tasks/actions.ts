@@ -25,11 +25,11 @@ function parseTaskFields(formData: FormData) {
   };
 }
 
+// 'layout' revalide toutes les pages sous /c/[containerId]/ (y compris rooms/[roomId], dont le
+// roomId n'est pas connu ici) — une tâche créée/modifiée depuis la page d'une catégorie précise
+// ne remontait sinon jamais dans son propre affichage tant qu'on ne rechargeait pas la page à la main.
 function revalidateTaskPaths(containerId: string) {
-  revalidatePath(`/c/${containerId}/tasks`);
-  revalidatePath(`/c/${containerId}`);
-  revalidatePath(`/c/${containerId}/events`);
-  revalidatePath(`/c/${containerId}/calendar`);
+  revalidatePath(`/c/${containerId}`, 'layout');
 }
 
 export async function createTask(containerId: string, formData: FormData) {

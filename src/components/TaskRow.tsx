@@ -34,6 +34,7 @@ export function TaskRow({
   const [completing, setCompleting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [addingSub, setAddingSub] = useState(false);
+  const [subtaskError, setSubtaskError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -283,29 +284,43 @@ export function TaskRow({
             />
           ))}
           {canEdit && !addingSub && (
-            <button className="self-start text-xs text-[var(--text-muted)] hover:underline" onClick={() => setAddingSub(true)}>
+            <button
+              className="self-start text-xs text-[var(--text-muted)] hover:underline"
+              onClick={() => {
+                setSubtaskError(null);
+                setAddingSub(true);
+              }}
+            >
               + sous-tâche
             </button>
           )}
           {canEdit && addingSub && (
-            <form
-              className="flex items-center gap-2"
-              action={(fd) =>
-                startTransition(async () => {
-                  fd.set('parentTaskId', task.id);
-                  await createTask(containerId, fd);
-                  setAddingSub(false);
-                })
-              }
-            >
-              <input name="title" required autoFocus placeholder="Titre de la sous-tâche" className="input flex-1 !py-1 text-sm" />
-              <button type="submit" className="btn btn-primary !py-1 text-sm">
-                Ajouter
-              </button>
-              <button type="button" className="btn btn-ghost !py-1 text-sm" onClick={() => setAddingSub(false)}>
-                ✕
-              </button>
-            </form>
+            <div className="flex flex-col gap-1">
+              <form
+                className="flex items-center gap-2"
+                action={(fd) =>
+                  startTransition(async () => {
+                    fd.set('parentTaskId', task.id);
+                    const res = await createTask(containerId, fd);
+                    if (res?.error) {
+                      setSubtaskError(res.error);
+                      return;
+                    }
+                    setSubtaskError(null);
+                    setAddingSub(false);
+                  })
+                }
+              >
+                <input name="title" required autoFocus placeholder="Titre de la sous-tâche" className="input flex-1 !py-1 text-sm" />
+                <button type="submit" disabled={pending} className="btn btn-primary !py-1 text-sm">
+                  Ajouter
+                </button>
+                <button type="button" className="btn btn-ghost !py-1 text-sm" onClick={() => setAddingSub(false)}>
+                  ✕
+                </button>
+              </form>
+              {subtaskError && <p className="text-xs text-fresh-low">{subtaskError}</p>}
+            </div>
           )}
         </div>
       )}
