@@ -25,11 +25,14 @@ function parseTaskFields(formData: FormData) {
   };
 }
 
-// 'layout' revalide toutes les pages sous /c/[containerId]/ (y compris rooms/[roomId], dont le
-// roomId n'est pas connu ici) — une tâche créée/modifiée depuis la page d'une catégorie précise
-// ne remontait sinon jamais dans son propre affichage tant qu'on ne rechargeait pas la page à la main.
-function revalidateTaskPaths(containerId: string) {
-  revalidatePath(`/c/${containerId}`, 'layout');
+// revalidatePath(`/c/${containerId}`, 'layout') ne suffisait pas : passer un segment dynamique déjà
+// résolu (l'UUID du conteneur) avec type 'layout' ne revalide que ce chemin précis, pas les routes
+// sœurs comme rooms/[roomId] (un autre segment dynamique plus bas dans l'arborescence) — le roomId
+// n'est de toute façon pas connu dans ces actions génériques (deleteTask, completeTask...).
+// On revalide donc tout le layout authentifié (app/(app)/layout.tsx), qui englobe toutes les pages
+// de l'appli : plus large que nécessaire, mais sans ambiguïté sur ce qui est réellement invalidé.
+function revalidateTaskPaths(_containerId: string) {
+  revalidatePath('/', 'layout');
 }
 
 export async function createTask(containerId: string, formData: FormData) {
