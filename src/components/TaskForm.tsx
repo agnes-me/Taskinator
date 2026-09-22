@@ -17,6 +17,18 @@ const WEEKDAYS = [
 ];
 const MONTHS = ['', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
+// <input type="datetime-local"> ne porte aucune information de fuseau : le navigateur affiche/
+// lit toujours une chaîne "naïve" en heure locale. task.start_at est stocké en UTC (timestamptz) ;
+// un simple .slice(0, 16) réaffichait donc les chiffres UTC tels quels (ex. 16h locale l'été,
+// stockée 14h UTC, réaffichée "14:00" au lieu de "16:00"). On convertit donc explicitement dans
+// les deux sens via l'horloge locale du navigateur.
+function toLocalDatetimeInputValue(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function TaskForm({
   containerId,
   members,
@@ -44,6 +56,13 @@ export function TaskForm({
   const selectedAssignees = task?.assignees.map((a) => a.user_id) ?? [];
 
   function submit(formData: FormData) {
+    // Convertit la chaîne "naïve" du champ datetime-local en horodatage UTC correct, avant qu'elle
+    // parte vers l'action serveur : côté serveur on ne connaît pas le fuseau du navigateur, la
+    // conversion doit donc se faire ici pendant que new Date(...) interprète encore la valeur en
+    // heure locale du poste de l'utilisateur.
+    const startAtRaw = String(formData.get('startAt') ?? '');
+    if (startAtRaw) formData.set('startAt', new Date(startAtRaw).toISOString());
+
     startTransition(async () => {
       const res = task ? await updateTask(task.id, containerId, formData) : await createTask(containerId, formData);
       if (res?.error) setError(res.error);
@@ -173,7 +192,7 @@ export function TaskForm({
           <div className="mt-2 flex flex-wrap gap-2">
             <label className="text-sm">
               Début
-              <input name="startAt" type="datetime-local" defaultValue={task?.start_at?.slice(0, 16) ?? ''} className="input mt-1" />
+              <input name="startAt" type="datetime-local" defaultValue={toLocalDatetimeInputValue(task?.start_at)} className="input mt-1" />
             </label>
             <label className="text-sm">
               Durée (min)
