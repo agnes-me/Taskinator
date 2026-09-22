@@ -33,13 +33,14 @@ export default async function CalendarPage({
   const rangeEnd = new Date(baseDate);
   rangeEnd.setDate(rangeEnd.getDate() + (view === 'month' ? 45 : 14));
 
-  const [{ role }, tasks, { data: events }, { data: rooms }, { data: subscriptions }, oauth] = await Promise.all([
+  const [{ role }, tasks, { data: events }, { data: rooms }, { data: subscriptions }, oauth, { data: myGoogleCalendars }] = await Promise.all([
     getContainerContext(containerId),
     listTasksWithDueDates(supabase, containerId),
     supabase.from('events').select('id, name, event_date').eq('container_id', containerId),
     supabase.from('rooms').select('id, name, icon').eq('container_id', containerId).order('sort_order'),
     supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
     fetchOAuthCalendarEvents(supabase, user?.id ?? '', rangeStart, rangeEnd),
+    supabase.from('google_calendars').select('google_calendar_id, label, color').eq('user_id', user?.id ?? ''),
   ]);
 
   const visibleSubs = (subscriptions ?? []).filter((sub) => sub.visible);
@@ -69,6 +70,7 @@ export default async function CalendarPage({
       rooms={rooms ?? []}
       roomFilter={roomFilter ?? ''}
       canEdit={canEdit}
+      myGoogleCalendars={(myGoogleCalendars ?? []).map((c) => ({ googleCalendarId: c.google_calendar_id, label: c.label, color: c.color }))}
     />
   );
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { GlobalCalendarTask } from '@/lib/data/tasks';
 import type { GoogleEvent } from '@/lib/google-ical';
 import { GoogleEventChip } from '@/components/GoogleEventChip';
+import { AddGoogleEventButton, type GoogleCalendarOption } from '@/components/AddGoogleEventButton';
 import { completeTask, reopenTask, rescheduleTask } from '@/app/(app)/c/[containerId]/tasks/actions';
 
 export interface GlobalCalendarEvent {
@@ -59,6 +60,7 @@ export function GlobalCalendarClient({
   containers,
   containerFilter,
   editableContainerIds,
+  myGoogleCalendars,
 }: {
   view: 'month' | 'week';
   year: number;
@@ -71,6 +73,7 @@ export function GlobalCalendarClient({
   containers: CalendarContainer[];
   containerFilter: string;
   editableContainerIds: string[];
+  myGoogleCalendars: GoogleCalendarOption[];
 }) {
   const [pending, startTransition] = useTransition();
   const editableSet = new Set(editableContainerIds);
@@ -224,6 +227,7 @@ export function GlobalCalendarClient({
         <div className="flex flex-wrap items-center justify-between gap-2">
           {viewToggle}
           {containerFilterChips}
+          <AddGoogleEventButton calendars={myGoogleCalendars} defaultDate={weekAnchor} />
         </div>
         <div className="flex items-center justify-between">
           <Link href={buildHref({ view: 'week', week: toISO(prevWeek), container: containerFilter })} className="btn btn-ghost !px-3 !py-1 text-sm">
@@ -341,6 +345,7 @@ export function GlobalCalendarClient({
       <div className="flex flex-wrap items-center justify-between gap-2">
         {viewToggle}
         {containerFilterChips}
+        <AddGoogleEventButton calendars={myGoogleCalendars} defaultDate={toISO(new Date())} />
       </div>
 
       <div className="flex items-center justify-between">

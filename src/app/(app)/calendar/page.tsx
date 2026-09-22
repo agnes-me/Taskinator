@@ -27,14 +27,16 @@ export default async function GlobalCalendarPage({
   const rangeEnd = new Date(baseDate);
   rangeEnd.setDate(rangeEnd.getDate() + (view === 'month' ? 45 : 14));
 
-  const [tasks, { data: events }, { data: subscriptions }, { data: memberships }, { data: households }, oauth] = await Promise.all([
-    listAllTasksWithDueDates(supabase),
-    supabase.from('events').select('id, name, event_date, container_id, containers(name, icon, color)'),
-    supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
-    supabase.from('container_members').select('container_id, role').eq('user_id', user?.id ?? ''),
-    supabase.from('households').select('id, name, containers(id, name, icon, color)').order('created_at', { ascending: true }),
-    fetchOAuthCalendarEvents(supabase, user?.id ?? '', rangeStart, rangeEnd),
-  ]);
+  const [tasks, { data: events }, { data: subscriptions }, { data: memberships }, { data: households }, oauth, { data: myGoogleCalendars }] =
+    await Promise.all([
+      listAllTasksWithDueDates(supabase),
+      supabase.from('events').select('id, name, event_date, container_id, containers(name, icon, color)'),
+      supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
+      supabase.from('container_members').select('container_id, role').eq('user_id', user?.id ?? ''),
+      supabase.from('households').select('id, name, containers(id, name, icon, color)').order('created_at', { ascending: true }),
+      fetchOAuthCalendarEvents(supabase, user?.id ?? '', rangeStart, rangeEnd),
+      supabase.from('google_calendars').select('google_calendar_id, label, color').eq('user_id', user?.id ?? ''),
+    ]);
 
   const visibleSubs = (subscriptions ?? []).filter((sub) => sub.visible);
   const results = await Promise.all(visibleSubs.map(async (sub) => ({ sub, result: await fetchGoogleEvents(sub.url) })));
@@ -67,6 +69,7 @@ export default async function GlobalCalendarPage({
       containers={containers}
       containerFilter={containerFilter ?? ''}
       editableContainerIds={[...editableContainerIds]}
+      myGoogleCalendars={(myGoogleCalendars ?? []).map((c) => ({ googleCalendarId: c.google_calendar_id, label: c.label, color: c.color }))}
     />
   );
 }

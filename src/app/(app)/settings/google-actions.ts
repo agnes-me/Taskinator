@@ -76,3 +76,78 @@ export async function updateGoogleCalendar(id: string, patch: { color?: string; 
   revalidatePath('/', 'layout');
   return {};
 }
+
+export interface ManageableContainer {
+  id: string;
+  name: string;
+  icon: string;
+  householdName: string;
+  syncedCalendarId: string | null;
+  syncEnabled: boolean;
+}
+
+/** Conteneurs où l'utilisateur est admin/membre (donc autorisé à configurer la synchro), avec leur état actuel. */
+export async function listMyManageableContainers(): Promise<{ error: string } | { containers: ManageableContainer[] }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié.' };
+
+  const { data: memberships } = await supabase
+    .from('container_members')
+    .select('container_id, role')
+    .eq('user_id', user.id)
+    .in('role', ['admin', 'member']);
+  const containerIds = (memberships ?? []).map((m) => m.container_id);
+  if (containerIds.length === 0) return { containers: [] };
+
+  const [{ data: containers }, { data: syncRows }] = await Promise.all([
+    supabase.from('containers').select('id, name, icon, household_id').in('id', containerIds),
+    supabase.from('container_google_sync').select('container_id, google_calendar_id, enabled').in('container_id', containerIds),
+  ]);
+
+  const householdIds = [...new Set((containers ?? []).map((c) => c.household_id))];
+  const { data: households } = householdIds.length
+    ? await supabase.from('households').select('id, name').in('id', householdIds)
+    : { data: [] };
+
+  const syncByContainer = new Map((syncRows ?? []).map((s) => [s.container_id, s]));
+  const householdNameById = new Map((households ?? []).map((h) => [h.id, h.name]));
+
+  return {
+    containers: (containers ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      icon: c.icon,
+      householdName: householdNameById.get(c.household_id) ?? '',
+      syncedCalendarId: syncByContainer.get(c.id)?.google_calendar_id ?? null,
+      syncEnabled: syncByContainer.get(c.id)?.enabled ?? false,
+    })),
+  };
+}
+
+/** Applique le même agenda cible à plusieurs conteneurs d'un coup — même effet que répéter l'action par conteneur. */
+export async function applyGoogleSyncToContainers(containerIds: string[], googleCalendarId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié.' };
+  if (containerIds.length === 0) return { error: 'Sélectionne au moins un conteneur.' };
+
+  const rows = containerIds.map((containerId) => ({
+    container_id: containerId,
+    synced_by: user.id,
+    google_calendar_id: googleCalendarId,
+    enabled: true,
+    updated_at: new Date().toISOString(),
+  }));
+
+  const { error } = await supabase.from('container_google_sync').upsert(rows);
+  if (error) return { error: `Impossible d'appliquer la synchro — ${error.message}` };
+
+  revalidatePath('/settings');
+  containerIds.forEach((id) => revalidatePath(`/c/${id}/settings`));
+  return {};
+}

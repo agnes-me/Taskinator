@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { CalendarTask } from '@/lib/data/tasks';
 import type { GoogleEvent } from '@/lib/google-ical';
 import { GoogleEventChip } from '@/components/GoogleEventChip';
+import { AddGoogleEventButton, type GoogleCalendarOption } from '@/components/AddGoogleEventButton';
 import { completeTask, reopenTask, rescheduleTask } from '@/app/(app)/c/[containerId]/tasks/actions';
 
 export interface CalendarEvent {
@@ -60,6 +61,7 @@ export function CalendarClient({
   rooms,
   roomFilter,
   canEdit,
+  myGoogleCalendars,
 }: {
   containerId: string;
   view: 'month' | 'week';
@@ -73,6 +75,7 @@ export function CalendarClient({
   rooms: CalendarRoom[];
   roomFilter: string;
   canEdit: boolean;
+  myGoogleCalendars: GoogleCalendarOption[];
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -208,6 +211,7 @@ export function CalendarClient({
         <div className="flex flex-wrap items-center justify-between gap-2">
           {viewToggle}
           {roomFilterChips}
+          <AddGoogleEventButton calendars={myGoogleCalendars} defaultDate={weekAnchor} />
         </div>
 
         <div className="flex items-center justify-between">
@@ -355,6 +359,7 @@ export function CalendarClient({
       <div className="flex flex-wrap items-center justify-between gap-2">
         {viewToggle}
         {roomFilterChips}
+        <AddGoogleEventButton calendars={myGoogleCalendars} defaultDate={toISO(new Date())} />
       </div>
 
       <div className="flex items-center justify-between">
