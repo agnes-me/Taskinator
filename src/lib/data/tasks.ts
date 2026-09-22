@@ -2,6 +2,7 @@ import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Database, Priority, RecurrenceType, TaskStatus } from '@/types/database';
 import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
 import { sortByDueDate } from '@/lib/utils';
+import { defaultFreshnessDaysFromRecurrence } from '@/lib/recurrence';
 
 export interface TaskRow {
   id: string;
@@ -74,7 +75,11 @@ export async function listTasks(
       r.recurrence_type !== 'none'
         ? computeFreshness({
             lastCompletedAt: r.last_completed_at,
-            freshnessDays: r.freshness_days ?? r.room?.freshness_days ?? 7,
+            freshnessDays:
+              r.freshness_days ??
+              defaultFreshnessDaysFromRecurrence(r.recurrence_type, r.recurrence_interval, r.recurrence_weekdays) ??
+              r.room?.freshness_days ??
+              7,
             pausedUntil: r.paused_until,
             seasonalStartMonth: r.seasonal_start_month,
             seasonalEndMonth: r.seasonal_end_month,

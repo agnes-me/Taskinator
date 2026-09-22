@@ -37,6 +37,33 @@ export function recurrenceLabel(type: RecurrenceType, interval: number, weekdays
   }
 }
 
+/**
+ * Délai de fraîcheur par défaut déduit de la récurrence elle-même (plutôt que d'une valeur
+ * générique au niveau de la pièce) : une tâche "tous les 3 jours" doit redevenir "sale" en 3
+ * jours, pas selon un réglage de pièce qui peut ne rien avoir à voir avec sa propre cadence.
+ * Retourne null pour une tâche ponctuelle (la fraîcheur ne s'applique pas).
+ */
+export function defaultFreshnessDaysFromRecurrence(
+  type: RecurrenceType,
+  interval: number,
+  weekdaysCsv: string | null,
+): number | null {
+  const n = Math.max(1, interval || 1);
+  switch (type) {
+    case 'daily':
+    case 'custom_days':
+      return n;
+    case 'weekly': {
+      const weekdayCount = (weekdaysCsv ?? '').split(',').filter(Boolean).length;
+      return weekdayCount > 0 ? Math.max(1, Math.round((7 * n) / weekdayCount)) : 7 * n;
+    }
+    case 'monthly':
+      return 30 * n;
+    default:
+      return null;
+  }
+}
+
 export const PRIORITY_LABELS: Record<string, string> = { low: 'Basse', medium: 'Moyenne', high: 'Haute' };
 export const STATUS_LABELS: Record<string, string> = {
   todo: 'À faire',

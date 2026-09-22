@@ -2,6 +2,7 @@ import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Priority, RecurrenceType, TaskStatus } from '@/types/database';
 import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
 import { todayISO, sortByDueDate } from '@/lib/utils';
+import { defaultFreshnessDaysFromRecurrence } from '@/lib/recurrence';
 
 export interface DashboardContainer {
   id: string;
@@ -33,7 +34,9 @@ export async function getDashboardHouseholds(supabase: SupabaseServerClient): Pr
   const { data: tasks } = containerIds.length
     ? await supabase
         .from('tasks')
-        .select('container_id, recurrence_type, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status, due_date')
+        .select(
+          'container_id, recurrence_type, recurrence_interval, recurrence_weekdays, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status, due_date',
+        )
         .in('container_id', containerIds)
         .is('parent_task_id', null)
         .neq('status', 'cancelled')
@@ -48,7 +51,7 @@ export async function getDashboardHouseholds(supabase: SupabaseServerClient): Pr
       const results = recurringTasks.map((t) =>
         computeFreshness({
           lastCompletedAt: t.last_completed_at,
-          freshnessDays: t.freshness_days ?? 7,
+          freshnessDays: t.freshness_days ?? defaultFreshnessDaysFromRecurrence(t.recurrence_type, t.recurrence_interval, t.recurrence_weekdays) ?? 7,
           pausedUntil: t.paused_until,
           seasonalStartMonth: t.seasonal_start_month,
           seasonalEndMonth: t.seasonal_end_month,
@@ -84,7 +87,8 @@ export interface MyTaskFilters {
 
 const MY_TASK_SELECT = `
   id, title, due_date, status, priority, container_id, room_id, parent_task_id,
-  recurrence_type, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month,
+  recurrence_type, recurrence_interval, recurrence_weekdays, last_completed_at, freshness_days,
+  paused_until, seasonal_start_month, seasonal_end_month,
   containers(name), rooms(name, freshness_days)
 `;
 
@@ -118,6 +122,8 @@ export async function getMyAllTasks(supabase: SupabaseServerClient, containerIds
     room_id: string | null;
     parent_task_id: string | null;
     recurrence_type: RecurrenceType;
+    recurrence_interval: number;
+    recurrence_weekdays: string | null;
     last_completed_at: string | null;
     freshness_days: number | null;
     paused_until: string | null;
@@ -137,7 +143,11 @@ export async function getMyAllTasks(supabase: SupabaseServerClient, containerIds
       r.recurrence_type !== 'none'
         ? computeFreshness({
             lastCompletedAt: r.last_completed_at,
-            freshnessDays: r.freshness_days ?? r.rooms?.freshness_days ?? 7,
+            freshnessDays:
+              r.freshness_days ??
+              defaultFreshnessDaysFromRecurrence(r.recurrence_type, r.recurrence_interval, r.recurrence_weekdays) ??
+              r.rooms?.freshness_days ??
+              7,
             pausedUntil: r.paused_until,
             seasonalStartMonth: r.seasonal_start_month,
             seasonalEndMonth: r.seasonal_end_month,

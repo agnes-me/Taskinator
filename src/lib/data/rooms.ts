@@ -1,6 +1,7 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
 import { computeFreshness, aggregateFreshness, type FreshnessResult } from '@/lib/cleanliness';
+import { defaultFreshnessDaysFromRecurrence } from '@/lib/recurrence';
 
 export interface RoomWithFreshness {
   id: string;
@@ -25,7 +26,9 @@ export async function getRoomsWithFreshness(supabase: SupabaseServerClient, cont
 
   const { data: tasks } = await supabase
     .from('tasks')
-    .select('room_id, recurrence_type, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status')
+    .select(
+      'room_id, recurrence_type, recurrence_interval, recurrence_weekdays, last_completed_at, freshness_days, paused_until, seasonal_start_month, seasonal_end_month, status',
+    )
     .eq('container_id', containerId)
     .is('parent_task_id', null)
     .neq('status', 'cancelled')
@@ -37,7 +40,10 @@ export async function getRoomsWithFreshness(supabase: SupabaseServerClient, cont
     const results = roomTasks.map((t) =>
       computeFreshness({
         lastCompletedAt: t.last_completed_at,
-        freshnessDays: t.freshness_days ?? room.freshness_days,
+        freshnessDays:
+          t.freshness_days ??
+          defaultFreshnessDaysFromRecurrence(t.recurrence_type, t.recurrence_interval, t.recurrence_weekdays) ??
+          room.freshness_days,
         pausedUntil: t.paused_until ?? room.paused_until,
         seasonalStartMonth: t.seasonal_start_month,
         seasonalEndMonth: t.seasonal_end_month,
