@@ -68,10 +68,19 @@ export interface MyTask {
   due_date: string | null;
   container_id: string;
   container_name: string;
+  room_id: string | null;
+  room_name: string | null;
   priority: string;
 }
 
-export async function getMyUpcomingTasks(supabase: SupabaseServerClient): Promise<MyTask[]> {
+export interface MyTaskFilters {
+  containerId?: string;
+  roomId?: string;
+  priority?: string;
+  dueBefore?: string;
+}
+
+export async function getMyUpcomingTasks(supabase: SupabaseServerClient, filters: MyTaskFilters = {}): Promise<MyTask[]> {
   const user = await getAuthUser();
   if (!user) return [];
 
@@ -80,15 +89,22 @@ export async function getMyUpcomingTasks(supabase: SupabaseServerClient): Promis
   // systématiquement une liste vide quelle que soit l'échéance. Ne filtre plus non plus sur une
   // fenêtre fixe de 7 jours, pour qu'une tâche d'événement à échéance dans plusieurs mois reste
   // "à venir". RLS restreint déjà aux tâches des conteneurs dont l'utilisateur est membre.
-  const { data: tasks } = await supabase
+  let query = supabase
     .from('tasks')
-    .select('id, title, due_date, priority, container_id, containers(name)')
+    .select('id, title, due_date, priority, container_id, room_id, containers(name), rooms(name)')
     .is('parent_task_id', null)
     .not('due_date', 'is', null)
     .neq('status', 'done')
     .neq('status', 'cancelled')
     .order('due_date', { ascending: true })
-    .limit(10);
+    .limit(100);
+
+  if (filters.containerId) query = query.eq('container_id', filters.containerId);
+  if (filters.roomId) query = query.eq('room_id', filters.roomId);
+  if (filters.priority) query = query.eq('priority', filters.priority);
+  if (filters.dueBefore) query = query.lte('due_date', filters.dueBefore);
+
+  const { data: tasks } = await query;
 
   return (tasks ?? []).map((t) => ({
     id: t.id,
@@ -97,5 +113,19 @@ export async function getMyUpcomingTasks(supabase: SupabaseServerClient): Promis
     priority: t.priority,
     container_id: t.container_id,
     container_name: (t.containers as unknown as { name: string } | null)?.name ?? '',
+    room_id: t.room_id,
+    room_name: (t.rooms as unknown as { name: string } | null)?.name ?? null,
   }));
+}
+
+export interface RoomOption {
+  id: string;
+  name: string;
+  container_id: string;
+}
+
+export async function getDashboardRoomOptions(supabase: SupabaseServerClient, containerIds: string[]): Promise<RoomOption[]> {
+  if (!containerIds.length) return [];
+  const { data } = await supabase.from('rooms').select('id, name, container_id').in('container_id', containerIds).order('name');
+  return data ?? [];
 }

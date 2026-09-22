@@ -1,14 +1,26 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { getDashboardHouseholds, getMyUpcomingTasks } from '@/lib/data/dashboard';
+import { getDashboardHouseholds, getMyUpcomingTasks, getDashboardRoomOptions } from '@/lib/data/dashboard';
 import { FreshnessBar } from '@/components/FreshnessBar';
-import { PRIORITY_LABELS } from '@/lib/recurrence';
-import { formatDate } from '@/lib/utils';
 import { NewContainerForm } from './NewContainerForm';
+import { DashboardFilters } from './DashboardFilters';
+import { DashboardTaskItem } from './DashboardTaskItem';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ container?: string; room?: string; priority?: string; dueBefore?: string }>;
+}) {
+  const { container, room, priority, dueBefore } = await searchParams;
   const supabase = await createClient();
-  const [households, myTasks] = await Promise.all([getDashboardHouseholds(supabase), getMyUpcomingTasks(supabase)]);
+  const households = await getDashboardHouseholds(supabase);
+  const containerIds = households.flatMap((h) => h.containers.map((c) => c.id));
+  const [myTasks, roomOptions] = await Promise.all([
+    getMyUpcomingTasks(supabase, { containerId: container, roomId: room, priority, dueBefore }),
+    getDashboardRoomOptions(supabase, containerIds),
+  ]);
+  const containerOptions = households.flatMap((h) => h.containers.map((c) => ({ id: c.id, name: c.name })));
+  const hasFilters = Boolean(container || room || priority || dueBefore);
 
   return (
     <div className="flex flex-col gap-8">
@@ -18,23 +30,21 @@ export default async function DashboardPage() {
         <p className="text-sm text-[var(--text-muted)]">Vue d'ensemble de vos foyers et conteneurs.</p>
       </div>
 
-      {myTasks.length > 0 && (
-        <div className="card p-4">
-          <h2 className="mb-3 font-semibold">📌 Mes prochaines tâches</h2>
-          <ul className="flex flex-col gap-2">
+      <div className="card flex flex-col gap-3 p-4">
+        <h2 className="font-semibold">📌 Mes prochaines tâches</h2>
+        <DashboardFilters containers={containerOptions} rooms={roomOptions} />
+        {myTasks.length === 0 ? (
+          <p className="text-sm text-[var(--text-muted)]">
+            {hasFilters ? 'Aucune tâche ne correspond à ces filtres.' : 'Rien à faire prochainement 🎉'}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-1">
             {myTasks.map((t) => (
-              <li key={t.id}>
-                <Link href={`/c/${t.container_id}/tasks`} className="flex items-center justify-between rounded-lg p-2 text-sm hover:bg-[var(--surface-muted)]">
-                  <span>{t.title}</span>
-                  <span className="text-xs text-[var(--text-muted)]">
-                    {t.container_name} · {PRIORITY_LABELS[t.priority]} {t.due_date ? `· ${formatDate(t.due_date)}` : ''}
-                  </span>
-                </Link>
-              </li>
+              <DashboardTaskItem key={t.id} task={t} />
             ))}
           </ul>
-        </div>
-      )}
+        )}
+      </div>
 
       {households.map((h) => (
         <div key={h.id}>
