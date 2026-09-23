@@ -4,18 +4,29 @@ import { useState, useTransition } from 'react';
 import type { TemplateSummary } from '@/lib/data/templates';
 import type { EventSummary } from '@/lib/data/events';
 import type { ChecklistTemplate } from '@/lib/data/checklist';
+import type { EventRecurrenceType } from '@/types/database';
 import { formatDate, todayISO } from '@/lib/utils';
 import { TaskRow } from '@/components/TaskRow';
 import { TaskForm, type ContainerMember } from '@/components/TaskForm';
 import { applyEventTemplate, createEvent, updateEvent, deleteEvent } from './actions';
 
-function RecurrenceSelect({ value, onChange }: { value: 'none' | 'yearly'; onChange: (v: 'none' | 'yearly') => void }) {
+const RECURRENCE_LABELS: Record<EventRecurrenceType, string> = {
+  none: 'Une fois',
+  weekly: 'Toutes les semaines',
+  monthly: 'Tous les mois',
+  yearly: 'Tous les ans (ex. anniversaire)',
+};
+
+function RecurrenceSelect({ value, onChange }: { value: EventRecurrenceType; onChange: (v: EventRecurrenceType) => void }) {
   return (
     <label className="text-sm">
       Périodicité
-      <select value={value} onChange={(e) => onChange(e.target.value as 'none' | 'yearly')} className="input mt-1">
-        <option value="none">Une fois</option>
-        <option value="yearly">Tous les ans (ex. anniversaire)</option>
+      <select value={value} onChange={(e) => onChange(e.target.value as EventRecurrenceType)} className="input mt-1">
+        {(Object.keys(RECURRENCE_LABELS) as EventRecurrenceType[]).map((r) => (
+          <option key={r} value={r}>
+            {RECURRENCE_LABELS[r]}
+          </option>
+        ))}
       </select>
     </label>
   );
@@ -26,7 +37,7 @@ function NewEventForm({ containerId, templates }: { containerId: string; templat
   const [templateId, setTemplateId] = useState('');
   const [name, setName] = useState('');
   const [date, setDate] = useState(todayISO());
-  const [recurrence, setRecurrence] = useState<'none' | 'yearly'>('none');
+  const [recurrence, setRecurrence] = useState<EventRecurrenceType>('none');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -94,7 +105,7 @@ function NewEventForm({ containerId, templates }: { containerId: string; templat
 function EditEventForm({ event, containerId, onDone, onCancel }: { event: EventSummary; containerId: string; onDone: () => void; onCancel: () => void }) {
   const [name, setName] = useState(event.name);
   const [date, setDate] = useState(event.event_date);
-  const [recurrence, setRecurrence] = useState<'none' | 'yearly'>(event.recurrence_type);
+  const [recurrence, setRecurrence] = useState<EventRecurrenceType>(event.recurrence_type);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -154,7 +165,7 @@ function EventCard({
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [, startTransition] = useTransition();
-  const isRecurring = event.recurrence_type === 'yearly';
+  const isRecurring = event.recurrence_type !== 'none';
 
   if (editing) {
     return <EditEventForm event={event} containerId={containerId} onDone={() => setEditing(false)} onCancel={() => setEditing(false)} />;
@@ -166,7 +177,9 @@ function EventCard({
         <button className="flex flex-1 items-center gap-2 text-left" onClick={() => setExpanded((e) => !e)}>
           <span>
             {expanded ? '▾' : '▸'} {event.name} — {formatDate(event.nextOccurrence)}
-            {isRecurring && <span className="ml-1 text-xs text-[var(--text-muted)]">🔁 tous les ans</span>}
+            {isRecurring && (
+              <span className="ml-1 text-xs text-[var(--text-muted)]">🔁 {RECURRENCE_LABELS[event.recurrence_type].toLowerCase()}</span>
+            )}
           </span>
         </button>
         <span className="shrink-0 text-[var(--text-muted)]">

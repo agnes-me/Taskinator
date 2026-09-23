@@ -1,27 +1,34 @@
 import type { SupabaseServerClient } from '@/lib/supabase/server';
 import type { TaskRow } from '@/lib/data/tasks';
+import type { EventRecurrenceType } from '@/types/database';
 import { sortByDueDate, todayISO } from '@/lib/utils';
 
 export interface EventSummary {
   id: string;
   name: string;
   event_date: string;
-  recurrence_type: 'none' | 'yearly';
+  recurrence_type: EventRecurrenceType;
   nextOccurrence: string;
   taskCount: number;
   doneCount: number;
   tasks: TaskRow[];
 }
 
-/** Pour un événement annuel dont la date est passée, calcule la prochaine occurrence (même
- * jour/mois, année suivante) plutôt que de faire disparaître l'événement du planning. */
-function computeNextOccurrence(eventDate: string, recurrenceType: 'none' | 'yearly'): string {
-  if (recurrenceType !== 'yearly') return eventDate;
+/** Pour un événement périodique dont la date est passée, calcule la prochaine occurrence
+ * (même jour de semaine/mois/année) plutôt que de faire disparaître l'événement du planning. */
+function computeNextOccurrence(eventDate: string, recurrenceType: EventRecurrenceType): string {
+  if (recurrenceType === 'none') return eventDate;
   const today = todayISO();
   if (eventDate >= today) return eventDate;
-  const [, month, day] = eventDate.split('-');
-  const nextYear = Number(today.slice(0, 4)) + (`${today.slice(0, 4)}-${month}-${day}` >= today ? 0 : 1);
-  return `${nextYear}-${month}-${day}`;
+
+  const d = new Date(`${eventDate}T12:00:00Z`);
+  const todayD = new Date(`${today}T12:00:00Z`);
+  while (d < todayD) {
+    if (recurrenceType === 'weekly') d.setUTCDate(d.getUTCDate() + 7);
+    else if (recurrenceType === 'monthly') d.setUTCMonth(d.getUTCMonth() + 1);
+    else d.setUTCFullYear(d.getUTCFullYear() + 1);
+  }
+  return d.toISOString().slice(0, 10);
 }
 
 export interface EventsCountSummary {

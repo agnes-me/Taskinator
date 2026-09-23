@@ -2,6 +2,7 @@ export type Role = 'admin' | 'member' | 'guest';
 export type TaskStatus = 'todo' | 'in_progress' | 'done' | 'cancelled';
 export type Priority = 'low' | 'medium' | 'high';
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'custom_days';
+export type EventRecurrenceType = 'none' | 'weekly' | 'monthly' | 'yearly';
 export type CompletionMode = 'manual' | 'auto_from_subtasks';
 export type TemplateVisibility = 'personal' | 'container' | 'public';
 export type ModerationStatus = 'draft' | 'pending' | 'approved' | 'rejected';
@@ -354,7 +355,7 @@ export interface Database {
           container_id: string;
           name: string;
           event_date: string;
-          recurrence_type: 'none' | 'yearly';
+          recurrence_type: EventRecurrenceType;
           template_id: string | null;
           notes: string | null;
           created_by: string;
@@ -365,13 +366,13 @@ export interface Database {
           container_id: string;
           name: string;
           event_date: string;
-          recurrence_type?: 'none' | 'yearly';
+          recurrence_type?: EventRecurrenceType;
           template_id?: string | null;
           notes?: string | null;
           created_by: string;
           created_at?: string;
         };
-        Update: Partial<{ name: string; event_date: string; recurrence_type: 'none' | 'yearly'; notes: string | null }>;
+        Update: Partial<{ name: string; event_date: string; recurrence_type: EventRecurrenceType; notes: string | null }>;
       };
       tasks: {
         Row: {

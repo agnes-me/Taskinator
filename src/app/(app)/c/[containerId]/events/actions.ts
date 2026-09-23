@@ -3,7 +3,7 @@
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import type { Priority, RecurrenceType, TemplateVisibility } from '@/types/database';
+import type { EventRecurrenceType, Priority, RecurrenceType, TemplateVisibility } from '@/types/database';
 
 export interface EventTemplateItemInput {
   title: string;
@@ -98,7 +98,7 @@ export async function publishEventTemplate(containerId: string, templateId: stri
 }
 
 /** Crée un événement vide (sans rétroplanning) : on y ajoute ensuite des tâches au cas par cas. */
-export async function createEvent(containerId: string, name: string, eventDate: string, recurrenceType: 'none' | 'yearly' = 'none') {
+export async function createEvent(containerId: string, name: string, eventDate: string, recurrenceType: EventRecurrenceType = 'none') {
   if (!name.trim()) return { error: 'Le nom est requis.' };
 
   const supabase = await createClient();
@@ -123,7 +123,7 @@ export async function applyEventTemplate(
   templateId: string,
   name: string,
   eventDate: string,
-  recurrenceType: 'none' | 'yearly' = 'none',
+  recurrenceType: EventRecurrenceType = 'none',
 ) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('apply_event_template', {
@@ -142,7 +142,7 @@ export async function applyEventTemplate(
 export async function updateEvent(
   containerId: string,
   eventId: string,
-  data: { name: string; event_date: string; recurrence_type: 'none' | 'yearly' },
+  data: { name: string; event_date: string; recurrence_type: EventRecurrenceType },
 ) {
   if (!data.name.trim()) return { error: 'Le nom est requis.' };
 
