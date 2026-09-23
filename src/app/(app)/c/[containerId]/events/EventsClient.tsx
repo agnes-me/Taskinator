@@ -9,8 +9,9 @@ import { TaskRow } from '@/components/TaskRow';
 import { TaskForm, type ContainerMember } from '@/components/TaskForm';
 import { applyEventTemplate, createEvent } from './actions';
 
-function NewEventForm({ containerId }: { containerId: string }) {
+function NewEventForm({ containerId, templates }: { containerId: string; templates: TemplateSummary[] }) {
   const [open, setOpen] = useState(false);
+  const [templateId, setTemplateId] = useState('');
   const [name, setName] = useState('');
   const [date, setDate] = useState(todayISO());
   const [error, setError] = useState<string | null>(null);
@@ -19,13 +20,26 @@ function NewEventForm({ containerId }: { containerId: string }) {
   if (!open) {
     return (
       <button className="self-start text-sm text-[var(--text-muted)] hover:underline" onClick={() => setOpen(true)}>
-        + Nouvel événement (sans template)
+        + Nouvel événement
       </button>
     );
   }
 
   return (
     <div className="card flex flex-wrap items-end gap-2 p-4">
+      {templates.length > 0 && (
+        <label className="text-sm">
+          Template (optionnel)
+          <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className="input mt-1">
+            <option value="">Aucun — événement vide</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.icon} {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="text-sm">
         Nom de l'événement
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Anniversaire de Léa" className="input mt-1" autoFocus />
@@ -39,70 +53,21 @@ function NewEventForm({ containerId }: { containerId: string }) {
         className="btn btn-primary"
         onClick={() =>
           startTransition(async () => {
-            const res = await createEvent(containerId, name, date);
+            const res = templateId ? await applyEventTemplate(containerId, templateId, name, date) : await createEvent(containerId, name, date);
             if (res?.error) setError(res.error);
             else {
               setName('');
+              setTemplateId('');
               setError(null);
               setOpen(false);
             }
           })
         }
       >
-        Créer
+        {templateId ? 'Générer le rétroplanning' : 'Créer'}
       </button>
       <button className="btn btn-ghost" onClick={() => setOpen(false)}>
         Annuler
-      </button>
-      {error && <p className="w-full text-sm text-fresh-low">{error}</p>}
-    </div>
-  );
-}
-
-function ApplyTemplateForm({ containerId, templates }: { containerId: string; templates: TemplateSummary[] }) {
-  const [templateId, setTemplateId] = useState(templates[0]?.id ?? '');
-  const [name, setName] = useState('');
-  const [date, setDate] = useState(todayISO());
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  if (templates.length === 0) return null;
-
-  return (
-    <div className="card flex flex-wrap items-end gap-2 p-4">
-      <label className="text-sm">
-        Template
-        <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className="input mt-1">
-          {templates.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.icon} {t.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="text-sm">
-        Nom de l'événement
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Vacances à la mer" className="input mt-1" />
-      </label>
-      <label className="text-sm">
-        Date de l'événement
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input mt-1" />
-      </label>
-      <button
-        disabled={pending || !name.trim()}
-        className="btn btn-primary"
-        onClick={() =>
-          startTransition(async () => {
-            const res = await applyEventTemplate(containerId, templateId, name, date);
-            if (res?.error) setError(res.error);
-            else {
-              setName('');
-              setError(null);
-            }
-          })
-        }
-      >
-        Générer le rétroplanning
       </button>
       {error && <p className="w-full text-sm text-fresh-low">{error}</p>}
     </div>
@@ -208,8 +173,7 @@ export function EventsClient({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      {canManage && <NewEventForm containerId={containerId} />}
-      {canManage && <ApplyTemplateForm containerId={containerId} templates={templates} />}
+      {canManage && <NewEventForm containerId={containerId} templates={templates} />}
 
       <div>
         <h3 className="mb-2 text-sm font-semibold text-[var(--text-muted)]">Événements</h3>
