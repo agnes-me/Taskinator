@@ -7,7 +7,57 @@ import type { ChecklistTemplate } from '@/lib/data/checklist';
 import { formatDate, todayISO } from '@/lib/utils';
 import { TaskRow } from '@/components/TaskRow';
 import { TaskForm, type ContainerMember } from '@/components/TaskForm';
-import { applyEventTemplate } from './actions';
+import { applyEventTemplate, createEvent } from './actions';
+
+function NewEventForm({ containerId }: { containerId: string }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [date, setDate] = useState(todayISO());
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  if (!open) {
+    return (
+      <button className="self-start text-sm text-[var(--text-muted)] hover:underline" onClick={() => setOpen(true)}>
+        + Nouvel événement (sans template)
+      </button>
+    );
+  }
+
+  return (
+    <div className="card flex flex-wrap items-end gap-2 p-4">
+      <label className="text-sm">
+        Nom de l'événement
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Anniversaire de Léa" className="input mt-1" autoFocus />
+      </label>
+      <label className="text-sm">
+        Date de l'événement
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input mt-1" />
+      </label>
+      <button
+        disabled={pending || !name.trim()}
+        className="btn btn-primary"
+        onClick={() =>
+          startTransition(async () => {
+            const res = await createEvent(containerId, name, date);
+            if (res?.error) setError(res.error);
+            else {
+              setName('');
+              setError(null);
+              setOpen(false);
+            }
+          })
+        }
+      >
+        Créer
+      </button>
+      <button className="btn btn-ghost" onClick={() => setOpen(false)}>
+        Annuler
+      </button>
+      {error && <p className="w-full text-sm text-fresh-low">{error}</p>}
+    </div>
+  );
+}
 
 function ApplyTemplateForm({ containerId, templates }: { containerId: string; templates: TemplateSummary[] }) {
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? '');
@@ -158,6 +208,7 @@ export function EventsClient({
 }) {
   return (
     <div className="flex flex-col gap-6">
+      {canManage && <NewEventForm containerId={containerId} />}
       {canManage && <ApplyTemplateForm containerId={containerId} templates={templates} />}
 
       <div>

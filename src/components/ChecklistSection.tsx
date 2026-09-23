@@ -129,8 +129,19 @@ export function ChecklistSection({
   const [adding, setAdding] = useState(false);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
 
   if (items.length === 0 && !canEdit) return null;
+
+  // Une liste de courses/cadeaux ne concerne qu'une partie des tâches : tant qu'elle est vide,
+  // on ne montre qu'un lien discret plutôt que le bloc complet (case, template…) sur chaque tâche.
+  if (items.length === 0 && !starting) {
+    return (
+      <button className="self-start text-xs text-[var(--text-muted)] hover:underline" onClick={() => setStarting(true)}>
+        🛒 + Liste de courses / cadeaux…
+      </button>
+    );
+  }
 
   const roots = items.filter((i) => !i.parent_item_id);
   const doneCount = items.filter((i) => i.checked).length;
@@ -139,28 +150,35 @@ export function ChecklistSection({
     <div className="flex flex-col gap-2 rounded-lg border border-[var(--border)] p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm font-medium">🛒 Liste{items.length > 0 && ` (${doneCount}/${items.length})`}</span>
-        {canEdit && templates.length > 0 && (
-          <select
-            className="input !py-1 text-xs"
-            defaultValue=""
-            disabled={pending}
-            onChange={(e) => {
-              const templateId = e.target.value;
-              if (!templateId) return;
-              startTransition(async () => {
-                await applyChecklistTemplate(taskId, containerId, templateId);
-              });
-              e.target.value = '';
-            }}
-          >
-            <option value="">Appliquer un template…</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.icon} {t.name} ({t.itemCount})
-              </option>
-            ))}
-          </select>
-        )}
+        <div className="flex items-center gap-2">
+          {canEdit && templates.length > 0 && (
+            <select
+              className="input !py-1 text-xs"
+              defaultValue=""
+              disabled={pending}
+              onChange={(e) => {
+                const templateId = e.target.value;
+                if (!templateId) return;
+                startTransition(async () => {
+                  await applyChecklistTemplate(taskId, containerId, templateId);
+                });
+                e.target.value = '';
+              }}
+            >
+              <option value="">Appliquer un template…</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.icon} {t.name} ({t.itemCount})
+                </option>
+              ))}
+            </select>
+          )}
+          {items.length === 0 && (
+            <button className="text-xs text-[var(--text-muted)] hover:text-fresh-low" onClick={() => setStarting(false)} aria-label="Annuler">
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {roots.map((item) => (

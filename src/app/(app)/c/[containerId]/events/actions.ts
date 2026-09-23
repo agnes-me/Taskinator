@@ -97,6 +97,27 @@ export async function publishEventTemplate(containerId: string, templateId: stri
   return {};
 }
 
+/** Crée un événement vide (sans rétroplanning) : on y ajoute ensuite des tâches au cas par cas. */
+export async function createEvent(containerId: string, name: string, eventDate: string) {
+  if (!name.trim()) return { error: 'Le nom est requis.' };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié.' };
+
+  const { data, error } = await supabase
+    .from('events')
+    .insert({ container_id: containerId, name: name.trim(), event_date: eventDate, created_by: user.id })
+    .select('id')
+    .single();
+  if (error || !data) return { error: "Impossible de créer l'événement." };
+
+  revalidatePath(`/c/${containerId}/events`);
+  return { eventId: data.id };
+}
+
 export async function applyEventTemplate(containerId: string, templateId: string, name: string, eventDate: string) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('apply_event_template', {
