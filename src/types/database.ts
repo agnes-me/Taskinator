@@ -354,6 +354,7 @@ export interface Database {
           container_id: string;
           name: string;
           event_date: string;
+          recurrence_type: 'none' | 'yearly';
           template_id: string | null;
           notes: string | null;
           created_by: string;
@@ -364,12 +365,13 @@ export interface Database {
           container_id: string;
           name: string;
           event_date: string;
+          recurrence_type?: 'none' | 'yearly';
           template_id?: string | null;
           notes?: string | null;
           created_by: string;
           created_at?: string;
         };
-        Update: Partial<{ name: string; event_date: string; notes: string | null }>;
+        Update: Partial<{ name: string; event_date: string; recurrence_type: 'none' | 'yearly'; notes: string | null }>;
       };
       tasks: {
         Row: {

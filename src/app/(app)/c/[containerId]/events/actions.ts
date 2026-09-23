@@ -98,7 +98,7 @@ export async function publishEventTemplate(containerId: string, templateId: stri
 }
 
 /** Crée un événement vide (sans rétroplanning) : on y ajoute ensuite des tâches au cas par cas. */
-export async function createEvent(containerId: string, name: string, eventDate: string) {
+export async function createEvent(containerId: string, name: string, eventDate: string, recurrenceType: 'none' | 'yearly' = 'none') {
   if (!name.trim()) return { error: 'Le nom est requis.' };
 
   const supabase = await createClient();
@@ -109,7 +109,7 @@ export async function createEvent(containerId: string, name: string, eventDate: 
 
   const { data, error } = await supabase
     .from('events')
-    .insert({ container_id: containerId, name: name.trim(), event_date: eventDate, created_by: user.id })
+    .insert({ container_id: containerId, name: name.trim(), event_date: eventDate, recurrence_type: recurrenceType, created_by: user.id })
     .select('id')
     .single();
   if (error || !data) return { error: "Impossible de créer l'événement." };
@@ -118,7 +118,13 @@ export async function createEvent(containerId: string, name: string, eventDate: 
   return { eventId: data.id };
 }
 
-export async function applyEventTemplate(containerId: string, templateId: string, name: string, eventDate: string) {
+export async function applyEventTemplate(
+  containerId: string,
+  templateId: string,
+  name: string,
+  eventDate: string,
+  recurrenceType: 'none' | 'yearly' = 'none',
+) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('apply_event_template', {
     p_template_id: templateId,
@@ -127,7 +133,34 @@ export async function applyEventTemplate(containerId: string, templateId: string
     p_event_date: eventDate,
   });
   if (error || !data) return { error: "Impossible d'appliquer le template." };
+  if (recurrenceType !== 'none') await supabase.from('events').update({ recurrence_type: recurrenceType }).eq('id', data);
   revalidatePath(`/c/${containerId}/events`);
   revalidatePath(`/c/${containerId}/tasks`);
   return { eventId: data };
+}
+
+export async function updateEvent(
+  containerId: string,
+  eventId: string,
+  data: { name: string; event_date: string; recurrence_type: 'none' | 'yearly' },
+) {
+  if (!data.name.trim()) return { error: 'Le nom est requis.' };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('events')
+    .update({ name: data.name.trim(), event_date: data.event_date, recurrence_type: data.recurrence_type })
+    .eq('id', eventId);
+  if (error) return { error: "Impossible de modifier l'événement (droits insuffisants ?)." };
+
+  revalidatePath(`/c/${containerId}/events`);
+  revalidatePath(`/c/${containerId}/calendar`);
+  return {};
+}
+
+export async function deleteEvent(containerId: string, eventId: string) {
+  const supabase = await createClient();
+  await supabase.from('events').delete().eq('id', eventId);
+  revalidatePath(`/c/${containerId}/events`);
+  revalidatePath(`/c/${containerId}/calendar`);
 }

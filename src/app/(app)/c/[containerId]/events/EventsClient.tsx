@@ -7,13 +7,26 @@ import type { ChecklistTemplate } from '@/lib/data/checklist';
 import { formatDate, todayISO } from '@/lib/utils';
 import { TaskRow } from '@/components/TaskRow';
 import { TaskForm, type ContainerMember } from '@/components/TaskForm';
-import { applyEventTemplate, createEvent } from './actions';
+import { applyEventTemplate, createEvent, updateEvent, deleteEvent } from './actions';
+
+function RecurrenceSelect({ value, onChange }: { value: 'none' | 'yearly'; onChange: (v: 'none' | 'yearly') => void }) {
+  return (
+    <label className="text-sm">
+      Périodicité
+      <select value={value} onChange={(e) => onChange(e.target.value as 'none' | 'yearly')} className="input mt-1">
+        <option value="none">Une fois</option>
+        <option value="yearly">Tous les ans (ex. anniversaire)</option>
+      </select>
+    </label>
+  );
+}
 
 function NewEventForm({ containerId, templates }: { containerId: string; templates: TemplateSummary[] }) {
   const [open, setOpen] = useState(false);
   const [templateId, setTemplateId] = useState('');
   const [name, setName] = useState('');
   const [date, setDate] = useState(todayISO());
+  const [recurrence, setRecurrence] = useState<'none' | 'yearly'>('none');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -48,16 +61,20 @@ function NewEventForm({ containerId, templates }: { containerId: string; templat
         Date de l'événement
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input mt-1" />
       </label>
+      <RecurrenceSelect value={recurrence} onChange={setRecurrence} />
       <button
         disabled={pending || !name.trim()}
         className="btn btn-primary"
         onClick={() =>
           startTransition(async () => {
-            const res = templateId ? await applyEventTemplate(containerId, templateId, name, date) : await createEvent(containerId, name, date);
+            const res = templateId
+              ? await applyEventTemplate(containerId, templateId, name, date, recurrence)
+              : await createEvent(containerId, name, date, recurrence);
             if (res?.error) setError(res.error);
             else {
               setName('');
               setTemplateId('');
+              setRecurrence('none');
               setError(null);
               setOpen(false);
             }
@@ -67,6 +84,45 @@ function NewEventForm({ containerId, templates }: { containerId: string; templat
         {templateId ? 'Générer le rétroplanning' : 'Créer'}
       </button>
       <button className="btn btn-ghost" onClick={() => setOpen(false)}>
+        Annuler
+      </button>
+      {error && <p className="w-full text-sm text-fresh-low">{error}</p>}
+    </div>
+  );
+}
+
+function EditEventForm({ event, containerId, onDone, onCancel }: { event: EventSummary; containerId: string; onDone: () => void; onCancel: () => void }) {
+  const [name, setName] = useState(event.name);
+  const [date, setDate] = useState(event.event_date);
+  const [recurrence, setRecurrence] = useState<'none' | 'yearly'>(event.recurrence_type);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  return (
+    <div className="card flex flex-wrap items-end gap-2 p-3">
+      <label className="text-sm">
+        Nom de l'événement
+        <input value={name} onChange={(e) => setName(e.target.value)} className="input mt-1" autoFocus />
+      </label>
+      <label className="text-sm">
+        Date de l'événement
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input mt-1" />
+      </label>
+      <RecurrenceSelect value={recurrence} onChange={setRecurrence} />
+      <button
+        disabled={pending || !name.trim()}
+        className="btn btn-primary"
+        onClick={() =>
+          startTransition(async () => {
+            const res = await updateEvent(containerId, event.id, { name, event_date: date, recurrence_type: recurrence });
+            if (res?.error) setError(res.error);
+            else onDone();
+          })
+        }
+      >
+        Enregistrer
+      </button>
+      <button className="btn btn-ghost" onClick={onCancel}>
         Annuler
       </button>
       {error && <p className="w-full text-sm text-fresh-low">{error}</p>}
@@ -95,17 +151,51 @@ function EventCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [addingTask, setAddingTask] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [, startTransition] = useTransition();
+  const isRecurring = event.recurrence_type === 'yearly';
+
+  if (editing) {
+    return <EditEventForm event={event} containerId={containerId} onDone={() => setEditing(false)} onCancel={() => setEditing(false)} />;
+  }
 
   return (
     <div className="card p-3 text-sm">
-      <button className="flex w-full items-center justify-between gap-2 text-left" onClick={() => setExpanded((e) => !e)}>
-        <span>
-          {expanded ? '▾' : '▸'} {event.name} — {formatDate(event.event_date)}
-        </span>
+      <div className="flex items-center justify-between gap-2">
+        <button className="flex flex-1 items-center gap-2 text-left" onClick={() => setExpanded((e) => !e)}>
+          <span>
+            {expanded ? '▾' : '▸'} {event.name} — {formatDate(event.nextOccurrence)}
+            {isRecurring && <span className="ml-1 text-xs text-[var(--text-muted)]">🔁 tous les ans</span>}
+          </span>
+        </button>
         <span className="shrink-0 text-[var(--text-muted)]">
           {event.doneCount}/{event.taskCount} tâches faites
         </span>
-      </button>
+        {canEdit && !confirmingDelete && (
+          <span className="flex shrink-0 items-center gap-1">
+            <button className="btn btn-ghost !px-2 !py-1 text-xs" onClick={() => setEditing(true)}>
+              ✏️
+            </button>
+            <button className="btn btn-ghost !px-2 !py-1 text-xs text-fresh-low" onClick={() => setConfirmingDelete(true)}>
+              🗑
+            </button>
+          </span>
+        )}
+        {canEdit && confirmingDelete && (
+          <span className="flex shrink-0 items-center gap-1 text-xs">
+            <button
+              className="btn btn-primary !px-2 !py-1 !bg-fresh-low text-xs"
+              onClick={() => startTransition(() => deleteEvent(containerId, event.id))}
+            >
+              Supprimer
+            </button>
+            <button className="btn btn-ghost !px-2 !py-1 text-xs" onClick={() => setConfirmingDelete(false)}>
+              Annuler
+            </button>
+          </span>
+        )}
+      </div>
 
       {expanded && (
         <div className="mt-3 flex flex-col gap-2 border-t border-[var(--border)] pt-3">
