@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, type SupabaseServerClient } from '@/lib/supabase/server';
 import type { Priority, RecurrenceType } from '@/types/database';
 import { syncTaskUpsert, syncTaskDone, syncTaskDeleted } from '@/lib/google-task-sync';
 
@@ -37,6 +37,28 @@ function parseTaskFields(formData: FormData) {
 // de l'appli : plus large que nécessaire, mais sans ambiguïté sur ce qui est réellement invalidé.
 function revalidateTaskPaths(_containerId: string) {
   revalidatePath('/', 'layout');
+}
+
+/**
+ * Quand une sous-tâche ponctuelle est cochée, si elle appartient à une tâche parente récurrente
+ * (ex. "Ménage du mercredi" utilisée comme checklist hebdomadaire) et que toutes ses sœurs
+ * ponctuelles sont maintenant faites, on complète aussi le parent : sinon sa fraîcheur reste
+ * bloquée sur sa propre dernière complétion, jamais mise à jour par les sous-tâches, et son
+ * échéance n'avance jamais au cycle suivant.
+ */
+async function maybeAutoCompleteRecurringParent(supabase: SupabaseServerClient, containerId: string, taskId: string, completedBy: string) {
+  const { data: task } = await supabase.from('tasks').select('parent_task_id').eq('id', taskId).maybeSingle();
+  const parentId = task?.parent_task_id;
+  if (!parentId) return;
+
+  const { data: parent } = await supabase.from('tasks').select('recurrence_type').eq('id', parentId).maybeSingle();
+  if (!parent || parent.recurrence_type === 'none') return;
+
+  const { data: siblings } = await supabase.from('tasks').select('status').eq('parent_task_id', parentId).eq('recurrence_type', 'none');
+  if (!siblings || siblings.length === 0 || !siblings.every((s) => s.status === 'done')) return;
+
+  await supabase.from('task_completions').insert({ task_id: parentId, completed_by: completedBy });
+  await syncTaskDone(supabase, containerId, parentId);
 }
 
 export async function createTask(containerId: string, formData: FormData) {
@@ -124,6 +146,7 @@ export async function completeTask(taskId: string, containerId: string, formData
     .insert({ task_id: taskId, completed_by: user.id, comment, photo_url: photoUrl, ...(completedAt ? { completed_at: completedAt } : {}) });
   if (error) return { error: "Impossible d'enregistrer la complétion (droits insuffisants ?)." };
 
+  await maybeAutoCompleteRecurringParent(supabase, containerId, taskId, user.id);
   await syncTaskDone(supabase, containerId, taskId);
   revalidateTaskPaths(containerId);
   return {};
