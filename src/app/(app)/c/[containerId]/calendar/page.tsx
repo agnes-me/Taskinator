@@ -33,17 +33,27 @@ export default async function CalendarPage({
   const rangeEnd = new Date(baseDate);
   rangeEnd.setDate(rangeEnd.getDate() + (view === 'month' ? 45 : 14));
 
-  const [{ role }, tasks, unscheduledTasks, { data: events }, { data: rooms }, { data: subscriptions }, oauth, { data: myGoogleCalendars }] =
-    await Promise.all([
-      getContainerContext(containerId),
-      listTasksWithDueDates(supabase, containerId),
-      listUnscheduledRecurringTasks(supabase, containerId),
-      supabase.from('events').select('id, name, event_date').eq('container_id', containerId),
-      supabase.from('rooms').select('id, name, icon').eq('container_id', containerId).order('sort_order'),
-      supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
-      fetchOAuthCalendarEvents(supabase, user?.id ?? '', rangeStart, rangeEnd),
-      supabase.from('google_calendars').select('google_calendar_id, label, color').eq('user_id', user?.id ?? ''),
-    ]);
+  const [
+    { role },
+    tasks,
+    unscheduledTasks,
+    { data: events },
+    { data: rooms },
+    { data: subscriptions },
+    oauth,
+    { data: myGoogleCalendars },
+    { data: syncedTaskEvents },
+  ] = await Promise.all([
+    getContainerContext(containerId),
+    listTasksWithDueDates(supabase, containerId),
+    listUnscheduledRecurringTasks(supabase, containerId),
+    supabase.from('events').select('id, name, event_date').eq('container_id', containerId),
+    supabase.from('rooms').select('id, name, icon').eq('container_id', containerId).order('sort_order'),
+    supabase.from('ical_subscriptions').select('id, label, url, color, visible').eq('user_id', user?.id ?? '').order('sort_order'),
+    fetchOAuthCalendarEvents(supabase, user?.id ?? '', rangeStart, rangeEnd),
+    supabase.from('google_calendars').select('google_calendar_id, label, color').eq('user_id', user?.id ?? ''),
+    supabase.from('task_google_events').select('google_event_id').eq('container_id', containerId),
+  ]);
 
   const visibleSubs = (subscriptions ?? []).filter((sub) => sub.visible);
   const results = await Promise.all(visibleSubs.map(async (sub) => ({ sub, result: await fetchGoogleEvents(sub.url) })));
@@ -51,7 +61,11 @@ export default async function CalendarPage({
     result.events.map((e) => ({ ...e, id: `${sub.id}:${e.id}`, calendarLabel: sub.label, calendarColor: sub.color })),
   );
   const icalErrors = results.filter(({ result }) => result.error).map(({ sub, result }) => ({ label: sub.label, message: result.error as string }));
-  const googleEvents = [...icalEvents, ...oauth.events];
+  // Une tâche synchronisée vers Google Calendar (réglage "push-sync") génère son propre événement
+  // Google : sans ce filtre elle apparaît deux fois sur le planning, une fois comme tâche et une
+  // fois comme événement Google, avec le même intitulé.
+  const syncedIds = new Set((syncedTaskEvents ?? []).map((r) => r.google_event_id));
+  const googleEvents = [...icalEvents, ...oauth.events].filter((e) => !e.googleEventId || !syncedIds.has(e.googleEventId));
   const googleEventsErrors = [...icalErrors, ...oauth.errors];
 
   const canEdit = role === 'admin' || role === 'member';
