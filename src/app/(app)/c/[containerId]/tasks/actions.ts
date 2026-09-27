@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient, type SupabaseServerClient } from '@/lib/supabase/server';
 import type { Priority, RecurrenceType } from '@/types/database';
 import { syncTaskUpsert, syncTaskDone, syncTaskDeleted } from '@/lib/google-task-sync';
+import { maybeAutoCompleteFromChildren, maybeAutoReopenFromChild } from '@/lib/task-completion';
 
 function parseTaskFields(formData: FormData) {
   const weekdays = formData.getAll('weekday').join(',');
@@ -40,38 +41,38 @@ function revalidateTaskPaths(_containerId: string) {
 }
 
 /**
- * Quand une sous-tâche ponctuelle est cochée et que toutes ses sœurs ponctuelles sont maintenant
- * faites, on complète aussi la tâche parente : sinon (pour un parent récurrent type "Ménage du
- * mercredi" utilisé comme checklist) sa fraîcheur reste bloquée sur sa propre dernière complétion,
- * jamais mise à jour par les sous-tâches, et son échéance n'avance jamais au cycle suivant ; pour
- * un parent ponctuel, elle resterait "à faire" alors que tout son contenu est fait.
+ * Une tâche ne peut avoir qu'un seul "propriétaire" de la récurrence : soit la tâche parente
+ * (ses sous-tâches ponctuelles servent alors de checklist pour son cycle, ex. "Ménage du
+ * mercredi"), soit ses sous-tâches (la tâche parente n'est alors qu'un regroupement, chaque
+ * sous-tâche ayant son propre rythme). Les deux en même temps rendraient la jauge de fraîcheur
+ * ambiguë : on bloque donc la combinaison contradictoire à l'écriture plutôt que de la tolérer.
  */
-async function maybeAutoCompleteParent(supabase: SupabaseServerClient, containerId: string, taskId: string, completedBy: string) {
-  const { data: task } = await supabase.from('tasks').select('parent_task_id').eq('id', taskId).maybeSingle();
-  const parentId = task?.parent_task_id;
-  if (!parentId) return;
+async function assertRecurrenceOwnership(
+  supabase: SupabaseServerClient,
+  taskId: string | null,
+  parentTaskId: string | null,
+  recurrenceType: RecurrenceType,
+): Promise<string | null> {
+  if (parentTaskId && recurrenceType !== 'none') {
+    const { data: parent } = await supabase.from('tasks').select('recurrence_type').eq('id', parentTaskId).maybeSingle();
+    if (parent && parent.recurrence_type !== 'none') {
+      return "Cette sous-tâche ne peut pas avoir sa propre récurrence : la tâche parente est déjà récurrente et porte le cycle pour toutes ses sous-tâches.";
+    }
+  }
 
-  const { data: parent } = await supabase.from('tasks').select('recurrence_type, status').eq('id', parentId).maybeSingle();
-  if (!parent) return;
-  if (parent.recurrence_type === 'none' && parent.status === 'done') return; // déjà complétée
+  if (taskId && recurrenceType !== 'none') {
+    const { data: recurringChildren } = await supabase
+      .from('tasks')
+      .select('id')
+      .eq('parent_task_id', taskId)
+      .neq('recurrence_type', 'none')
+      .limit(1);
+    if (recurringChildren && recurringChildren.length > 0) {
+      return "Impossible de rendre cette tâche récurrente : elle a des sous-tâches qui ont leur propre récurrence (chacune gère son propre cycle). Retirez d'abord leur récurrence pour changer celle-ci.";
+    }
+  }
 
-  const { data: siblings } = await supabase.from('tasks').select('status').eq('parent_task_id', parentId).eq('recurrence_type', 'none');
-  if (!siblings || siblings.length === 0 || !siblings.every((s) => s.status === 'done')) return;
-
-  await supabase.from('task_completions').insert({ task_id: parentId, completed_by: completedBy });
-  await syncTaskDone(supabase, containerId, parentId);
-}
-
-/** Symétrique : décocher une sous-tâche d'un parent ponctuel déjà marqué fait le rouvre aussi. */
-async function maybeAutoReopenParent(supabase: SupabaseServerClient, taskId: string) {
-  const { data: task } = await supabase.from('tasks').select('parent_task_id').eq('id', taskId).maybeSingle();
-  const parentId = task?.parent_task_id;
-  if (!parentId) return;
-
-  const { data: parent } = await supabase.from('tasks').select('recurrence_type, status').eq('id', parentId).maybeSingle();
-  if (!parent || parent.recurrence_type !== 'none' || parent.status !== 'done') return;
-
-  await supabase.from('tasks').update({ status: 'todo' }).eq('id', parentId);
+  return null;
 }
 
 export async function createTask(containerId: string, formData: FormData) {
@@ -87,6 +88,9 @@ export async function createTask(containerId: string, formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: 'Non authentifié.' };
+
+  const conflict = await assertRecurrenceOwnership(supabase, null, parentTaskId, fields.recurrence_type);
+  if (conflict) return { error: conflict };
 
   const { data: task, error } = await supabase
     .from('tasks')
@@ -111,6 +115,10 @@ export async function updateTask(taskId: string, containerId: string, formData: 
   const assigneeIds = formData.getAll('assigneeId').map(String).filter(Boolean);
 
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('tasks').select('parent_task_id').eq('id', taskId).maybeSingle();
+  const conflict = await assertRecurrenceOwnership(supabase, taskId, existing?.parent_task_id ?? null, fields.recurrence_type);
+  if (conflict) return { error: conflict };
+
   const { error } = await supabase.from('tasks').update(fields).eq('id', taskId);
   if (error) return { error: 'Impossible de modifier la tâche (droits insuffisants ?).' };
 
@@ -159,16 +167,24 @@ export async function completeTask(taskId: string, containerId: string, formData
     .insert({ task_id: taskId, completed_by: user.id, comment, photo_url: photoUrl, ...(completedAt ? { completed_at: completedAt } : {}) });
   if (error) return { error: "Impossible d'enregistrer la complétion (droits insuffisants ?)." };
 
-  await maybeAutoCompleteParent(supabase, containerId, taskId, user.id);
   await syncTaskDone(supabase, containerId, taskId);
+
+  const { data: completed } = await supabase.from('tasks').select('parent_task_id').eq('id', taskId).maybeSingle();
+  if (completed?.parent_task_id) {
+    await maybeAutoCompleteFromChildren(supabase, containerId, completed.parent_task_id, user.id);
+  }
+
   revalidateTaskPaths(containerId);
   return {};
 }
 
 export async function reopenTask(taskId: string, containerId: string) {
   const supabase = await createClient();
+  const { data: task } = await supabase.from('tasks').select('parent_task_id').eq('id', taskId).maybeSingle();
   await supabase.from('tasks').update({ status: 'todo' }).eq('id', taskId);
-  await maybeAutoReopenParent(supabase, taskId);
+  if (task?.parent_task_id) {
+    await maybeAutoReopenFromChild(supabase, task.parent_task_id);
+  }
   revalidateTaskPaths(containerId);
 }
 

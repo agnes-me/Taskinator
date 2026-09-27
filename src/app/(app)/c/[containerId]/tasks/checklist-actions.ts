@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getChecklistTemplateItems } from '@/lib/data/checklist';
+import { maybeAutoCompleteFromChildren, maybeAutoReopenFromChild } from '@/lib/task-completion';
 
 export async function addChecklistItem(taskId: string, containerId: string, formData: FormData) {
   const label = String(formData.get('label') ?? '').trim();
@@ -19,7 +20,19 @@ export async function addChecklistItem(taskId: string, containerId: string, form
 
 export async function toggleChecklistItem(itemId: string, containerId: string, checked: boolean) {
   const supabase = await createClient();
-  await supabase.from('checklist_items').update({ checked }).eq('id', itemId);
+  const { data: item } = await supabase.from('checklist_items').update({ checked }).eq('id', itemId).select('task_id').maybeSingle();
+
+  if (item) {
+    if (checked) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) await maybeAutoCompleteFromChildren(supabase, containerId, item.task_id, user.id);
+    } else {
+      await maybeAutoReopenFromChild(supabase, item.task_id);
+    }
+  }
+
   revalidatePath('/', 'layout');
 }
 

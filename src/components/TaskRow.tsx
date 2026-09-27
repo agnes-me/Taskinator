@@ -47,6 +47,11 @@ export function TaskRow({
   const canComplete = canEdit || (isGuest && isAssignee);
   const isPaused = task.paused_until && new Date(task.paused_until) > new Date();
   const doneSubtasks = task.subtasks.filter((s) => s.status === 'done').length;
+  // Vue d'ensemble du cycle en cours : sous-tâches ET liste comptent ensemble, puisque les deux
+  // doivent être terminées pour que la tâche se coche automatiquement (voir maybeAutoCompleteFromChildren).
+  const doneChecklist = task.checklist.filter((c) => c.checked).length;
+  const totalItems = task.subtasks.length + task.checklist.length;
+  const doneItems = doneSubtasks + doneChecklist;
   // Une tâche ponctuelle sans sous-tâche a une fraîcheur binaire (faite/à faire) uniquement pour
   // compter dans l'agrégat de sa pièce — inutile de l'afficher en plus de la case à cocher, déjà
   // parlante pour ce cas-là.
@@ -103,9 +108,9 @@ export function TaskRow({
           <span className={`h-2 w-2 shrink-0 rounded-full ${PRIORITY_DOT[task.priority]}`} title={PRIORITY_LABELS[task.priority]} />
           <span className={`truncate ${task.status === 'done' ? 'line-through opacity-60' : 'font-medium'}`}>{task.title}</span>
           {isPaused && <span className="shrink-0 text-xs">⏸</span>}
-          {task.subtasks.length > 0 && (
+          {totalItems > 0 && (
             <span className="shrink-0 text-xs text-[var(--text-muted)]">
-              {doneSubtasks}/{task.subtasks.length}
+              {doneItems}/{totalItems}
             </span>
           )}
         </button>
