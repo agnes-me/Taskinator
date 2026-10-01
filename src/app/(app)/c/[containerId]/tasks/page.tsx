@@ -1,0 +1,84 @@
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
+import { getContainerContext } from '@/lib/data/nav';
+import { getContainerMembers } from '@/lib/data/members';
+import { listTasks } from '@/lib/data/tasks';
+import { getChecklistTemplates } from '@/lib/data/checklist';
+import { TaskListSection } from '@/components/TaskListSection';
+
+export default async function TasksPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ containerId: string }>;
+  searchParams: Promise<{ room?: string; status?: string }>;
+}) {
+  const { containerId } = await params;
+  const { room, status } = await searchParams;
+  const isEventFilter = room === '__event__';
+  const supabase = await createClient();
+  const user = await getAuthUser();
+
+  const [{ role }, members, { data: rooms }, tasks, checklistTemplates] = await Promise.all([
+    getContainerContext(containerId),
+    getContainerMembers(supabase, containerId),
+    supabase.from('rooms').select('id, name').eq('container_id', containerId).order('sort_order'),
+    listTasks(supabase, containerId, {
+      roomId: room && !isEventFilter ? room : undefined,
+      status: (status as 'todo' | 'in_progress' | 'done' | 'cancelled') || undefined,
+    }),
+    getChecklistTemplates(supabase, containerId),
+  ]);
+
+  const filteredTasks = isEventFilter ? tasks.filter((t) => t.event) : tasks;
+
+  const canEdit = role === 'admin' || role === 'member';
+  const isGuest = role === 'guest';
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-2 text-sm">
+        <FilterLink containerId={containerId} label="Toutes les catégories" active={!room} params={{ status }} />
+        {(rooms ?? []).map((r) => (
+          <FilterLink key={r.id} containerId={containerId} label={r.name} active={room === r.id} params={{ room: r.id, status }} />
+        ))}
+        <FilterLink containerId={containerId} label="🎉 Événements" active={isEventFilter} params={{ room: '__event__', status }} />
+      </div>
+
+      <TaskListSection
+        containerId={containerId}
+        tasks={filteredTasks}
+        members={members}
+        rooms={rooms ?? []}
+        currentUserId={user?.id ?? ''}
+        isGuest={isGuest}
+        canEdit={canEdit}
+        checklistTemplates={checklistTemplates}
+      />
+    </div>
+  );
+}
+
+function FilterLink({
+  containerId,
+  label,
+  active,
+  params,
+}: {
+  containerId: string;
+  label: string;
+  active: boolean;
+  params: Record<string, string | undefined>;
+}) {
+  const entries = Object.entries(params).filter((entry): entry is [string, string] => Boolean(entry[1]));
+  const qs = new URLSearchParams(entries).toString();
+  return (
+    <Link
+      href={`/c/${containerId}/tasks${qs ? `?${qs}` : ''}`}
+      className={`chip ${active ? 'bg-container text-white' : 'bg-[var(--surface-muted)]'}`}
+    >
+      {label}
+    </Link>
+  );
+}

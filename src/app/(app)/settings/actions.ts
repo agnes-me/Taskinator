@@ -1,96 +1,92 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import { requireSessionAndHousehold } from '@/lib/require-session';
+import { createClient } from '@/lib/supabase/server';
 
-export async function updateHouseholdName(formData: FormData) {
-  const { household } = await requireSessionAndHousehold();
-  const name = String(formData.get('name') ?? '').trim();
-  if (!name) return;
-  await prisma.household.update({ where: { id: household.id }, data: { name } });
-  revalidatePath('/settings');
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+export async function updateThemeGradient(colors: string[]) {
+  const cleaned = colors.map((c) => c.trim());
+
+  if (cleaned.length < 2 || cleaned.length > 5) {
+    return { error: 'Choisis entre 2 et 5 couleurs.' };
+  }
+  if (!cleaned.every((c) => HEX_RE.test(c))) {
+    return { error: 'Couleur invalide.' };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié.' };
+
+  const { error } = await supabase.from('profiles').update({ theme_gradient: cleaned }).eq('id', user.id);
+  if (error) return { error: 'Impossible d’enregistrer le dégradé.' };
+
+  revalidatePath('/', 'layout');
+  return {};
 }
 
-export async function pauseReminders(formData: FormData) {
-  const { household } = await requireSessionAndHousehold();
-  const untilRaw = String(formData.get('until') ?? '');
-  const reason = String(formData.get('reason') ?? '').trim() || null;
-  const until = untilRaw ? new Date(untilRaw) : null;
-  await prisma.household.update({
-    where: { id: household.id },
-    data: { remindersPausedUntil: until, remindersPauseReason: until ? reason : null },
-  });
-  revalidatePath('/settings');
-  revalidatePath('/dashboard');
-  revalidatePath('/tasks');
+const ICS_URL_RE = /^https:\/\/.+\.ics(\?.*)?$/i;
+
+export async function addIcalSubscription(label: string, url: string) {
+  const cleanedLabel = label.trim() || 'Calendrier';
+  const cleanedUrl = url.trim();
+  if (!ICS_URL_RE.test(cleanedUrl)) {
+    return {
+      error:
+        "Cette adresse ne ressemble pas à un fichier iCal (elle doit se terminer par .ics). Sur Google Calendar : " +
+        "Réglages du calendrier concerné → « Intégrer l'agenda » → « Adresse secrète au format iCal » — pas le lien " +
+        "« Obtenir le lien pour le partage », qui ne fonctionne pas ici.",
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié.' };
+
+  const { error } = await supabase.from('ical_subscriptions').insert({ user_id: user.id, label: cleanedLabel, url: cleanedUrl });
+  if (error) return { error: `Impossible d'enregistrer ce calendrier — ${error.message} (${error.code}).` };
+
+  revalidatePath('/', 'layout');
+  return {};
 }
 
-export async function resumeReminders() {
-  const { household } = await requireSessionAndHousehold();
-  await prisma.household.update({
-    where: { id: household.id },
-    data: { remindersPausedUntil: null, remindersPauseReason: null },
-  });
-  revalidatePath('/settings');
-  revalidatePath('/dashboard');
-  revalidatePath('/tasks');
+export async function deleteIcalSubscription(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('ical_subscriptions').delete().eq('id', id);
+  if (error) return { error: `Impossible de supprimer ce calendrier — ${error.message} (${error.code}).` };
+
+  revalidatePath('/', 'layout');
+  return {};
 }
 
-export async function createZone(formData: FormData) {
-  const { household } = await requireSessionAndHousehold();
-  const name = String(formData.get('name') ?? '').trim();
-  const icon = String(formData.get('icon') ?? '🏠').trim() || '🏠';
-  if (!name) return;
-  const zone = await prisma.zone.create({ data: { householdId: household.id, name, icon } });
-  revalidatePath('/settings');
-  // On file directement vers la zone créée : si un template correspond à son nom
-  // (ex: "Cuisine"), ses tâches types sont proposées tout de suite.
-  redirect(`/zones/${zone.id}`);
+export async function updateIcalSubscription(id: string, patch: { color?: string; visible?: boolean }) {
+  if (patch.color !== undefined && !HEX_RE.test(patch.color)) {
+    return { error: 'Couleur invalide.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from('ical_subscriptions').update(patch).eq('id', id);
+  if (error) return { error: `Impossible de modifier ce calendrier — ${error.message} (${error.code}).` };
+
+  revalidatePath('/', 'layout');
+  return {};
 }
 
-export async function deleteZone(zoneId: string) {
-  const { household } = await requireSessionAndHousehold();
-  await prisma.zone.deleteMany({ where: { id: zoneId, householdId: household.id } });
-  revalidatePath('/settings');
-}
+export async function updateDisplayName(name: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié.' };
 
-export async function createCategory(formData: FormData) {
-  const { household } = await requireSessionAndHousehold();
-  const name = String(formData.get('name') ?? '').trim();
-  const icon = String(formData.get('icon') ?? '✅').trim() || '✅';
-  const color = String(formData.get('color') ?? '#0d9488').trim();
-  const kind = String(formData.get('kind') ?? 'OTHER') as
-    | 'CHORE'
-    | 'SHOPPING'
-    | 'PACKING'
-    | 'EVENT'
-    | 'ADMIN'
-    | 'OTHER';
-  if (!name) return;
-  await prisma.category.create({ data: { householdId: household.id, name, icon, color, kind } });
-  revalidatePath('/settings');
-}
+  const { error } = await supabase.from('profiles').update({ display_name: name.trim() || null }).eq('id', user.id);
+  if (error) return { error: 'Impossible d’enregistrer le nom.' };
 
-export async function deleteCategory(categoryId: string) {
-  const { household } = await requireSessionAndHousehold();
-  await prisma.category.deleteMany({ where: { id: categoryId, householdId: household.id } });
-  revalidatePath('/settings');
-}
-
-export async function addProfile(formData: FormData) {
-  const { household } = await requireSessionAndHousehold();
-  const displayName = String(formData.get('displayName') ?? '').trim();
-  const isChild = formData.get('isChild') === 'on';
-  const color = String(formData.get('color') ?? '#14b8a6').trim();
-  if (!displayName) return;
-  await prisma.profile.create({ data: { householdId: household.id, displayName, isChild, color } });
-  revalidatePath('/settings');
-}
-
-export async function removeProfile(profileId: string) {
-  const { household } = await requireSessionAndHousehold();
-  await prisma.profile.deleteMany({ where: { id: profileId, householdId: household.id } });
-  revalidatePath('/settings');
+  revalidatePath('/', 'layout');
+  return {};
 }

@@ -1,35 +1,84 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { getCurrentHousehold, getUserHouseholds } from '@/lib/current-household';
-import { ensurePersonalHousehold } from '@/lib/ensure-personal-household';
-import { NavBar } from '@/components/NavBar';
+import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/user';
+import { getHouseholdsWithContainers } from '@/lib/data/nav';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { SignOutButton } from '@/components/SignOutButton';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    redirect('/login');
-  }
+  const user = await getAuthUser();
+  if (!user) redirect('/login');
 
-  const household = await getCurrentHousehold(session.user.id);
-  if (!household) {
-    redirect('/register');
-  }
+  const supabase = await createClient();
+  const [households, { data: profile }] = await Promise.all([
+    getHouseholdsWithContainers(supabase),
+    supabase.from('profiles').select('theme_gradient').eq('id', user.id).maybeSingle(),
+  ]);
+  if (households.length === 0) redirect('/onboarding');
 
-  let households = await getUserHouseholds(session.user.id);
-  // Comptes créés avant l'introduction du conteneur perso : on le crée à la volée.
-  if (!households.some((h) => h.household.isPersonal)) {
-    await ensurePersonalHousehold(session.user.id, session.user.name ?? 'Moi');
-    households = await getUserHouseholds(session.user.id);
-  }
+  const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const gradientColors = profile?.theme_gradient?.length ? profile.theme_gradient : ['#14b8a6', '#6366f1'];
+  const userGradient = `linear-gradient(135deg, ${gradientColors.join(', ')})`;
 
   return (
-    <div className="min-h-screen pb-16 md:pb-0">
-      <NavBar
-        activeHousehold={{ id: household.id, name: household.name }}
-        households={households.map((h) => ({ id: h.household.id, name: h.household.name }))}
-      />
-      <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+    <div className="flex min-h-screen flex-col md:flex-row" style={{ ['--user-gradient' as string]: userGradient }}>
+      <aside className="gradient-surface sidebar-gradient m-3 flex shrink-0 flex-col overflow-hidden rounded-[1.25rem] text-white shadow-lg md:w-64">
+        <Link href="/dashboard" className="flex items-center gap-2 px-4 pb-2 pt-5 text-lg font-bold">
+          <span className="text-2xl">✅</span> Taskinator
+        </Link>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 pt-2">
+          <nav className="flex flex-col gap-1">
+            <Link href="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
+              📊 Tableau de bord
+            </Link>
+            <Link href="/calendar" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
+              📅 Calendrier
+            </Link>
+          </nav>
+
+          <div className="flex flex-col gap-4 overflow-y-auto">
+            {households.map((h) => (
+              <div key={h.id}>
+                <p className="px-3 text-xs font-semibold uppercase tracking-wide text-white/70">{h.name}</p>
+                <div className="mt-1 flex flex-col gap-1">
+                  {h.containers.map((c) => (
+                    <Link
+                      key={c.id}
+                      href={`/c/${c.id}`}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15"
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/25 text-[11px]">
+                        {c.icon}
+                      </span>
+                      {c.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-auto flex flex-col gap-2 border-t border-white/25 pt-3">
+            <Link href="/settings" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
+              🎨 Personnaliser
+            </Link>
+            {isAdmin && (
+              <Link href="/admin/moderation" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/15">
+                🛡️ Modération marketplace
+              </Link>
+            )}
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate text-xs text-white/70">{user.email}</span>
+              <ThemeToggle />
+            </div>
+            <SignOutButton />
+          </div>
+        </div>
+      </aside>
+
+      <main className="min-w-0 flex-1 p-3 md:p-6">{children}</main>
     </div>
   );
 }

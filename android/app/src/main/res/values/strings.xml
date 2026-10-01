@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Taskinator</string>
+    <string name="task_list_widget_name">Taskinator — Mes tâches</string>
+    <string name="task_list_widget_description">Tes tâches, avec case à cocher et filtre de date (Aujourd\'hui / Cette semaine / Tout) directement sur le widget ; conteneur et catégorie au choix à la pose.</string>
+    <string name="calendar_widget_name">Taskinator — Calendrier</string>
+    <string name="calendar_widget_description">Tâches, événements Google Calendar et agendas iCal fusionnés, en grille par jour.</string>
+</resources>

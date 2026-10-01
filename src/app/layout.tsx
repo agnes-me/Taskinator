@@ -1,34 +1,29 @@
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
-import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'Taskinator',
-  description: "Gérez les tâches d'équipe et de la maison : ménage, courses, valises, évènements.",
+  description: 'Tâches et ménage partagés, par foyer et par conteneur.',
   manifest: '/manifest.json',
-  icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Taskinator',
-  },
 };
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#0d9488',
-};
+const THEME_INIT = `
+try {
+  const stored = localStorage.getItem('theme');
+  const dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.classList.toggle('dark', dark);
+} catch (e) {}
+`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body>
-        <Providers>{children}</Providers>
-      </body>
+    <html lang="fr" suppressHydrationWarning>
+      <head>
+        <meta name="theme-color" content="#0d9488" />
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+      </head>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }

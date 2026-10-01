@@ -1,25 +1,13 @@
 {
   "name": "Taskinator",
   "short_name": "Taskinator",
-  "description": "Gérez les tâches d'équipe et de la maison : ménage, courses, valises, évènements.",
+  "description": "Tâches et ménage partagés, par foyer et par conteneur.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#0d9488",
   "orientation": "portrait",
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
-  ],
-  "shortcuts": [
-    {
-      "name": "Nouvelle tâche",
-      "url": "/tasks",
-      "description": "Ajouter une tâche rapidement"
-    },
-    {
-      "name": "Tableau de bord",
-      "url": "/dashboard"
-    }
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
